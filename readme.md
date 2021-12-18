@@ -17,7 +17,7 @@ The editor will create the log file autoDriveEditor.log, which is used for later
 Please use the "Issues" section to report any bugs, i will try to respond as soon as humanly possible, but bear in mind
 real life doesn't always allow for quick answers
 
-#License
+# License
 
 The Editor does not currently have a license attached to it.
 
