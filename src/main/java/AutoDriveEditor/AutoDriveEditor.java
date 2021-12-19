@@ -37,8 +37,8 @@ import static AutoDriveEditor.MapPanel.*;
 
 public class AutoDriveEditor extends JFrame {
 
-    public static final String AUTODRIVE_COURSE_EDITOR_TITLE = "AutoDrive Course Editor 0.5.0 Beta";
-    public static final String AUTODRIVE_INTERNAL_VERSION = "0.5.0-beta";
+    public static final String AUTODRIVE_INTERNAL_VERSION = "0.50.1";
+    public static final String AUTODRIVE_COURSE_EDITOR_TITLE = "AutoDrive Course Editor " + AUTODRIVE_INTERNAL_VERSION + " Beta";
     private String lastRunVersion;
     public static boolean DEBUG = false;
     public static boolean EXPERIMENTAL = false;
