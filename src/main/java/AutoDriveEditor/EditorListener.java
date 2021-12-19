@@ -45,8 +45,9 @@ public class EditorListener implements ActionListener, ItemListener, ChangeListe
                 }
                 fc.setDialogTitle(localeString.getString("dialog_load_config_title"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                fc.setAcceptAllFileFilterUsed(false);
                 FileNameExtensionFilter filter = new FileNameExtensionFilter("AutoDrive config", "xml");
+                fc.setAcceptAllFileFilterUsed(false);
+                fc.setFileFilter(filter);
                 fc.addChoosableFileFilter(filter);
 
                 if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {

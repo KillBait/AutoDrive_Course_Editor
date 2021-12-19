@@ -200,7 +200,7 @@ public class AutoDriveEditor extends JFrame {
     public static void main(String[] args) {
 
         // set look and feel to the system look and feel
-        System.setProperty("sun.java2d.opengl", "True");
+        //System.setProperty("sun.java2d.opengl", "True");
 
         try {
 
