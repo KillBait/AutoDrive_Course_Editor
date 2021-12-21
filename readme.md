@@ -21,7 +21,7 @@ real life doesn't always allow for quick answers.
 
 I maintain another repository of map images that are ready to use with the editor.
 
-Go [here](https://github.com/KillBait/FS19_AutoDrive_MapImages) .. If you have any mapimages that are not on the repository, please consider doing a pull request to add to it
+Go [here](https://github.com/KillBait/AutoDrive_MapImages) .. If you have any mapimages that are not on the repository, please consider doing a pull request to add to it
 
 ## License
 
