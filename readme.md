@@ -21,7 +21,8 @@ real life doesn't always allow for quick answers.
 
 I maintain another repository of map images that are ready to use with the editor.
 
-Go [here](https://github.com/KillBait/AutoDrive_MapImages) .. If you have any mapimages that are not on the repository, please consider doing a pull request to add to it
+Go [here](https://github.com/KillBait/AutoDrive_MapImages) .. Do you have any map images that are not on the repository?, please consider doing a pull request to add to
+the collection, it will help other people.. Help with pull requests can be found on [GitHub Docs](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)
 
 ## License
 
@@ -29,4 +30,4 @@ The Editor does not currently have a license attached to it.
 
 ## Credits
 
-@Stephan_S - The creator of the AutoDrive mod and original editor. With his permission i have taken over maintaining this editor.
+**@Stephan_S** - The creator of the AutoDrive mod and original editor. With his permission i have taken over maintaining this editor.
