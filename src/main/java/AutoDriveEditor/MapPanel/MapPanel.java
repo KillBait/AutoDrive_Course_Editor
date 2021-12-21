@@ -35,6 +35,7 @@ import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.Locale.LocaleManager.locale;
 import static AutoDriveEditor.Locale.LocaleManager.localeString;
 import static AutoDriveEditor.Managers.ChangeManager.*;
+import static AutoDriveEditor.MapPanel.MapImage.updateMapZoomStore;
 import static AutoDriveEditor.RoadNetwork.MapNode.*;
 import static AutoDriveEditor.Utils.DebugUtils.startTimer;
 import static AutoDriveEditor.Utils.DebugUtils.stopTimer;
@@ -1926,11 +1927,9 @@ public class MapPanel extends JPanel{
     }
 
     public static void updateMapZoomFactor(int zoomFactor) {
-        boolean found = false;
-
         getMapPanel().setMapZoomFactor(zoomFactor);
         getMapPanel().repaint();
-        MapImage.updateMapZoomStore(roadMap.roadMapName, zoomFactor);
+        updateMapZoomStore(roadMap.roadMapName, zoomFactor);
     }
 
     public static void cutSelected() {

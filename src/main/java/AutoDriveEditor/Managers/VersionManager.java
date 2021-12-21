@@ -1,6 +1,63 @@
 package AutoDriveEditor.Managers;
 
+import AutoDriveEditor.AutoDriveEditor;
+import com.vdurmont.semver4j.Semver;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
+
+import static AutoDriveEditor.AutoDriveEditor.AUTODRIVE_INTERNAL_VERSION;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.Utils.XMLUtils.getTextValue;
+
 public class VersionManager {
+
+    public static void getVersionXML() {
+
+        InputStream in = null;
+        URL url = null;
+        try {
+            url = new URL("https://github.com/KillBait/AutoDrive_Course_Editor/raw/refactor/version.xml");
+            URLConnection urlConnection = url.openConnection();
+            in = new BufferedInputStream(urlConnection.getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+
+        }
+
+        if (in != null) {
+            DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+            try {
+                DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+                Document doc = docBuilder.parse(in);
+                Element e = doc.getDocumentElement();
+
+                String remoteVersion = getTextValue(null, e, "latest_version");
+                Semver remoteSem = new Semver(remoteVersion);
+                if (remoteSem.isGreaterThan(AUTODRIVE_INTERNAL_VERSION)) {
+                    LOG.info("Update is available...Remote version {} is greater than {}", remoteVersion, AUTODRIVE_INTERNAL_VERSION);
+                } else {
+                    LOG.info("No update available...Remote version {} is lower than {}", remoteVersion, AUTODRIVE_INTERNAL_VERSION);
+                }
+
+            } catch (ParserConfigurationException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (SAXException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 
 

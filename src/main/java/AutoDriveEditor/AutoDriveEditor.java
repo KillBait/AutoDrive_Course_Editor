@@ -7,6 +7,7 @@ import AutoDriveEditor.Listeners.CurvePanelListener;
 import AutoDriveEditor.Listeners.EditorListener;
 import AutoDriveEditor.Locale.LocaleManager;
 import AutoDriveEditor.Managers.ChangeManager;
+import AutoDriveEditor.Managers.VersionManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,7 +28,7 @@ import static AutoDriveEditor.XMLConfig.GameXML.xmlConfigFile;
 
 public class AutoDriveEditor extends JFrame {
 
-    public static final String AUTODRIVE_INTERNAL_VERSION = "0.50.1";
+    public static final String AUTODRIVE_INTERNAL_VERSION = "0.51.0";
     public static final String AUTODRIVE_COURSE_EDITOR_TITLE = "AutoDrive Course Editor " + AUTODRIVE_INTERNAL_VERSION + " Beta";
 
 
@@ -43,6 +44,7 @@ public class AutoDriveEditor extends JFrame {
     public AutoDriveEditor() {
         super();
 
+        LOG.info("Starting AutoDrive Editor v{} .....", AUTODRIVE_INTERNAL_VERSION);
         LOG.info("Java Runtime Version {}", Runtime.version().feature());
         LocaleManager.setLocale();
         setTitle(createTitle());
@@ -97,6 +99,8 @@ public class AutoDriveEditor extends JFrame {
             setSize(width, height);
         }
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        VersionManager.getVersionXML();
         if (lastRunVersion != null && !lastRunVersion.equals(AUTODRIVE_INTERNAL_VERSION)) {
             LOG.info("Version Updated Detected");
             // TODO display new version notes
@@ -105,7 +109,7 @@ public class AutoDriveEditor extends JFrame {
         changeManager = new ChangeManager();
 
 
-        LOG.info(localeString.getString("console_start"));
+        LOG.info("Setup Complete....");
     }
 
     public static void main(String[] args) {

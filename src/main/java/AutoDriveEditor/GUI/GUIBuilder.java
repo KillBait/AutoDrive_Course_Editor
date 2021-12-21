@@ -62,8 +62,6 @@ public class GUIBuilder {
 
     public static final String BUTTON_ALIGN_HORIZONTAL = "Horizontally Align Nodes";
     public static final String BUTTON_ALIGN_VERTICAL = "Vertically Align Nodes";
-
-    public static final String BUTTON_CREATE_LINEARLINE = "Linear Line";
     public static final String BUTTON_CREATE_QUADRATICBEZIER = "Quadratic Bezier";
     public static final String BUTTON_CREATE_CUBICBEZIER = "Cubic Bezier";
     public static final String BUTTON_COMMIT_CURVE = "Confirm Curve";

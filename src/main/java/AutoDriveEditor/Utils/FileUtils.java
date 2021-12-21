@@ -11,8 +11,8 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import static AutoDriveEditor.GUI.MenuBuilder.bDebugFileIO;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.GUI.MenuBuilder.*;
+import static AutoDriveEditor.Utils.LoggerUtils.*;
 
 public class FileUtils {
 

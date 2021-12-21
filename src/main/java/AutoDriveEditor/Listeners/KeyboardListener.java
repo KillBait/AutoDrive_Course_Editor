@@ -9,17 +9,17 @@ public class KeyboardListener implements KeyListener {
 
     @Override
     public void keyTyped(KeyEvent e) {
-        LOG.info("Key Typed : {}", e.getKeyChar());
+        //LOG.info("Key Typed : {}", e.getKeyChar());
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        LOG.info("Key Pressed : {}", e.getKeyChar());
+        //LOG.info("Key Pressed : {}", e.getKeyChar());
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        LOG.info("Key Released : {}", e.getKeyChar());
+        //LOG.info("Key Released : {}", e.getKeyChar());
 
     }
 }

@@ -77,7 +77,7 @@ public class MenuBuilder {
 
 
     public static boolean bDebugShowID;
-    public static boolean bDebugFileIO;
+    public static boolean bDebugFileIO = true;
     public static boolean bDebugShowSelectedLocation;
     public static boolean bDebugProfile;
     public static boolean bDebugUndoRedo;

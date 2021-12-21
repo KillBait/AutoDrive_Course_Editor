@@ -18,9 +18,9 @@ import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.Import.ImportManager.*;
-import static AutoDriveEditor.Locale.LocaleManager.localeString;
+import static AutoDriveEditor.Locale.LocaleManager.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.Utils.LoggerUtils.*;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 import static AutoDriveEditor.XMLConfig.GameXML.*;
 
@@ -31,11 +31,11 @@ public class MenuListener implements ActionListener, ItemListener {
         LOG.info("ActionCommand: {}", e.getActionCommand());
 
         JFileChooser fc = new JFileChooser();
-        MapPanel.getMapPanel().isMultiSelectAllowed = false;
+        getMapPanel().isMultiSelectAllowed = false;
 
         switch (e.getActionCommand()) {
             case MENU_LOAD_CONFIG:
-                if (MapPanel.getMapPanel().isStale()) {
+                if (getMapPanel().isStale()) {
                     int response = JOptionPane.showConfirmDialog(editor, localeString.getString("dialog_exit_unsaved"), "AutoDrive", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                     if (response == JOptionPane.YES_OPTION) {
                         saveConfigFile(null);
