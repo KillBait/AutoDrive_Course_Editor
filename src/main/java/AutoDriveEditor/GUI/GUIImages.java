@@ -3,8 +3,8 @@ package AutoDriveEditor.GUI;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
 
-import static AutoDriveEditor.Utils.ImageUtils.getImageIcon;
-import static AutoDriveEditor.Utils.ImageUtils.loadImage;
+import static AutoDriveEditor.Utils.ImageUtils.*;
+
 
 public class GUIImages {
 

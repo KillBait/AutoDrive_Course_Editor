@@ -1,11 +1,11 @@
 package AutoDriveEditor.GUI;
 
-import AutoDriveEditor.AutoDriveEditor;
-import AutoDriveEditor.Listeners.MenuListener;
-
 import javax.swing.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+
+import AutoDriveEditor.AutoDriveEditor;
+import AutoDriveEditor.Listeners.MenuListener;
 
 import static AutoDriveEditor.GUI.GUIBuilder.*;
 import static AutoDriveEditor.GUI.GUIUtils.*;
@@ -29,6 +29,8 @@ public class MenuBuilder {
     public static final String MENU_ZOOM_1x = "1x";
     public static final String MENU_ZOOM_4x = "4x";
     public static final String MENU_ZOOM_16x = "16x";
+    public static final String MENU_HEIGHTMAP_IMPORT = "HeightMap Import";
+    public static final String MENU_HEIGHTMAP_FIX = "Fix Node Height";
     public static final String MENU_CHECKBOX_CONTINUECONNECT = "Continuous Connections";
     public static final String MENU_CHECKBOX_MIDDLEMOUSEMOVE = "Middle Mouse Move";
     public static final String MENU_GRID_SET = "Grid Set";
@@ -42,13 +44,18 @@ public class MenuBuilder {
     public static final String MENU_ROTATE_ANTICLOCKWISE="Rotate Anticlockwise";
     public static final String MENU_ABOUT = "About";
 
+
     public static final String MENU_DEBUG_SHOWID = "DEBUG ID";
     public static final String MENU_DEBUG_FILEIO = "DEBUG CONFIG";
     public static final String MENU_DEBUG_SELECTED_LOCATION = "DEBUG SELECTED LOCATION";
     public static final String MENU_DEBUG_PROFILE = "DEBUG PROFILE";
     public static final String MENU_DEBUG_UNDO = "DEBUG UNDO/REDO SYSTEM";
     public static final String MENU_DEBUG_ZOOMSCALE = "ZOOMSCALE";
+    public static final String MENU_DEBUG_HEIGHTMAP = "DEBUG HEIGHTMAP";
     public static final String MENU_DEBUG_TEST = "TEST";
+
+    public static int InputEvent_NONE = 0;
+    public static int KeyEvent_NONE = 0;
 
     public static MenuListener menuListener;
 
@@ -67,6 +74,7 @@ public class MenuBuilder {
     public static JMenuItem zoomOneX;
     public static JMenuItem zoomFourX;
     public static JMenuItem zoomSixteenX;
+    public static JMenuItem importHeightmapMenuItem;
     public static JMenuItem gridSnapMenuItem;
     public static JMenuItem gridSnapSubDivisionMenuItem;
 
@@ -75,18 +83,21 @@ public class MenuBuilder {
     public static JMenuItem rAntiClockwiseMenuItem;
     public static JMenuItem r90AntiClockwiseMenuItem;
 
+    public static JMenuItem fixNodesMenuItem;
+
 
     public static boolean bDebugShowID;
-    public static boolean bDebugFileIO = true;
+    public static boolean bDebugFileIO;
     public static boolean bDebugShowSelectedLocation;
     public static boolean bDebugProfile;
     public static boolean bDebugUndoRedo;
     public static boolean bDebugZoomScale;
+    public static boolean bDebugHeightMap;
     public static boolean bDebugTest;
 
     public static void createMenu() {
         JMenuItem menuItem;
-        JMenu fileMenu, editMenu, mapMenu, optionsMenu, helpMenu, subMenu, gridMenu, rotationMenu, debugMenu;
+        JMenu fileMenu, editMenu, mapMenu, heightmapMenu, optionsMenu, helpMenu, subMenu, gridMenu, rotationMenu, debugMenu;
 
 
         menuBar = new JMenuBar();
@@ -129,6 +140,12 @@ public class MenuBuilder {
         importFS22DDSMenuItem = makeMenuItem("menu_import_fs22_dds", "menu_import_fs22_dds_accstring", KeyEvent.VK_P, InputEvent.ALT_DOWN_MASK, mapMenu, menuListener, MENU_IMPORT_FS22_DDS, false);
         saveImageMenuItem = makeMenuItem("menu_map_saveimage", "menu_map_saveimage_accstring", KeyEvent.VK_B, InputEvent.ALT_DOWN_MASK, mapMenu, menuListener, MENU_SAVE_IMAGE, false);
 
+        // create the HeightMap menu
+
+        heightmapMenu = makeMenu("menu_heightmap", KeyEvent.VK_T, "menu_heightmap_accstring", menuBar);
+        importHeightmapMenuItem = makeMenuItem("menu_heightmap_import", "menu_heightmap_import_accstring", heightmapMenu, menuListener, MENU_HEIGHTMAP_IMPORT,false);
+        fixNodesMenuItem = makeMenuItem("menu_heightmap_fix_nodes", "menu_heightmap_fix_nodes_accstring", heightmapMenu, menuListener, MENU_HEIGHTMAP_FIX,false);
+
         // create the Options menu
 
         optionsMenu = makeMenu("menu_options", KeyEvent.VK_O, "menu_options_accstring", menuBar);
@@ -138,7 +155,7 @@ public class MenuBuilder {
         // create the grid snap menu
 
         gridMenu = makeMenu("menu_grid", KeyEvent.VK_G, "menu_grid_accstring", menuBar);
-        makeCheckBoxMenuItem("menu_grid_show", "menu_grid_show_accstring", KeyEvent.VK_G, InputEvent.CTRL_DOWN_MASK, bShowGrid, gridMenu, menuListener, MENU_GRID_SHOW);
+        makeCheckBoxMenuItem("menu_grid_show", "menu_grid_show_accstring", KeyEvent.VK_G, bShowGrid, gridMenu, menuListener, MENU_GRID_SHOW);
         gridSnapMenuItem = makeCheckBoxMenuItem("menu_grid_snap", "menu_grid_snap_accstring", KeyEvent.VK_S, bGridSnap, gridMenu, menuListener, MENU_GRID_SNAP);
         gridSnapSubDivisionMenuItem = makeCheckBoxMenuItem("menu_grid_snap_subdivide", "menu_grid_snap_subdivide_accstring", KeyEvent.VK_D, bGridSnapSubs, gridMenu, menuListener, MENU_GRID_SNAP_SUBS);
         gridMenu.addSeparator();
@@ -157,7 +174,7 @@ public class MenuBuilder {
         // Create the Help menu
 
         helpMenu = makeMenu("menu_help", KeyEvent.VK_H, "menu_help_accstring", menuBar);
-        makeMenuItem("menu_help_about", "menu_help_about_accstring", KeyEvent.VK_H, InputEvent.ALT_DOWN_MASK, helpMenu,menuListener, MENU_ABOUT, true );
+        makeMenuItem("menu_help_about", "menu_help_about_accstring", KeyEvent.VK_H, InputEvent.ALT_DOWN_MASK, helpMenu, menuListener, MENU_ABOUT, true);
 
         if (AutoDriveEditor.DEBUG) {
             debugMenu = makeMenu("menu_debug", KeyEvent.VK_D, "menu_debug_accstring", menuBar);
@@ -166,6 +183,7 @@ public class MenuBuilder {
             makeCheckBoxMenuItem("menu_debug_showselectedlocation", "menu_debug_showselectedlocation_accstring", KeyEvent.VK_7, InputEvent.ALT_DOWN_MASK, bDebugShowSelectedLocation, debugMenu, menuListener, MENU_DEBUG_SELECTED_LOCATION);
             makeCheckBoxMenuItem("menu_debug_profile", "menu_debug_profile_accstring", bDebugProfile, debugMenu, menuListener, MENU_DEBUG_PROFILE);
             makeCheckBoxMenuItem("menu_debug_zoom", "menu_debug_zoom_accstring", bDebugZoomScale, debugMenu, menuListener, MENU_DEBUG_ZOOMSCALE);
+            makeCheckBoxMenuItem("menu_debug_heightmap", "menu_debug_heightmap_accstring", bDebugHeightMap, debugMenu, menuListener, MENU_DEBUG_HEIGHTMAP);
             makeCheckBoxMenuItem("menu_debug_test", "menu_debug_test_accstring", bDebugTest, debugMenu, menuListener, MENU_DEBUG_TEST);
             debugMenu.addSeparator();
             makeCheckBoxMenuItem("menu_debug_fileio", "menu_debug_fileio_accstring", bDebugFileIO, debugMenu, menuListener, MENU_DEBUG_FILEIO);
@@ -182,6 +200,10 @@ public class MenuBuilder {
 
     public static void saveImageEnabled(boolean enabled) {
         saveImageMenuItem.setEnabled(enabled);
+    }
+
+    public static void fixNodesEnabled(boolean enabled) {
+        fixNodesMenuItem.setEnabled(enabled);
     }
 
 

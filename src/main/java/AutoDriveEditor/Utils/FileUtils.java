@@ -1,7 +1,5 @@
 package AutoDriveEditor.Utils;
 
-import AutoDriveEditor.AutoDriveEditor;
-
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
@@ -10,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+
+import AutoDriveEditor.AutoDriveEditor;
 
 import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.Utils.LoggerUtils.*;

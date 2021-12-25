@@ -1,19 +1,20 @@
 package AutoDriveEditor.GUI;
 
+import javax.swing.*;
+import java.awt.*;
+import java.net.URL;
+
 import AutoDriveEditor.AutoDriveEditor;
 import AutoDriveEditor.Listeners.CurvePanelListener;
 import AutoDriveEditor.Listeners.EditorListener;
 import AutoDriveEditor.Listeners.MenuListener;
 
-import javax.swing.*;
-import java.awt.*;
-import java.net.URL;
-
-import static AutoDriveEditor.Locale.LocaleManager.localeString;
+import static AutoDriveEditor.GUI.GUIBuilder.*;
+import static AutoDriveEditor.GUI.MenuBuilder.*;
+import static AutoDriveEditor.Locale.LocaleManager.*;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public class GUIUtils {
-
-    public static JFrame frame;
 
     // 1st part of fix for alpha cascading errors on radio buttons.
 
@@ -121,7 +122,7 @@ public class GUIUtils {
     }
 
     public static JRadioButton makeRadioButton(String text, String actionCommand, String toolTipText, Color textColour, boolean isSelected, boolean isOpaque, JPanel panel, ButtonGroup group, EditorListener actionListener) {
-        return makeRadioButton(text, actionCommand, toolTipText, textColour, isSelected, isOpaque, panel, group, actionListener);
+        return makeRadioButton(text, actionCommand, toolTipText, textColour, isSelected, isOpaque, panel, group, actionListener, null);
     }
 
     public static JRadioButton makeRadioButton(String text, String actionCommand, String toolTipText, Color textColour, boolean isSelected, boolean isOpaque, JPanel panel, ButtonGroup group, EditorListener actionListener, CurvePanelListener itemListener) {
@@ -160,9 +161,15 @@ public class GUIUtils {
         return newMenu;
     }
 
+    public static JMenuItem makeMenuItem(String menuName, String accString, JMenu menu, MenuListener listener, String actionCommand, Boolean enabled) {
+        return makeMenuItem(menuName, accString, KeyEvent_NONE, InputEvent_NONE, menu, listener, actionCommand, enabled);
+    }
+
     public static JMenuItem makeMenuItem(String menuName, String accString, int keyEvent, int inputEvent, JMenu menu, MenuListener listener, String actionCommand, Boolean enabled) {
         JMenuItem menuItem = new JMenuItem(localeString.getString(menuName));
-        menuItem.setAccelerator(KeyStroke.getKeyStroke(keyEvent, inputEvent));
+        if (keyEvent != 0 && inputEvent != 0) {
+            menuItem.setAccelerator(KeyStroke.getKeyStroke(keyEvent, inputEvent));
+        }
         menuItem.getAccessibleContext().setAccessibleDescription(localeString.getString(accString));
         menuItem.setEnabled(enabled);
         if (actionCommand != null) menuItem.setActionCommand(actionCommand);
@@ -172,20 +179,20 @@ public class GUIUtils {
     }
 
     public static JCheckBoxMenuItem makeCheckBoxMenuItem (String text, String accString, Boolean isSelected, JMenu menu, MenuListener itemListener, String actionCommand) {
-        return makeCheckBoxMenuItem(text, accString, 0, 0, isSelected, menu, itemListener, actionCommand);
+        return makeCheckBoxMenuItem(text, accString, KeyEvent_NONE, InputEvent_NONE, isSelected, menu, itemListener, actionCommand);
     }
     public static JCheckBoxMenuItem makeCheckBoxMenuItem (String text, String accString, int keyEvent, Boolean isSelected, JMenu menu, MenuListener itemListener, String actionCommand) {
-        return makeCheckBoxMenuItem(text, accString, keyEvent, 0, isSelected, menu, itemListener, actionCommand);
+        return makeCheckBoxMenuItem(text, accString, keyEvent, InputEvent_NONE, isSelected, menu, itemListener, actionCommand);
     }
 
     public static JCheckBoxMenuItem makeCheckBoxMenuItem (String text, String accString, int keyEvent, int inputEvent, Boolean isSelected, JMenu menu, MenuListener itemListener, String actionCommand) {
         JCheckBoxMenuItem cbMenuItem = new JCheckBoxMenuItem(localeString.getString(text), isSelected);
         cbMenuItem.setActionCommand(actionCommand);
-        if (keyEvent != 0 ) {
-            cbMenuItem.setMnemonic(keyEvent);
-        }
-        if (inputEvent != 0 ) {
+        if (inputEvent != 0 && keyEvent != 0) {
             cbMenuItem.setAccelerator(KeyStroke.getKeyStroke(keyEvent, inputEvent));
+            cbMenuItem.setMnemonic(keyEvent);
+        } else if (inputEvent == InputEvent_NONE && keyEvent != 0){
+            cbMenuItem.setAccelerator(KeyStroke.getKeyStroke(keyEvent, 0));
         }
         cbMenuItem.setSelected(isSelected);
         cbMenuItem.getAccessibleContext().setAccessibleDescription(localeString.getString(accString));
@@ -213,5 +220,14 @@ public class GUIUtils {
         }
         menu.add(menuItem);
         return menuItem;
+    }
+
+    public static void showInTextArea(String text, boolean clearAll) {
+        if (clearAll) {
+            textArea.selectAll();
+            textArea.replaceSelection("");
+        }
+        //LOG.info(text);
+        textArea.append(text + "\n");
     }
 }

@@ -1,19 +1,19 @@
 package AutoDriveEditor.MapPanel;
 
+import java.awt.geom.Point2D;
+import java.util.LinkedList;
+
 import AutoDriveEditor.AutoDriveEditor;
 import AutoDriveEditor.GUI.GUIBuilder;
 import AutoDriveEditor.Managers.ChangeManager.CurveChanger;
 import AutoDriveEditor.RoadNetwork.MapNode;
 
-import java.awt.geom.Point2D;
-import java.util.LinkedList;
-
-import static AutoDriveEditor.AutoDriveEditor.changeManager;
-import static AutoDriveEditor.GUI.GUIBuilder.editorState;
+import static AutoDriveEditor.AutoDriveEditor.*;
+import static AutoDriveEditor.GUI.GUIBuilder.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.RoadNetwork.MapNode.*;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
-import static AutoDriveEditor.XMLConfig.EditorXML.controlPointMoveScaler;
+import static AutoDriveEditor.Utils.LoggerUtils.*;
+import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
 
 public class CubicCurve {
@@ -106,7 +106,8 @@ public class CubicCurve {
 
         for (int j = 1; j < curveNodesList.size() - 1; j++) {
             MapNode tempNode = curveNodesList.get(j);
-            MapNode newNode = new MapNode(roadMap.mapNodes.size() + 1, tempNode.x, -1, tempNode.z, this.nodeType, false, false);
+            double heightMapY = getYValueFromHeightMap(tempNode.x, tempNode.z);
+            MapNode newNode = new MapNode(roadMap.mapNodes.size() + 1, tempNode.x, heightMapY, tempNode.z, this.nodeType, false, false);
             roadMap.mapNodes.add(newNode);
             mergeNodesList.add(newNode);
         }

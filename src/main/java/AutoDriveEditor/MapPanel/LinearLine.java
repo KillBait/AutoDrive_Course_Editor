@@ -1,17 +1,17 @@
 package AutoDriveEditor.MapPanel;
 
+import java.awt.geom.Point2D;
+import java.util.LinkedList;
+
 import AutoDriveEditor.AutoDriveEditor;
 import AutoDriveEditor.Managers.ChangeManager;
 import AutoDriveEditor.RoadNetwork.MapNode;
 
-import java.awt.geom.Point2D;
-import java.util.LinkedList;
-
-import static AutoDriveEditor.AutoDriveEditor.changeManager;
-import static AutoDriveEditor.MapPanel.MapPanel.roadMap;
-import static AutoDriveEditor.RoadNetwork.MapNode.NODE_STANDARD;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
-import static AutoDriveEditor.XMLConfig.EditorXML.linearLineNodeDistance;
+import static AutoDriveEditor.AutoDriveEditor.*;
+import static AutoDriveEditor.MapPanel.MapPanel.*;
+import static AutoDriveEditor.RoadNetwork.MapNode.*;
+import static AutoDriveEditor.Utils.LoggerUtils.*;
+import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
 public class LinearLine {
 
@@ -73,7 +73,8 @@ public class LinearLine {
 
         for (int j = 1; j < this.lineNodeList.size() - 1; j++) {
             MapNode tempNode = this.lineNodeList.get(j);
-            MapNode newNode = new MapNode(roadMap.mapNodes.size() + 1, tempNode.x, -1, tempNode.y, nodeType, false, false);
+            double heightMapY = getYValueFromHeightMap(tempNode.x, tempNode.z);
+            MapNode newNode = new MapNode(roadMap.mapNodes.size() + 1, tempNode.x, heightMapY, tempNode.y, nodeType, false, false);
             roadMap.mapNodes.add(newNode);
             mergeNodesList.add(newNode);
         }

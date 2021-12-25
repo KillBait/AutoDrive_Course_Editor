@@ -13,15 +13,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static AutoDriveEditor.AutoDriveEditor.AUTODRIVE_INTERNAL_VERSION;
-import static AutoDriveEditor.AutoDriveEditor.editor;
-import static AutoDriveEditor.Locale.LocaleManager.localeString;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.AutoDriveEditor.*;
+import static AutoDriveEditor.Locale.LocaleManager.*;
+import static AutoDriveEditor.Utils.LoggerUtils.*;
 import static AutoDriveEditor.Utils.XMLUtils.*;
 
 public class EditorXML {
 
     public static String lastRunVersion;
+    public static boolean bShowUpdateMessage = true;
     public static boolean bUseOnlineMapImages = true;
     public static int x = -99; // x + y are negative on purpose
     public static int y = -99;
@@ -64,6 +64,8 @@ public class EditorXML {
             Element e = doc.getDocumentElement();
 
             lastRunVersion = getTextValue(lastRunVersion, e, "Version");
+            bShowUpdateMessage = getBooleanValue(bShowUpdateMessage, e, "ShowUpdateMessage");
+
             x = getIntegerValue(x, e, "WindowX");
             y = getIntegerValue(y, e, "WindowY");
             if ( x == -99 || y == -99) noSavedWindowPosition = true;
@@ -128,6 +130,7 @@ public class EditorXML {
 
 
             setTextValue("Version", doc, AUTODRIVE_INTERNAL_VERSION, root);
+            setBooleanValue("ShowUpdateMessage", doc, bShowUpdateMessage, root);
             setIntegerValue("WindowX", doc, editor.getBounds().x, root);
             setIntegerValue("WindowY", doc, editor.getBounds().y, root);
             setIntegerValue("WindowWidth", doc, editor.getBounds().width, root);

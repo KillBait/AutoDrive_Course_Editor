@@ -1,34 +1,45 @@
 package AutoDriveEditor.Managers;
 
-import AutoDriveEditor.AutoDriveEditor;
 import com.vdurmont.semver4j.Semver;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
+import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.awt.*;
 import java.io.BufferedInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 
-import static AutoDriveEditor.AutoDriveEditor.AUTODRIVE_INTERNAL_VERSION;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
-import static AutoDriveEditor.Utils.XMLUtils.getTextValue;
+import static AutoDriveEditor.AutoDriveEditor.*;
+import static AutoDriveEditor.Locale.LocaleManager.localeString;
+import static AutoDriveEditor.Utils.LoggerUtils.*;
+import static AutoDriveEditor.Utils.XMLUtils.*;
+import static AutoDriveEditor.XMLConfig.EditorXML.bShowUpdateMessage;
 
 public class VersionManager {
 
-    public static void getVersionXML() {
+    public static void updateCheck() {
+
+        LOG.info("Connecting to GitHub for update check");
 
         InputStream in = null;
-        URL url = null;
+        URL url;
         try {
             url = new URL("https://github.com/KillBait/AutoDrive_Course_Editor/raw/refactor/version.xml");
             URLConnection urlConnection = url.openConnection();
             in = new BufferedInputStream(urlConnection.getInputStream());
+        } catch (FileNotFoundException e) {
+            LOG.info("Update file not found");
         } catch (IOException e) {
             e.printStackTrace();
 
@@ -44,11 +55,21 @@ public class VersionManager {
                 String remoteVersion = getTextValue(null, e, "latest_version");
                 Semver remoteSem = new Semver(remoteVersion);
                 if (remoteSem.isGreaterThan(AUTODRIVE_INTERNAL_VERSION)) {
-                    LOG.info("Update is available...Remote version {} is greater than {}", remoteVersion, AUTODRIVE_INTERNAL_VERSION);
+                    if (bShowUpdateMessage) {
+                        LOG.info("Update is available... Current version {} is lower than remote version {}", AUTODRIVE_INTERNAL_VERSION, remoteVersion);
+                        String mainText = "<center>AutoDrive Editor Update is available<br><br>Current Version v" + AUTODRIVE_INTERNAL_VERSION + "<br><br><b>New Version v" + remoteVersion;
+                        String linkText = "<br><br>Visit AutoDrive Editor HomePage</b>";
+                        JEditorPane link = createHyperLink(mainText,linkText, "https://github.com/KillBait/AutoDrive_Course_Editor");
+                        JOptionPane.showMessageDialog(editor, link, "AutoDrive", JOptionPane.PLAIN_MESSAGE);
+                    }
+                    bShowUpdateMessage = false;
+                } else if (remoteSem.isEqualTo(remoteVersion)){
+                    LOG.info("No update available... Remote version {} matches current version", remoteVersion);
+                    bShowUpdateMessage = true;
                 } else {
-                    LOG.info("No update available...Remote version {} is lower than {}", remoteVersion, AUTODRIVE_INTERNAL_VERSION);
+                    // yes.... this is a "Back To The Future" reference.. :-P
+                    LOG.info("Wait a minute, Doc. Are you telling me you built a time machine... current version {} is higher than remote version {}", AUTODRIVE_INTERNAL_VERSION, remoteVersion);
                 }
-
             } catch (ParserConfigurationException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -59,41 +80,39 @@ public class VersionManager {
         }
     }
 
+    private static JEditorPane createHyperLink(String text, String linkText, String URL) {
+        JLabel label = new JLabel();
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+        Font font = label.getFont();
 
+        // create some css from the label's font
+        String style = "font-family:" + font.getFamily() + ";" + "font-weight:" + (font.isBold() ? "bold" : "normal") + ";" +
+                "font-size:" + font.getSize() + "pt;" +
+                "text-align: centre";
 
-    public static void CheckVersion(String oldVersion, String newVersion) {
-        isUpdateAvailable(oldVersion.split("\\."), newVersion.split("\\."));
-    }
+        // html content
+        JEditorPane ep = new JEditorPane("text/html", "<html><body style=\"" + style + "\">" //
+                + text + " <a href=\"" + URL + "\">" + linkText + "</a>" //
+                + "</body></html>");
 
-
-    public static boolean isUpdateAvailable(String[] userVersionSplit, String[] latestVersionSplit) {
-
-        try {
-            int majorUserVersion = Integer.parseInt(userVersionSplit[0]);
-            int minorUserVersion = Integer.parseInt(userVersionSplit[1]);
-            int patchUserVersion = Integer.parseInt(userVersionSplit[2]);
-
-            int majorLatestVersion = Integer.parseInt(latestVersionSplit[0]);
-            int minorLatestVersion = Integer.parseInt(latestVersionSplit[1]);
-            int patchLatestVersion = Integer.parseInt(latestVersionSplit[2]);
-
-            if (majorUserVersion <= majorLatestVersion) {
-                if (majorUserVersion < majorLatestVersion) {
-                    return true;
-                } else {
-                    if (minorUserVersion <= minorLatestVersion) {
-                        if (minorUserVersion < minorLatestVersion) {
-                            return true;
-                        } else {
-                            return patchUserVersion < patchLatestVersion;
-                        }
+        // handle link events
+        ep.addHyperlinkListener(new HyperlinkListener()
+        {
+            @Override
+            public void hyperlinkUpdate(HyperlinkEvent e)
+            {
+                if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
+                    try {
+                        Desktop.getDesktop().browse(e.getURL().toURI()); // roll your own link launcher or use Desktop if J6+
+                    } catch (IOException | URISyntaxException ex) {
+                        ex.printStackTrace();
                     }
                 }
             }
-        } catch (Exception ignored) {
-            // Will be throw only if the versions pattern is different from "x.x.x" format
-            // Will return false at the end
-        }
-        return false;
+        });
+        ep.setEditable(false);
+        ep.setBackground(label.getBackground());
+        return ep;
+
     }
 }

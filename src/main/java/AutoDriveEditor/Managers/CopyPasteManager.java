@@ -1,17 +1,18 @@
 package AutoDriveEditor.Managers;
 
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+import java.util.LinkedList;
+
 import AutoDriveEditor.AutoDriveEditor;
 import AutoDriveEditor.GUI.MenuBuilder;
 import AutoDriveEditor.MapPanel.MapPanel;
 import AutoDriveEditor.RoadNetwork.MapNode;
 
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
-import java.util.LinkedList;
-
-import static AutoDriveEditor.AutoDriveEditor.changeManager;
+import static AutoDriveEditor.AutoDriveEditor.*;
+import static AutoDriveEditor.MapPanel.MapImage.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.Utils.LoggerUtils.*;
 
 
 public class CopyPasteManager {
@@ -142,7 +143,7 @@ public class CopyPasteManager {
         if ((roadMap == null) || (image == null)) {
             return;
         }
-        Point2D selectionCentre = getMapPanel().screenPosToWorldPos(getMapPanel().getWidth() / 2, getMapPanel().getHeight() / 2);
+        Point2D selectionCentre = screenPosToWorldPos(getMapPanel().getWidth() / 2, getMapPanel().getHeight() / 2);
         clearMultiSelection();
 
         int startID = roadMap.mapNodes.size() + 1;
@@ -150,8 +151,10 @@ public class CopyPasteManager {
             node.id = startID++;
             node.x += selectionCentre.getX();
             node.z += selectionCentre.getY();
-            node.isSelected = false;
+            node.y = getYValueFromHeightMap(node.x, node.z);
+            node.isSelected = true;
             roadMap.mapNodes.add(node);
+            multiSelectList.add(node);
         }
 
         changeManager.addChangeable( new ChangeManager.AddMultiNodeChanger(newNodes) );

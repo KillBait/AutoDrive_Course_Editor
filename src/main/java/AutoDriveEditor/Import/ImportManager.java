@@ -1,8 +1,5 @@
 package AutoDriveEditor.Import;
 
-import AutoDriveEditor.GUI.MenuBuilder;
-import AutoDriveEditor.MapPanel.MapPanel;
-
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -10,8 +7,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import static AutoDriveEditor.Locale.LocaleManager.localeString;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import AutoDriveEditor.GUI.MenuBuilder;
+import AutoDriveEditor.MapPanel.MapPanel;
+
+import static AutoDriveEditor.Locale.LocaleManager.*;
+import static AutoDriveEditor.MapPanel.MapImage.*;
+import static AutoDriveEditor.Utils.LoggerUtils.*;
 
 public class ImportManager {
 
@@ -88,7 +89,7 @@ public class ImportManager {
         // set the converted and resized image as the map image
 
 
-        MapPanel.getMapPanel().setImage(scaledImage);
+        setImage(scaledImage);
         MapPanel.forceMapImageRedraw();
         MapPanel.isUsingConvertedImage = true;
     }
@@ -111,7 +112,7 @@ public class ImportManager {
                     throw new IOException("File '" + outputFile + "' could not be created");
                 }
             }
-            ImageIO.write(MapPanel.getMapPanel().getImage(), "png", outputFile);
+            ImageIO.write(getImage(), "png", outputFile);
             LOG.info("{} {}", localeString.getString("console_map_saveimage_done"), outputFile.getAbsolutePath());
         } catch (IOException e) {
             e.printStackTrace();

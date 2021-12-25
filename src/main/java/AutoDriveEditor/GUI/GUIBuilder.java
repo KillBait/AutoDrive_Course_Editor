@@ -1,20 +1,19 @@
 package AutoDriveEditor.GUI;
 
+import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import java.awt.*;
+
 import AutoDriveEditor.AutoDriveEditor;
 import AutoDriveEditor.Listeners.CurvePanelListener;
 import AutoDriveEditor.Listeners.EditorListener;
 import AutoDriveEditor.MapPanel.MapPanel;
 
-import javax.swing.*;
-import javax.swing.border.BevelBorder;
-import java.awt.*;
-
 import static AutoDriveEditor.GUI.GUIUtils.*;
-import static AutoDriveEditor.Locale.LocaleManager.localeString;
+import static AutoDriveEditor.Locale.LocaleManager.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.XMLConfig.EditorXML.quadSliderDefault;
-import static AutoDriveEditor.XMLConfig.EditorXML.quadSliderMax;
-import static AutoDriveEditor.XMLConfig.GameXML.oldConfigFormat;
+import static AutoDriveEditor.XMLConfig.EditorXML.*;
+import static AutoDriveEditor.XMLConfig.GameXML.*;
 import static javax.swing.BoxLayout.X_AXIS;
 import static javax.swing.BoxLayout.Y_AXIS;
 
@@ -272,15 +271,6 @@ public class GUIBuilder {
         textArea.setEditable(false);
         textPanel.add(scrollPane, BorderLayout.CENTER);
         return textPanel;
-    }
-
-    public static void showInTextArea(String text, boolean clearAll) {
-        if (clearAll) {
-            textArea.selectAll();
-            textArea.replaceSelection("");
-        }
-        //LOG.info(text);
-        textArea.append(text + "\n");
     }
 
     public static void updateGUIButtons(boolean enabled) {

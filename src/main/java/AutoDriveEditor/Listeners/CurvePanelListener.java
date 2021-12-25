@@ -1,18 +1,17 @@
 package AutoDriveEditor.Listeners;
 
-import AutoDriveEditor.GUI.GUIBuilder;
-import AutoDriveEditor.MapPanel.MapPanel;
-
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
+import AutoDriveEditor.GUI.GUIBuilder;
+import AutoDriveEditor.MapPanel.MapPanel;
+
 import static AutoDriveEditor.GUI.GUIBuilder.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.RoadNetwork.MapNode.NODE_STANDARD;
-import static AutoDriveEditor.RoadNetwork.MapNode.NODE_SUBPRIO;
+import static AutoDriveEditor.RoadNetwork.MapNode.*;
 
 public class CurvePanelListener implements ItemListener, ChangeListener {
 

@@ -1,10 +1,5 @@
 package AutoDriveEditor.Listeners;
 
-import AutoDriveEditor.GUI.MenuBuilder;
-import AutoDriveEditor.Managers.CopyPasteManager;
-import AutoDriveEditor.MapPanel.MapPanel;
-import AutoDriveEditor.Utils.FileUtils;
-
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -14,12 +9,18 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
+import AutoDriveEditor.Managers.CopyPasteManager;
+import AutoDriveEditor.MapPanel.MapPanel;
+
 import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
+import static AutoDriveEditor.GUI.GUIUtils.showInTextArea;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.Import.ImportManager.*;
 import static AutoDriveEditor.Locale.LocaleManager.*;
+import static AutoDriveEditor.MapPanel.MapImage.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
+import static AutoDriveEditor.Utils.FileUtils.*;
 import static AutoDriveEditor.Utils.LoggerUtils.*;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 import static AutoDriveEditor.XMLConfig.GameXML.*;
@@ -29,9 +30,9 @@ public class MenuListener implements ActionListener, ItemListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         LOG.info("ActionCommand: {}", e.getActionCommand());
+        getMapPanel().isMultiSelectAllowed = false;
 
         JFileChooser fc = new JFileChooser();
-        getMapPanel().isMultiSelectAllowed = false;
 
         switch (e.getActionCommand()) {
             case MENU_LOAD_CONFIG:
@@ -41,6 +42,7 @@ public class MenuListener implements ActionListener, ItemListener {
                         saveConfigFile(null);
                     }
                 }
+
                 fc.setDialogTitle(localeString.getString("dialog_load_config_title"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fc.setAcceptAllFileFilterUsed(false);
@@ -48,14 +50,17 @@ public class MenuListener implements ActionListener, ItemListener {
                 fc.addChoosableFileFilter(filter);
 
                 if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
-                    MapPanel.getMapPanel().confirmCurve();
+                    getMapPanel().confirmCurve();
                     File fileName = fc.getSelectedFile();
                     loadConfigFile(fileName);
+                    loadHeightMap(fileName);
                     forceMapImageRedraw();
                     isUsingConvertedImage = false;
-                    MenuBuilder.saveImageEnabled(false);
+                    saveImageEnabled(false);
                     getMapPanel().setStale(false);
+
                 }
+
                 break;
             case MENU_SAVE_CONFIG:
                 saveConfigFile(null);
@@ -65,22 +70,20 @@ public class MenuListener implements ActionListener, ItemListener {
                 fc.setDialogTitle(localeString.getString("dialog_save_destination"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fc.setAcceptAllFileFilterUsed(false);
-                FileNameExtensionFilter savefilter = new FileNameExtensionFilter("AutoDrive config", "xml");
+                FileNameExtensionFilter saveFilter = new FileNameExtensionFilter("AutoDrive config", "xml");
                 fc.setSelectedFile(xmlConfigFile);
-                fc.addChoosableFileFilter(savefilter);
+                fc.addChoosableFileFilter(saveFilter);
 
                 if (fc.showSaveDialog(editor) == JFileChooser.APPROVE_OPTION) {
-                    LOG.info("{} {}", localeString.getString("console_config_saveas"), FileUtils.getSelectedFileWithExtension(fc));
-                    saveConfigFile(FileUtils.getSelectedFileWithExtension(fc).toString());
+                    LOG.info("{} {}", localeString.getString("console_config_saveas"), getSelectedFileWithExtension(fc));
+                    saveConfigFile(getSelectedFileWithExtension(fc).toString());
                 }
                 break;
             case MENU_EXIT:
                 editor.dispatchEvent(new WindowEvent(editor, WindowEvent.WINDOW_CLOSING));
                 break;
             case MENU_EDIT_CUT:
-                break;
             case MENU_EDIT_COPY:
-                break;
             case MENU_EDIT_PASTE:
                 break;
             case MENU_LOAD_IMAGE:
@@ -93,7 +96,7 @@ public class MenuListener implements ActionListener, ItemListener {
                         fileName = fc.getSelectedFile();
                         BufferedImage mapImage = ImageIO.read(fileName);
                         if (mapImage != null) {
-                            MapPanel.getMapPanel().setImage(mapImage);
+                            setImage(mapImage);
                             forceMapImageRedraw();
                             //MapPanel.getMapPanel().moveMapBy(0,1); // hacky way to get map image to refresh
                         }
@@ -105,9 +108,9 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_SAVE_IMAGE:
                 String currentPath;
                 if (!oldConfigFormat) {
-                    currentPath = FileUtils.getCurrentLocation() + "mapImages/" + roadMap.roadMapName + ".png";
+                    currentPath = getCurrentLocation() + "mapImages/" + roadMap.roadMapName + ".png";
                 } else {
-                    currentPath = FileUtils.getCurrentLocation() + "mapImages/unknown.png";
+                    currentPath = getCurrentLocation() + "mapImages/unknown.png";
                 }
 
                 LOG.info("currentpath = {}", currentPath);
@@ -140,7 +143,7 @@ public class MenuListener implements ActionListener, ItemListener {
                 fc.addChoosableFileFilter(imageFilter);
 
                 if (fc.showSaveDialog(editor) == JFileChooser.APPROVE_OPTION) {
-                    File saveImageFile = FileUtils.getSelectedFileWithExtension(fc);
+                    File saveImageFile = getSelectedFileWithExtension(fc);
                     if (saveImageFile.exists()) {
                         int response = JOptionPane.showConfirmDialog(editor, localeString.getString("dialog_mapimage_overwrite"), "File already exists " + roadMap.roadMapName + ".png", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                         if (response == JOptionPane.NO_OPTION) {
@@ -149,7 +152,7 @@ public class MenuListener implements ActionListener, ItemListener {
                         }
                     }
                     LOG.info("{} {}", localeString.getString("console_map_saveimage"), saveImageFile);
-                    exportMapImage(FileUtils.getSelectedFileWithExtension(fc).toString());
+                    exportMapImage(getSelectedFileWithExtension(fc).toString());
                 }
                 break;
             case MENU_IMPORT_FS19_DDS:
@@ -160,7 +163,7 @@ public class MenuListener implements ActionListener, ItemListener {
                     public boolean accept(File f) {
                         // always accept directory's
                         if (f.isDirectory()) return true;
-                        // but only files with a s pecific name
+                        // but only files with a specific name
                         return f.getName().equals("pda_map_H.dds");
                     }
 
@@ -179,7 +182,7 @@ public class MenuListener implements ActionListener, ItemListener {
                     boolean result = importFromFS19(fc.getSelectedFile().getAbsoluteFile().toString());
                     if (result) {
                         isUsingConvertedImage = true;
-                        MenuBuilder.saveImageEnabled(true);
+                        saveImageEnabled(true);
                     }
                 } else {
                     LOG.info("Cancelled FS19 PDA Image Import");
@@ -193,7 +196,7 @@ public class MenuListener implements ActionListener, ItemListener {
                     public boolean accept(File f) {
                         // always accept directory's
                         if (f.isDirectory()) return true;
-                        // but only files with a s pecific name
+                        // but only files with a specific name
                         return f.getName().equals("overview.dds");
                     }
 
@@ -212,7 +215,7 @@ public class MenuListener implements ActionListener, ItemListener {
                     boolean result = importFromFS22(fc.getSelectedFile().getAbsoluteFile().toString());
                     if (result) {
                         isUsingConvertedImage = true;
-                        MenuBuilder.saveImageEnabled(true);
+                        saveImageEnabled(true);
                     }
                 } else {
                     LOG.info("Cancelled FS22 PDA Image Import");
@@ -236,10 +239,10 @@ public class MenuListener implements ActionListener, ItemListener {
                 enableMultiSelect();
                 break;
             case MENU_GRID_SET:
-                MapPanel.getMapPanel().showGridSettingDialog();
+                getMapPanel().showGridSettingDialog();
                 break;
             case MENU_ROTATE_SET:
-                MapPanel.getMapPanel().showRotationSettingDialog();
+                getMapPanel().showRotationSettingDialog();
                 break;
             case MENU_ROTATE_CLOCKWISE:
                 CopyPasteManager.rotateSelected(rotationAngle);
@@ -255,6 +258,11 @@ public class MenuListener implements ActionListener, ItemListener {
                 break;
             case MENU_ABOUT:
                 showAbout();
+                break;
+            case MENU_HEIGHTMAP_FIX:
+                fixNodeHeight();
+                break;
+            case MENU_HEIGHTMAP_IMPORT:
                 break;
         }
 
@@ -299,6 +307,10 @@ public class MenuListener implements ActionListener, ItemListener {
                 break;
             case MENU_DEBUG_UNDO:
                 bDebugUndoRedo = button.isSelected();
+                break;
+            case MENU_DEBUG_HEIGHTMAP:
+                bDebugHeightMap = button.isSelected();
+                if (!button.isSelected()) showInTextArea("", true);
                 break;
             case MENU_DEBUG_TEST:
                 bDebugTest = button.isSelected();

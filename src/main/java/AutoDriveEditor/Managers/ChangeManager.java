@@ -1,19 +1,18 @@
 package AutoDriveEditor.Managers;
 
+import java.awt.geom.Point2D;
+import java.util.LinkedList;
+
 import AutoDriveEditor.MapPanel.LinearLine;
 import AutoDriveEditor.MapPanel.MapPanel;
 import AutoDriveEditor.RoadNetwork.MapMarker;
 import AutoDriveEditor.RoadNetwork.MapNode;
 
-import java.awt.geom.Point2D;
-import java.util.LinkedList;
-
-import static AutoDriveEditor.GUI.MenuBuilder.bDebugTest;
-import static AutoDriveEditor.GUI.MenuBuilder.bDebugUndoRedo;
+import static AutoDriveEditor.Listeners.MouseListener.*;
+import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.Utils.DebugUtils.startTimer;
-import static AutoDriveEditor.Utils.DebugUtils.stopTimer;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.Utils.DebugUtils.*;
+import static AutoDriveEditor.Utils.LoggerUtils.*;
 
 /**
  * Manages a Queue of Changables to perform undo and/or redo operations. Clients can add implementations of the Changeable
@@ -193,33 +192,13 @@ public class ChangeManager {
         }
 
         public void undo(){
-            for (int i = 0; i <= this.moveNodes.size() - 1 ; i++) {
-                MapNode mapNode = this.moveNodes.get(i);
-                if (bDebugUndoRedo) LOG.debug("Moving {} - {} , {} .. distance {} , {}", mapNode, mapNode.x, mapNode.z, this.diffX, this.diffY);
-                if (this.wasSnapMove) {
-                    Point2D p = worldPosToScreenPos(mapNode.x, mapNode.z);
-                    getMapPanel().lastX = (int)p.getX();
-                    getMapPanel().lastY = (int)p.getY();
-                    if (bDebugUndoRedo) LOG.info("setting lastX/lastY to node x/z");
-                }
-                getMapPanel().moveNodeBy(mapNode, -this.diffX, -this.diffY, true);
-                if (bDebugUndoRedo) LOG.debug("Moved {} - {} , {}", mapNode, mapNode.x, mapNode.z);
-            }
+            getMapPanel().moveNodeBy(this.moveNodes, -this.diffX, -this.diffY, true);
             getMapPanel().repaint();
             getMapPanel().setStale(this.isStale);
         }
 
         public void redo(){
-            for (int i = 0; i <= this.moveNodes.size() - 1 ; i++) {
-                MapNode mapNode = this.moveNodes.get(i);
-                if (this.wasSnapMove) {
-                    Point2D p = worldPosToScreenPos(mapNode.x, mapNode.z);
-                    getMapPanel().lastX = (int)p.getX();
-                    getMapPanel().lastY = (int)p.getY();
-                    if (bDebugUndoRedo) LOG.info("setting lastX/lastY to node x/z");
-                }
-                getMapPanel().moveNodeBy(mapNode, this.diffX, this.diffY, true);
-            }
+            getMapPanel().moveNodeBy(this.moveNodes, this.diffX, this.diffY, true);
             getMapPanel().repaint();
             getMapPanel().setStale(true);
         }

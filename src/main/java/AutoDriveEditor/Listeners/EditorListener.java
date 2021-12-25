@@ -1,20 +1,20 @@
 package AutoDriveEditor.Listeners;
 
-import AutoDriveEditor.AutoDriveEditor;
-import AutoDriveEditor.GUI.GUIBuilder;
-import AutoDriveEditor.MapPanel.MapPanel;
-
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
+import AutoDriveEditor.AutoDriveEditor;
+import AutoDriveEditor.GUI.GUIBuilder;
+import AutoDriveEditor.MapPanel.MapPanel;
+
 import static AutoDriveEditor.GUI.GUIBuilder.*;
 import static AutoDriveEditor.GUI.GUIImages.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.RoadNetwork.MapNode.NODE_STANDARD;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.RoadNetwork.MapNode.*;
+import static AutoDriveEditor.Utils.LoggerUtils.*;
 
 
 public class EditorListener implements ActionListener, MouseListener {
@@ -39,13 +39,16 @@ public class EditorListener implements ActionListener, MouseListener {
             case BUTTON_CONNECT_NODES:
                 editorState = EDITORSTATE_CONNECTING;
                 connectionType = CONNECTION_STANDARD;
+                MapPanel.getMapPanel().isMultiSelectAllowed = false;
                 break;
             case BUTTON_CREATE_PRIMARY_NODE:
                 editorState = EDITORSTATE_CREATE_PRIMARY_NODE;
+                MapPanel.getMapPanel().isMultiSelectAllowed = false;
                 break;
             case BUTTON_CREATE_DUAL_CONNECTION:
                 editorState = EDITORSTATE_CONNECTING;
                 connectionType = CONNECTION_DUAL;
+                MapPanel.getMapPanel().isMultiSelectAllowed = false;
                 break;
             case BUTTON_CHANGE_NODE_PRIORITY:
                 editorState = EDITORSTATE_CHANGE_NODE_PRIORITY;
@@ -53,10 +56,12 @@ public class EditorListener implements ActionListener, MouseListener {
                 break;
             case BUTTON_CREATE_SUBPRIO_NODE:
                 editorState = EDITORSTATE_CREATE_SUBPRIO_NODE;
+                MapPanel.getMapPanel().isMultiSelectAllowed = false;
                 break;
             case BUTTON_CREATE_REVERSE_CONNECTION:
                 editorState = EDITORSTATE_CONNECTING;
                 connectionType = CONNECTION_REVERSE;
+                MapPanel.getMapPanel().isMultiSelectAllowed = false;
                 break;
             case BUTTON_REMOVE_NODES:
                 editorState = EDITORSTATE_DELETE_NODES;
@@ -64,13 +69,15 @@ public class EditorListener implements ActionListener, MouseListener {
                 break;
             case BUTTON_CREATE_DESTINATIONS:
                 editorState = EDITORSTATE_CREATING_DESTINATION;
+                MapPanel.getMapPanel().isMultiSelectAllowed = false;
                 break;
             case BUTTON_EDIT_DESTINATIONS_GROUPS:
                 editorState = EDITORSTATE_EDITING_DESTINATION;
+                MapPanel.getMapPanel().isMultiSelectAllowed = false;
                 break;
             case BUTTON_DELETE_DESTINATIONS:
                 editorState = EDITORSTATE_DELETING_DESTINATION;
-                MapPanel.getMapPanel().isMultiSelectAllowed = true;
+                MapPanel.getMapPanel().isMultiSelectAllowed = false;
                 break;
             case BUTTON_ALIGN_HORIZONTAL:
                 editorState = EDITORSTATE_ALIGN_HORIZONTAL;
@@ -82,9 +89,11 @@ public class EditorListener implements ActionListener, MouseListener {
                 break;
             case BUTTON_CREATE_QUADRATICBEZIER:
                 editorState = EDITORSTATE_QUADRATICBEZIER;
+                MapPanel.getMapPanel().isMultiSelectAllowed = false;
                 break;
             case BUTTON_CREATE_CUBICBEZIER:
                 editorState = EDITORSTATE_CUBICBEZIER;
+                MapPanel.getMapPanel().isMultiSelectAllowed = false;
                 break;
             case BUTTON_COMMIT_CURVE:
                 MapPanel.getMapPanel().confirmCurve();

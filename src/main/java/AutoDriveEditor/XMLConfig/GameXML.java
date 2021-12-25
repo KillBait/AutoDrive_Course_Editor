@@ -1,8 +1,5 @@
 package AutoDriveEditor.XMLConfig;
 
-import AutoDriveEditor.RoadNetwork.MapMarker;
-import AutoDriveEditor.RoadNetwork.MapNode;
-import AutoDriveEditor.RoadNetwork.RoadMap;
 import com.vdurmont.semver4j.Semver;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -30,13 +27,16 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 
+import AutoDriveEditor.RoadNetwork.MapMarker;
+import AutoDriveEditor.RoadNetwork.MapNode;
+import AutoDriveEditor.RoadNetwork.RoadMap;
+
 import static AutoDriveEditor.AutoDriveEditor.*;
-import static AutoDriveEditor.Locale.LocaleManager.localeString;
-import static AutoDriveEditor.MapPanel.MapImage.loadMapImage;
-import static AutoDriveEditor.MapPanel.MapPanel.getMapPanel;
-import static AutoDriveEditor.MapPanel.MapPanel.roadMap;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
-import static AutoDriveEditor.Utils.XMLUtils.getTextValue;
+import static AutoDriveEditor.Locale.LocaleManager.*;
+import static AutoDriveEditor.MapPanel.MapImage.*;
+import static AutoDriveEditor.MapPanel.MapPanel.*;
+import static AutoDriveEditor.Utils.LoggerUtils.*;
+import static AutoDriveEditor.Utils.XMLUtils.*;
 
 public class GameXML {
 
@@ -52,10 +52,15 @@ public class GameXML {
         LOG.info("loadFile: {}", fXmlFile.getAbsolutePath());
 
         try {
-            getMapPanel().setRoadMap(loadXmlConfigFile(fXmlFile));
-            editor.setTitle(AUTODRIVE_COURSE_EDITOR_TITLE + " - " + fXmlFile.getAbsolutePath());
-            xmlConfigFile = fXmlFile;
-            loadMapImage(roadMap.roadMapName);
+            RoadMap roadMap = loadXmlConfigFile(fXmlFile);
+            if (roadMap != null) {
+                getMapPanel().setRoadMap(roadMap);
+                editor.setTitle(AUTODRIVE_COURSE_EDITOR_TITLE + " - " + fXmlFile.getAbsolutePath());
+                xmlConfigFile = fXmlFile;
+                loadMapImage(roadMap.roadMapName);
+            } else {
+                JOptionPane.showMessageDialog(editor, localeString.getString("dialog_config_unknown"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
+            }
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
             JOptionPane.showMessageDialog(editor, localeString.getString("dialog_config_load_failed"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
@@ -84,6 +89,13 @@ public class GameXML {
         Document doc = dBuilder.parse(fXmlFile);
         doc.getDocumentElement().normalize();
 
+        if (!doc.getDocumentElement().getNodeName().equals("AutoDrive")) {
+            LOG.info("Not an autodrive Config");
+            return null;
+        }
+
+        LOG.info("{} :{}", localeString.getString("console_root_node"), doc.getDocumentElement().getNodeName());
+
         if (getTextValue(null, doc.getDocumentElement(), "markerID") != null) {
             JOptionPane.showConfirmDialog(editor, "" + localeString.getString("console_config_unsupported1") + "\n\n" + localeString.getString("console_config_unsupported2"), "AutoDrive", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE);
             LOG.info("## {}",localeString.getString("console_config_unsupported1"));
@@ -102,8 +114,6 @@ public class GameXML {
             LOG.info("{} {}", localeString.getString("console_config_version"), version);
             oldConfigFormat = false;
         }
-
-        LOG.info("{} :{}", localeString.getString("console_root_node"), doc.getDocumentElement().getNodeName());
 
         NodeList markerList = doc.getElementsByTagName("mapmarker");
         LinkedList<MapMarker> mapMarkers = new LinkedList<>();

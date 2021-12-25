@@ -1,5 +1,11 @@
 package AutoDriveEditor;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.Objects;
+
 import AutoDriveEditor.GUI.GUIBuilder;
 import AutoDriveEditor.GUI.MenuBuilder;
 import AutoDriveEditor.Handlers.GlobalExceptionHandler;
@@ -9,26 +15,16 @@ import AutoDriveEditor.Locale.LocaleManager;
 import AutoDriveEditor.Managers.ChangeManager;
 import AutoDriveEditor.Managers.VersionManager;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.util.Objects;
-
-import static AutoDriveEditor.GUI.GUIImages.loadIcons;
-import static AutoDriveEditor.GUI.GUIImages.tractorImage;
-import static AutoDriveEditor.Locale.LocaleManager.localeString;
+import static AutoDriveEditor.GUI.GUIImages.*;
+import static AutoDriveEditor.Locale.LocaleManager.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.Utils.LoggerUtils.*;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
-import static AutoDriveEditor.XMLConfig.GameXML.saveConfigFile;
-import static AutoDriveEditor.XMLConfig.GameXML.xmlConfigFile;
-
-
+import static AutoDriveEditor.XMLConfig.GameXML.*;
 
 public class AutoDriveEditor extends JFrame {
 
-    public static final String AUTODRIVE_INTERNAL_VERSION = "0.51.0";
+    public static final String AUTODRIVE_INTERNAL_VERSION = "0.60.0";
     public static final String AUTODRIVE_COURSE_EDITOR_TITLE = "AutoDrive Course Editor " + AUTODRIVE_INTERNAL_VERSION + " Beta";
 
 
@@ -39,7 +35,6 @@ public class AutoDriveEditor extends JFrame {
 
     public static boolean DEBUG = false;
     public static boolean EXPERIMENTAL = false;
-    private String lastRunVersion;
 
     public AutoDriveEditor() {
         super();
@@ -52,6 +47,10 @@ public class AutoDriveEditor extends JFrame {
         loadEditorXMLConfig();
         setPreferredSize(new Dimension(1024,768));
         addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent we) {
+                if (!DEBUG) { VersionManager.updateCheck(); }
+            }
             @Override
             public void windowClosing(WindowEvent e) {
                 if (getMapPanel().isStale()) {
@@ -100,21 +99,10 @@ public class AutoDriveEditor extends JFrame {
         }
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        VersionManager.getVersionXML();
-        if (lastRunVersion != null && !lastRunVersion.equals(AUTODRIVE_INTERNAL_VERSION)) {
-            LOG.info("Version Updated Detected");
-            // TODO display new version notes
-        }
-
         changeManager = new ChangeManager();
-
-
-        LOG.info("Setup Complete....");
     }
 
     public static void main(String[] args) {
-
-        //System.setProperty("sun.java2d.opengl", "True");
 
         // set look and feel to the system look and feel
         try {

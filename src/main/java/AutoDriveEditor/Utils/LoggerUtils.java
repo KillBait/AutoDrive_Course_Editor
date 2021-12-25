@@ -1,8 +1,9 @@
 package AutoDriveEditor.Utils;
 
-import AutoDriveEditor.AutoDriveEditor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import AutoDriveEditor.AutoDriveEditor;
 
 public class LoggerUtils {
 
