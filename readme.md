@@ -28,3 +28,6 @@ the collection, it will help other people.. Help with pull requests can be found
 
 The Editor does not currently have a license attached to it.
 
+## Credits
+
+**@Stephan_S** - The creator of the AutoDrive mod and original editor. With his permission i have taken over maintaining this editor.
