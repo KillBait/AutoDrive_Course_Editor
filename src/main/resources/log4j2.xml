@@ -17,7 +17,7 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Logger name="de.adEditor" level="debug" additivity="true">
+        <Logger name="AutoDriveEditor" level="debug" additivity="true">
             <appender-ref ref="fileLogger" level="debug" />
         </Logger>
         <Root level="debug" additivity="false">
