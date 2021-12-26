@@ -11,6 +11,8 @@ import AutoDriveEditor.RoadNetwork.MapNode;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
+import static AutoDriveEditor.Listeners.MouseListener.prevMousePosX;
+import static AutoDriveEditor.Listeners.MouseListener.prevMousePosY;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.RoadNetwork.MapNode.*;
 import static AutoDriveEditor.Utils.LoggerUtils.*;
@@ -143,7 +145,7 @@ public class QuadCurve extends MouseAdapter {
         return this.curveNodesList != null && this.controlPoint1 != null && this.curveNodesList.size() > 2;
     }
 
-    public void updateControlPoint(double diffX, double diffY) {
+    private void updateVirtualControlPoint(double diffX, double diffY) {
         if (editorState == GUIBuilder.EDITORSTATE_QUADRATICBEZIER) {
             this.virtualControlPoint1.x += diffX * movementScaler;
             this.virtualControlPoint1.y += diffY * movementScaler;
@@ -151,22 +153,32 @@ public class QuadCurve extends MouseAdapter {
             this.virtualControlPoint1.x += diffX;
             this.virtualControlPoint1.y += diffY;
         }
+
+    }
+
+    public void updateControlPoint(double diffX, double diffY) {
+        controlPoint1.x += diffX;
+        controlPoint1.z += diffY;
+        updateVirtualControlPoint(diffX, diffY);
         this.updateCurve();
     }
 
-    public void  moveControlPoint(double diffX, double diffY) {
-        double newX, newY;
-        double scaledDiffX, scaledDiffY;
+    public void moveControlPoint(double diffX, double diffY) {
+        double scaledDiffX;
+        double scaledDiffY;
         if (bGridSnap) {
+            Point2D p = screenPosToWorldPos((int) (prevMousePosX + diffX), (int) (prevMousePosY + diffY));
+            double newX, newY;
             if (bGridSnapSubs) {
-                newX = Math.round(controlPoint1.x / (gridSpacingX / (gridSubDivisions + 1))) * (gridSpacingX / (gridSubDivisions + 1));
-                newY = Math.round(controlPoint1.z / (gridSpacingY / (gridSubDivisions + 1))) * (gridSpacingY / (gridSubDivisions + 1));
+                newX = Math.round(p.getX() / (gridSpacingX / (gridSubDivisions + 1))) * (gridSpacingX / (gridSubDivisions + 1));
+                newY = Math.round(p.getY() / (gridSpacingY / (gridSubDivisions + 1))) * (gridSpacingY / (gridSubDivisions + 1));
             } else {
-                newX = Math.round(controlPoint1.x / gridSpacingX) * gridSpacingX;
-                newY = Math.round(controlPoint1.z / gridSpacingY) * gridSpacingY;
+                newX = Math.round(p.getX() / gridSpacingX) * gridSpacingX;
+                newY = Math.round(p.getY() / gridSpacingY) * gridSpacingY;
             }
             scaledDiffX = newX - controlPoint1.x;
             scaledDiffY = newY - controlPoint1.z;
+
         } else {
             scaledDiffX = (diffX * mapZoomFactor) / zoomLevel;
             scaledDiffY = (diffY * mapZoomFactor) / zoomLevel;
@@ -174,9 +186,11 @@ public class QuadCurve extends MouseAdapter {
 
         controlPoint1.x += scaledDiffX;
         controlPoint1.z += scaledDiffY;
-        updateControlPoint(scaledDiffX, scaledDiffY);
-
+        updateVirtualControlPoint(scaledDiffX, scaledDiffY);
+        this.updateCurve();
     }
+
+
 
     public boolean isReversePath() {
         return isReversePath;

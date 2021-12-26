@@ -21,10 +21,9 @@ import java.net.URL;
 import java.net.URLConnection;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
-import static AutoDriveEditor.Locale.LocaleManager.localeString;
 import static AutoDriveEditor.Utils.LoggerUtils.*;
 import static AutoDriveEditor.Utils.XMLUtils.*;
-import static AutoDriveEditor.XMLConfig.EditorXML.bShowUpdateMessage;
+import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
 public class VersionManager {
 
@@ -35,7 +34,7 @@ public class VersionManager {
         InputStream in = null;
         URL url;
         try {
-            url = new URL("https://github.com/KillBait/AutoDrive_Course_Editor/raw/refactor/version.xml");
+            url = new URL("https://github.com/KillBait/AutoDrive_Course_Editor/raw/master/version.xml");
             URLConnection urlConnection = url.openConnection();
             in = new BufferedInputStream(urlConnection.getInputStream());
         } catch (FileNotFoundException e) {
@@ -53,8 +52,8 @@ public class VersionManager {
                 Element e = doc.getDocumentElement();
 
                 String remoteVersion = getTextValue(null, e, "latest_version");
-                Semver remoteSem = new Semver(remoteVersion);
-                if (remoteSem.isGreaterThan(AUTODRIVE_INTERNAL_VERSION)) {
+                Semver localSem = new Semver(AUTODRIVE_INTERNAL_VERSION);
+                if (localSem.isLowerThan(remoteVersion)) {
                     if (bShowUpdateMessage) {
                         LOG.info("Update is available... Current version {} is lower than remote version {}", AUTODRIVE_INTERNAL_VERSION, remoteVersion);
                         String mainText = "<center>AutoDrive Editor Update is available<br><br>Current Version v" + AUTODRIVE_INTERNAL_VERSION + "<br><br><b>New Version v" + remoteVersion;
@@ -63,7 +62,7 @@ public class VersionManager {
                         JOptionPane.showMessageDialog(editor, link, "AutoDrive", JOptionPane.PLAIN_MESSAGE);
                     }
                     bShowUpdateMessage = false;
-                } else if (remoteSem.isEqualTo(remoteVersion)){
+                } else if (localSem.isEqualTo(remoteVersion)){
                     LOG.info("No update available... Remote version {} matches current version", remoteVersion);
                     bShowUpdateMessage = true;
                 } else {

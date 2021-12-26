@@ -169,7 +169,8 @@ public class MapImage {
             g.dispose();
         } catch (IOException e) {
             JOptionPane.showMessageDialog(editor, localeString.getString("dialog_heightmap_not_found"), localeString.getString("dialog_heightmap_not_found_title"), JOptionPane.ERROR_MESSAGE);
-
+            LOG.info("Failed to load HeightMap");
+            fixNodesMenuItem.setEnabled(false);
             e.printStackTrace();
         }
     }
