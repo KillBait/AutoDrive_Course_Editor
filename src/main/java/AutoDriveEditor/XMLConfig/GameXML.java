@@ -104,14 +104,16 @@ public class GameXML {
         } else {
             String version = getTextValue(null, doc.getDocumentElement(), "version");
             Semver configSemver = new Semver(version);
-            if (configSemver.isLowerThan("2.0.0.0")) {
+            //version = "1.1.1.6";//Semver configSemver = new Semver(version);
+
+            if (configSemver.getMajor() == 1 ) {
                 LOG.info("FS19 Config detected");
                 configVersion = FS19_CONFIG;
-            } else if (configSemver.isGreaterThanOrEqualTo("2.0.0.0")) {
+            } else if (configSemver.getMajor() == 2) {
                 LOG.info("FS22 Config detected");
                 configVersion = FS22_CONFIG;
             };
-            LOG.info("{} {}", localeString.getString("console_config_version"), version);
+            LOG.info("{} '{}'", localeString.getString("console_config_version"), version);
             oldConfigFormat = false;
         }
 

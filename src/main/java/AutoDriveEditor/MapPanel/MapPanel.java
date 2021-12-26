@@ -855,11 +855,11 @@ public class MapPanel extends JPanel{
         }
         scaledDiffX = newX - movingNode.x;
         scaledDiffY = newY - movingNode.z;
-        movingNode.x += scaledDiffX;
-        movingNode.z += scaledDiffY;
+        //movingNode.x += scaledDiffX;
+        //movingNode.z += scaledDiffY;
 
         for (MapNode node : nodeList) {
-            if (node != movingNode) {
+            if (!node.isControlNode) {
                 if (node.x + scaledDiffX > -1024 * mapZoomFactor && node.x + scaledDiffX < 1024 * mapZoomFactor) {
                     node.x += scaledDiffX;
                 }
@@ -873,9 +873,9 @@ public class MapPanel extends JPanel{
                 } else if (node == quadCurve.getCurveEndNode()) {
                     quadCurve.setCurveEndNode(node);
                 }
-                if (node == quadCurve.getControlPoint()) {
-                    quadCurve.updateControlPoint(scaledDiffX, scaledDiffY);
-                }
+                    if (node == quadCurve.getControlPoint()) {
+                        quadCurve.updateControlPoint(scaledDiffX, scaledDiffY);
+                    }
             }
             if (isCubicCurveCreated) {
                 if (node == cubicCurve.getCurveStartNode()) {
@@ -917,20 +917,23 @@ public class MapPanel extends JPanel{
                 scaledDiffY = (diffY * mapZoomFactor) / zoomLevel;
             }
 
-            if (node.x + scaledDiffX > -1024 * mapZoomFactor && node.x + scaledDiffX < 1024 * mapZoomFactor) {
-                if (bGridSnap && !snapOverride) {
-                    node.x = (double) Math.round((node.x + scaledDiffX) * 50) / 50;
-                } else {
-                    node.x += scaledDiffX;
+            if (!node.isControlNode) {
+                if (node.x + scaledDiffX > -1024 * mapZoomFactor && node.x + scaledDiffX < 1024 * mapZoomFactor) {
+                    if (bGridSnap && !snapOverride) {
+                        node.x = (double) Math.round((node.x + scaledDiffX) * 50) / 50;
+                    } else {
+                        node.x += scaledDiffX;
+                    }
+                }
+                if (node.z + scaledDiffY > -1024 * mapZoomFactor && node.z + scaledDiffY < 1024 * mapZoomFactor) {
+                    if (bGridSnap && !snapOverride) {
+                        node.z = (double) Math.round((node.z + scaledDiffY) * 50) / 50;
+                    } else {
+                        node.z += scaledDiffY;
+                    }
                 }
             }
-            if (node.z + scaledDiffY > -1024 * mapZoomFactor && node.z + scaledDiffY < 1024 * mapZoomFactor) {
-                if (bGridSnap && !snapOverride) {
-                    node.z = (double) Math.round((node.z + scaledDiffY) * 50) / 50;
-                } else {
-                    node.z += scaledDiffY;
-                }
-            }
+
             if (isQuadCurveCreated) {
                 if (node == quadCurve.getCurveStartNode()) {
                     quadCurve.setCurveStartNode(node);
@@ -1280,7 +1283,7 @@ public class MapPanel extends JPanel{
                    controlPoint1.isSelected = true;
                }
            }
-           Point2D nodePos2 = worldPosToScreenPos(controlPoint1.x, controlPoint1.z);
+           Point2D nodePos2 = worldPosToScreenPos(controlPoint2.x, controlPoint2.z);
            if (screenStartX < nodePos2.getX() + currentNodeSize && (screenStartX + width) > nodePos2.getX() - currentNodeSize && screenStartY < nodePos2.getY() + currentNodeSize && (screenStartY + height) > nodePos2.getY() - currentNodeSize) {
                if (multiSelectList.contains(controlPoint2)) {
                    multiSelectList.remove(controlPoint2);
@@ -1477,26 +1480,28 @@ public class MapPanel extends JPanel{
         if (isDraggingNode) {
             moveDiffX += diffX;
             moveDiffY += diffY;
-            if (editorState== EDITORSTATE_MOVING) {
+            //if (editorState== EDITORSTATE_MOVING) {
                 if (bGridSnap) {
                     snapMoveNodeBy(multiSelectList, diffX, diffY, false);
                 } else {
                     moveNodeBy(multiSelectList, diffX, diffY, false);
                 }
 
-            }
+            //}
         }
 
         if (isControlNodeSelected) {
-            if (quadCurve != null && movingNode == quadCurve.getControlPoint()) {
-                quadCurve.moveControlPoint(diffX, diffY);
+            if (quadCurve != null) {
+                if (movingNode == quadCurve.getControlPoint()) {
+                    quadCurve.moveControlPoint(diffX, diffY);
+                }
             }
             if (cubicCurve != null) {
                 if ( movingNode == cubicCurve.getControlPoint1()) {
-                    cubicCurve.updateControlPoint1(diffX, diffY);
+                    cubicCurve.moveControlPoint1(diffX, diffY);
                 }
                 if ( movingNode == cubicCurve.getControlPoint2()) {
-                    cubicCurve.updateControlPoint2(diffX, diffY);
+                    cubicCurve.moveControlPoint2(diffX, diffY);
                 }
             }
         }

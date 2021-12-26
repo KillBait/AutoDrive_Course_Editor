@@ -10,6 +10,8 @@ import AutoDriveEditor.RoadNetwork.MapNode;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
+import static AutoDriveEditor.Listeners.MouseListener.prevMousePosX;
+import static AutoDriveEditor.Listeners.MouseListener.prevMousePosY;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.RoadNetwork.MapNode.*;
 import static AutoDriveEditor.Utils.LoggerUtils.*;
@@ -146,7 +148,7 @@ public class CubicCurve {
         return this.curveNodesList != null && this.controlPoint1 !=null && this.controlPoint2 != null && this.curveNodesList.size() > 2;
     }
 
-    public void updateControlPoint1(double diffX, double diffY) {
+    public void updateVirtualControlPoint1(double diffX, double diffY) {
         if (editorState == GUIBuilder.EDITORSTATE_CUBICBEZIER) {
             this.virtualControlPoint1.x += diffX * movementScaler;
             this.virtualControlPoint1.y += diffY * movementScaler;
@@ -158,7 +160,7 @@ public class CubicCurve {
         this.updateCurve();
     }
 
-    public void updateControlPoint2(double diffX, double diffY) {
+    public void updateVirtualControlPoint2(double diffX, double diffY) {
         if (editorState == GUIBuilder.EDITORSTATE_CUBICBEZIER) {
             this.virtualControlPoint2.x += diffX * movementScaler;
             this.virtualControlPoint2.y += diffY * movementScaler;
@@ -167,6 +169,60 @@ public class CubicCurve {
             this.virtualControlPoint2.y += diffY;
         }
         this.updateCurve();
+    }
+
+    public void updateControlPoint1(double diffX, double diffY) {
+        controlPoint1.x += diffX;
+        controlPoint1.z += diffY;
+        updateVirtualControlPoint1(diffX, diffY);
+        updateCurve();
+    }
+
+    public void updateControlPoint2(double diffX, double diffY) {
+        controlPoint2.x += diffX;
+        controlPoint2.z += diffY;
+        updateVirtualControlPoint2(diffX, diffY);
+        updateCurve();
+    }
+
+    public void moveControlPoint1(double diffX, double diffY) {
+        Point2D point = calcScaledDifference(this.controlPoint1, diffX, diffY);
+        controlPoint1.x += point.getX();
+        controlPoint1.z += point.getY();
+        updateVirtualControlPoint1(point.getX(), point.getY());
+        this.updateCurve();
+    }
+
+    public void moveControlPoint2(double diffX, double diffY) {
+        Point2D point = calcScaledDifference(this.controlPoint2, diffX, diffY);
+        controlPoint2.x += point.getX();
+        controlPoint2.z += point.getY();
+        updateVirtualControlPoint2(point.getX(), point.getY());
+        this.updateCurve();
+    }
+
+
+    private Point2D calcScaledDifference(MapNode node, double diffX, double diffY) {
+        double scaledDiffX;
+        double scaledDiffY;
+        if (bGridSnap) {
+            Point2D p = screenPosToWorldPos((int) (prevMousePosX + diffX), (int) (prevMousePosY + diffY));
+            double newX, newY;
+            if (bGridSnapSubs) {
+                newX = Math.round(p.getX() / (gridSpacingX / (gridSubDivisions + 1))) * (gridSpacingX / (gridSubDivisions + 1));
+                newY = Math.round(p.getY() / (gridSpacingY / (gridSubDivisions + 1))) * (gridSpacingY / (gridSubDivisions + 1));
+            } else {
+                newX = Math.round(p.getX() / gridSpacingX) * gridSpacingX;
+                newY = Math.round(p.getY() / gridSpacingY) * gridSpacingY;
+            }
+            scaledDiffX = newX - node.x;
+            scaledDiffY = newY - node.z;
+
+        } else {
+            scaledDiffX = (diffX * mapZoomFactor) / zoomLevel;
+            scaledDiffY = (diffY * mapZoomFactor) / zoomLevel;
+        }
+        return new Point2D.Double(scaledDiffX, scaledDiffY);
     }
 
     public boolean isReversePath() { return isReversePath; }
