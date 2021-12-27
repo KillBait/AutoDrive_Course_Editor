@@ -1,6 +1,5 @@
 package AutoDriveEditor.Managers;
 
-import java.awt.geom.Point2D;
 import java.util.LinkedList;
 
 import AutoDriveEditor.MapPanel.LinearLine;
@@ -8,7 +7,7 @@ import AutoDriveEditor.MapPanel.MapPanel;
 import AutoDriveEditor.RoadNetwork.MapMarker;
 import AutoDriveEditor.RoadNetwork.MapNode;
 
-import static AutoDriveEditor.Listeners.MouseListener.*;
+import static AutoDriveEditor.AutoDriveEditor.EXPERIMENTAL;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.DebugUtils.*;
@@ -262,12 +261,12 @@ public class ChangeManager {
     // Delete Node
     //
 
-    public static class RemoveNodeChanger implements Changeable{
+    public static class DeleteNodeChanger implements Changeable{
 
         private LinkedList<NodeLinks> nodeListToDelete = new LinkedList<>();
         private final boolean isStale;
 
-        public RemoveNodeChanger(LinkedList<NodeLinks> nodeLinks){
+        public DeleteNodeChanger(LinkedList<NodeLinks> nodeLinks){
             super();
             this.nodeListToDelete =  (LinkedList<NodeLinks>) nodeLinks.clone();
             this.isStale = getMapPanel().isStale();
@@ -288,13 +287,13 @@ public class ChangeManager {
                 }
             }
 
-            if (bDebugTest) {
+            /*if (!bDebugTest) {
                 LinkedList<MapNode> nodes = getMapPanel().getRoadMap().mapNodes;
                 for (int i = 0; i <= nodes.size() - 1 ; i++) {
                     MapNode mapNode = nodes.get(i);
                     mapNode.id = i+1;
                 }
-            }
+            }*/
 
             if (bDebugTest) LOG.info("result = {}", stopTimer());
             getMapPanel().repaint();

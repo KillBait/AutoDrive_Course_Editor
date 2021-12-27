@@ -50,7 +50,7 @@ public class CopyPasteManager {
         for (MapNode node : nodesToCopy) {
             addToDeleteList(node);
         }
-        changeManager.addChangeable( new ChangeManager.RemoveNodeChanger(deleteNodeList));
+        changeManager.addChangeable( new ChangeManager.DeleteNodeChanger(deleteNodeList));
         CopySelection(nodesToCopy);
         MapPanel.getMapPanel().removeNodes();
         clearMultiSelection();

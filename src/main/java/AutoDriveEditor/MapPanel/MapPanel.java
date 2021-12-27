@@ -1204,7 +1204,7 @@ public class MapPanel extends JPanel{
             addToDeleteList(node);
             if (bDebugUndoRedo) LOG.info("Added ID {} to delete list", node.id);
         }
-        changeManager.addChangeable( new RemoveNodeChanger(deleteNodeList));
+        changeManager.addChangeable( new DeleteNodeChanger(deleteNodeList));
         removeNodes();
         deleteNodeList.clear();
         clearMultiSelection();
@@ -1770,7 +1770,7 @@ public class MapPanel extends JPanel{
                 }
                 if (delete) {
                     addToDeleteList(movingNode);
-                    changeManager.addChangeable( new RemoveNodeChanger(deleteNodeList));
+                    changeManager.addChangeable( new DeleteNodeChanger(deleteNodeList));
                     removeNodes();
                     deleteNodeList.clear();
                     clearMultiSelection();

@@ -2,6 +2,9 @@ package AutoDriveEditor.RoadNetwork;
 
 import java.util.LinkedList;
 
+import static AutoDriveEditor.GUI.MenuBuilder.*;
+import static AutoDriveEditor.Utils.LoggerUtils.*;
+
 public class RoadMap {
 
     public String roadMapName;
@@ -25,18 +28,16 @@ public class RoadMap {
         // increment the ID's of all nodes to the right of the mapNodes by +1
         // so when we insert the node all the id's match their index
 
-        /*if (!bDebugTest) {
-            LinkedList<MapNode> nodes = mapNodes;
-            if (GUIBuilder.bDebugUndoRedo) LOG.info("## insertMapNode() ## bumping all ID's of mapNodes index {} -> {} by +1", toAdd.id - 1, nodes.size() - 1);
-            for (int i = toAdd.id - 1; i <= nodes.size() - 1; i++) {
-                MapNode mapNode = nodes.get(i);
-                mapNode.id++;
-            }
-        }*/
+        LinkedList<MapNode> nodes = mapNodes;
+        if (bDebugUndoRedo) LOG.info("## insertMapNode() ## bumping all ID's of mapNodes index {} -> {} by +1", toAdd.id - 1, nodes.size() - 1);
+        for (int i = toAdd.id - 1; i <= nodes.size() - 1; i++) {
+            MapNode mapNode = nodes.get(i);
+            mapNode.id++;
+        }
 
         // insert the MapNode into the list
 
-        //if (GUIBuilder.bDebugUndoRedo) LOG.info("## insertMapNode() ## inserting index {} ( ID {} ) into mapNodes", toAdd.id - 1, toAdd.id );
+        if (bDebugUndoRedo) LOG.info("## insertMapNode() ## inserting index {} ( ID {} ) into mapNodes", toAdd.id - 1, toAdd.id );
         mapNodes.add(toAdd.id -1 , toAdd);
 
         //now we need to restore all the connections to/from it
