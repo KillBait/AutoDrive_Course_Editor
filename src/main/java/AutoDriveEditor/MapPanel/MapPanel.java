@@ -212,7 +212,9 @@ public class MapPanel extends JPanel{
                             for (MapNode mapNode : mapNodes) {
                                 Point2D nodePos = worldPosToScreenPos(mapNode.x, mapNode.z);
                                 if (0 < nodePos.getX() && width > nodePos.getX() && 0 < nodePos.getY() && height > nodePos.getY()) {
-                                    if (mapNode.isSelected && mapNode.flag == 0) {
+                                    if (mapNode.hasWarning && mapNode.isSelected) {
+                                        backBufferGraphics.drawImage(nodeImageSelected, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
+                                    } else if (mapNode.isSelected && mapNode.flag == 0) {
                                         backBufferGraphics.drawImage(nodeImageSelected, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
                                     } else if (mapNode.isSelected && mapNode.flag == 1) {
                                         backBufferGraphics.drawImage(subPrioNodeImageSelected, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
@@ -220,6 +222,10 @@ public class MapPanel extends JPanel{
                                         backBufferGraphics.drawImage(subPrioNodeImage, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
                                     } else {
                                         backBufferGraphics.drawImage(nodeImage, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
+                                    }
+
+                                    if (mapNode.hasWarning) {
+                                        backBufferGraphics.drawImage(warningImage, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), warningImage.getWidth(), warningImage.getHeight(), null);
                                     }
                                 }
 
@@ -272,8 +278,7 @@ public class MapPanel extends JPanel{
 
                         drawLock.lock();
                         try {
-                            for(int i = 0; i <= textList.size() -1; i++ ) {
-                                TextDisplayStore list = textList.get(i);
+                            for (TextDisplayStore list : textList) {
                                 backBufferGraphics.setColor(list.colour);
                                 backBufferGraphics.drawString(list.Text, (int) list.coord.getX(), (int) list.coord.getY());
                             }
@@ -323,7 +328,7 @@ public class MapPanel extends JPanel{
                                         colour = Color.CYAN;
                                     }
                                     Point2D startNodePos = worldPosToScreenPos(linearLine.getLineStartNode().x, linearLine.getLineStartNode().z);
-                                    Point2D mousePos = new Point2D.Double(mapPanel.getMousePosition().getX(),mapPanel.getMousePosition().getY());
+                                    Point2D mousePos = new Point2D.Double(currentMouseX,currentMouseY);
                                     drawLock.lock();
                                     try {
                                         backBufferGraphics.setColor(colour);
@@ -336,7 +341,7 @@ public class MapPanel extends JPanel{
                         } else {
 
                             Point2D startNodePos = worldPosToScreenPos(selected.x, selected.z);
-                            Point2D mousePos = new Point2D.Double(mapPanel.getMousePosition().getX(),mapPanel.getMousePosition().getY());
+                            Point2D mousePos = new Point2D.Double(currentMouseX,currentMouseY);
 
                             drawLock.lock();
                             try {
@@ -855,8 +860,6 @@ public class MapPanel extends JPanel{
         }
         scaledDiffX = newX - movingNode.x;
         scaledDiffY = newY - movingNode.z;
-        //movingNode.x += scaledDiffX;
-        //movingNode.z += scaledDiffY;
 
         for (MapNode node : nodeList) {
             if (!node.isControlNode) {
@@ -1009,6 +1012,8 @@ public class MapPanel extends JPanel{
             y = ((512 * mapZoomFactor)) + (int) Math.ceil(worldZ / 2);
             if (x <0) x = 0;
             if (y <0) y = 0;
+            if (x > 1024) x = 1024;
+            if (y > 1024) y = 1024;
             Color color = new Color(heightMapImage.getRGB((int)x, (int)y));
             return color.getRed() + 0.5;
         }
@@ -1450,6 +1455,22 @@ public class MapPanel extends JPanel{
     public void mouseMoved(int mousePosX, int mousePosY) {
         if (image != null) {
 
+            if (bDebugHeightMap) {
+                if (heightMapImage != null) {
+                    double x, y;
+                    Point2D point = MapPanel.screenPosToWorldPos(mousePosX, mousePosY);
+                    x = ((512 * mapZoomFactor)) + (int) Math.ceil(point.getX() / 2);
+                    y = ((512 * mapZoomFactor)) + (int) Math.ceil(point.getY() / 2);
+                    if (x <0) x = 0;
+                    if (y <0) y = 0;
+                    Color color = new Color(heightMapImage.getRGB((int)x, (int)y));
+                    String colourText="Heightmap R = " + color.getRed() + " , G = " + color.getGreen() + " , B = " + color.getBlue() + " , (" + ((color.getRed()<<8) + color.getGreen()) + ")";
+                    showInTextArea(colourText, true);
+                    String pointerText = "Mouse X = " + x + ", Y =" + y;
+                    showInTextArea(pointerText, false);
+                }
+            }
+
             if (editorState == EDITORSTATE_CONNECTING && selected != null) {
                 if (isDraggingRoute) {
                     Point2D pointerPos = screenPosToWorldPos(mousePosX, mousePosY);
@@ -1786,7 +1807,6 @@ public class MapPanel extends JPanel{
         if (!bMiddleMouseMove) isDragging = false;
         if (isDraggingNode) {
             if (bGridSnap || bGridSnapSubs) {
-
                 Point2D p = worldPosToScreenPos(movingNode.x, movingNode.z);
                 moveDiffX = (int) (p.getX() - preSnapX);
                 moveDiffY = (int) (p.getY() - preSnapY);
@@ -1973,7 +1993,8 @@ public class MapPanel extends JPanel{
             if (result == JOptionPane.OK_OPTION) {
                 for (MapNode node : roadMap.mapNodes) {
                     double heightMapY = getYValueFromHeightMap(node.x, node.z);
-                    if (node.y > heightMapY || node.y < heightMapY) {
+                    if (node.y == -1) {
+                        LOG.info("ID {} ({}) adjusting Y to {}", node.id, node.y, heightMapY);
                         node.y = heightMapY;
                     }
                 }
@@ -2323,5 +2344,55 @@ public class MapPanel extends JPanel{
                 if (!this.otherOutgoing.contains(outNode)) this.otherOutgoing.add(outNode);
             }
         }
+    }
+
+    public static void scanNetworkForOverlapNodes() {
+        if (DEBUG) startTimer();
+        int count = 0;
+
+        for (MapNode node : roadMap.mapNodes) {
+
+            int result = checkIfNodesOverlap(node);
+            if ( result > 0) {
+                count += 1;
+                node.hasWarning = true;
+                if (DEBUG) LOG.info("Found {} nodes overlapping ID {}", result, node.id);
+            } else {
+                node.hasWarning = false;
+            }
+        }
+        if (DEBUG) LOG.info("scan time = {}s ", (float)stopTimer()/1000);
+        if (DEBUG && count > 0) LOG.info("Roadmap nodes = {} --- Found {} nodes overlapping", roadMap.mapNodes.size(), count);
+        getMapPanel().repaint();
+    }
+
+    public static int checkIfNodesOverlap(MapNode node) {
+
+        int result = 0;
+
+        if (roadMap != null) {
+            double searchArea = 0.05;
+            double worldStartX = node.x - (searchArea / 2);
+            double worldStartY = node.z - (searchArea / 2);
+            double width = (node.x + (searchArea / 2)) - (node.x - (searchArea / 2));
+            double height = (node.z + (searchArea / 2)) - (node.z - (searchArea / 2));
+
+            for (MapNode mapNode : roadMap.mapNodes) {
+                if (mapNode != node) {
+                    //Point2D nodePos = worldPosToScreenPos(mapNode.x, mapNode.z);
+                    if (worldStartX < mapNode.x + searchArea &&
+                            (worldStartX + width) > mapNode.x - searchArea &&
+                            worldStartY < mapNode.z + searchArea &&
+                            (worldStartY + height) > mapNode.z - searchArea) {
+
+                        result += 1;
+                        mapNode.hasWarning = true;
+                        //mapNode.warningPos = new Point2D.Double(node.x, node.z);
+                        //LOG.info("     node {} - Found ID {}", node.id, mapNode.id);
+                    }
+                }
+            }
+        }
+        return result;
     }
 }

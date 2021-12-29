@@ -1,5 +1,6 @@
 package AutoDriveEditor.RoadNetwork;
 
+import java.awt.geom.Point2D;
 import java.util.LinkedList;
 
 public class MapNode {
@@ -14,6 +15,7 @@ public class MapNode {
     public int id, flag;
     public boolean isControlNode;
     public boolean isSelected;
+    public boolean hasWarning;
 
     public MapNode(int id, double x, double y, double z, int flag, boolean isSelected, boolean isControlNode) {
         this.id = id;
@@ -29,5 +31,6 @@ public class MapNode {
 
         this.isSelected = isSelected;
         this.isControlNode = isControlNode;
+        this.hasWarning = false;
     }
 }

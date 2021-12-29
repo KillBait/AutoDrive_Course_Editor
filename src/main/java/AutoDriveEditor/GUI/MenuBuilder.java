@@ -4,9 +4,9 @@ import javax.swing.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
-import AutoDriveEditor.AutoDriveEditor;
 import AutoDriveEditor.Listeners.MenuListener;
 
+import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
 import static AutoDriveEditor.GUI.GUIUtils.*;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
@@ -42,6 +42,7 @@ public class MenuBuilder {
     public static final String MENU_ROTATE_ANTICLOCKWISE_NINTY ="Rotate 90 Anticlockwise";
     public static final String MENU_ROTATE_CLOCKWISE="Rotate Clockwise";
     public static final String MENU_ROTATE_ANTICLOCKWISE="Rotate Anticlockwise";
+    public static final String MENU_SCAN_OVERLAP="Scan Overlap";
     public static final String MENU_ABOUT = "About";
 
 
@@ -96,8 +97,8 @@ public class MenuBuilder {
     public static boolean bDebugTest;
 
     public static void createMenu() {
-        JMenuItem menuItem;
-        JMenu fileMenu, editMenu, mapMenu, heightmapMenu, optionsMenu, helpMenu, subMenu, gridMenu, rotationMenu, debugMenu;
+        //JMenuItem menuItem;
+        JMenu fileMenu, editMenu, mapMenu, heightmapMenu, optionsMenu, helpMenu, subMenu, gridMenu, rotationMenu, fixItMenu, debugMenu;
 
 
         menuBar = new JMenuBar();
@@ -171,21 +172,27 @@ public class MenuBuilder {
         rotationMenu.addSeparator();
         makeMenuItem("menu_rotate_set_step", "menu_rotate_set_step_accstring", KeyEvent.VK_Y, InputEvent.SHIFT_DOWN_MASK, rotationMenu, menuListener, MENU_ROTATE_SET, true );
 
+        // Ctreate the FixIt menu
+
+        fixItMenu = makeMenu("menu_scan", KeyEvent.VK_S, "menu_scan_accstring", menuBar);
+        makeMenuItem("menu_scan_overlap", "menu_scan_overlap_accstring", KeyEvent.VK_O, InputEvent.ALT_DOWN_MASK, fixItMenu, menuListener, MENU_SCAN_OVERLAP, true);
+
         // Create the Help menu
 
         helpMenu = makeMenu("menu_help", KeyEvent.VK_H, "menu_help_accstring", menuBar);
         makeMenuItem("menu_help_about", "menu_help_about_accstring", KeyEvent.VK_H, InputEvent.ALT_DOWN_MASK, helpMenu, menuListener, MENU_ABOUT, true);
 
-        if (AutoDriveEditor.DEBUG) {
+        if (DEBUG) {
             debugMenu = makeMenu("menu_debug", KeyEvent.VK_D, "menu_debug_accstring", menuBar);
             makeCheckBoxMenuItem("menu_debug_showID", "menu_debug_showID_accstring", KeyEvent.VK_6, InputEvent.ALT_DOWN_MASK, bDebugShowID, debugMenu, menuListener, MENU_DEBUG_SHOWID);
-
             makeCheckBoxMenuItem("menu_debug_showselectedlocation", "menu_debug_showselectedlocation_accstring", KeyEvent.VK_7, InputEvent.ALT_DOWN_MASK, bDebugShowSelectedLocation, debugMenu, menuListener, MENU_DEBUG_SELECTED_LOCATION);
             makeCheckBoxMenuItem("menu_debug_profile", "menu_debug_profile_accstring", bDebugProfile, debugMenu, menuListener, MENU_DEBUG_PROFILE);
-            makeCheckBoxMenuItem("menu_debug_zoom", "menu_debug_zoom_accstring", bDebugZoomScale, debugMenu, menuListener, MENU_DEBUG_ZOOMSCALE);
             makeCheckBoxMenuItem("menu_debug_heightmap", "menu_debug_heightmap_accstring", bDebugHeightMap, debugMenu, menuListener, MENU_DEBUG_HEIGHTMAP);
-            makeCheckBoxMenuItem("menu_debug_test", "menu_debug_test_accstring", bDebugTest, debugMenu, menuListener, MENU_DEBUG_TEST);
+            if (EXPERIMENTAL) {
+                makeCheckBoxMenuItem("menu_debug_test", "menu_debug_test_accstring", bDebugTest, debugMenu, menuListener, MENU_DEBUG_TEST);
+            }
             debugMenu.addSeparator();
+            makeCheckBoxMenuItem("menu_debug_zoom", "menu_debug_zoom_accstring", bDebugZoomScale, debugMenu, menuListener, MENU_DEBUG_ZOOMSCALE);
             makeCheckBoxMenuItem("menu_debug_fileio", "menu_debug_fileio_accstring", bDebugFileIO, debugMenu, menuListener, MENU_DEBUG_FILEIO);
             makeCheckBoxMenuItem("menu_debug_undo", "menu_debug_undo_accstring", bDebugUndoRedo, debugMenu, menuListener, MENU_DEBUG_UNDO);
 

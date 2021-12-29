@@ -7,5 +7,5 @@ public class DebugUtils {
 
     public static void startTimer() { profileTimer = System.currentTimeMillis(); }
 
-    public static long stopTimer() { return System.currentTimeMillis() - profileTimer; }
+    public static long  stopTimer() { return System.currentTimeMillis() - profileTimer; }
 }

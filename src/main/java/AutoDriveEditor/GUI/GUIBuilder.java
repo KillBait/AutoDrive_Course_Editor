@@ -122,6 +122,7 @@ public class GUIBuilder {
     public static JPanel createButtonPanel(EditorListener editorListener) {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        //JToolBar buttonPanel = new JToolBar(BorderLayout.PAGE_START);
 
         //
         // Create node panel

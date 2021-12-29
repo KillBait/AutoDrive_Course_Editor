@@ -155,7 +155,7 @@ public class MapImage {
 
     }
 
-    public static void loadHeightMap(File path) {
+    public static void  loadHeightMap(File path) {
         BufferedImage heightImage;
         String pathStr = path.toString();
         //pathStr.replaceAll("/", "V\");
@@ -163,6 +163,7 @@ public class MapImage {
         LOG.info("HeightMap path = {}", launchPath);
         try {
             heightImage = ImageIO.read(new File(launchPath));
+            //heightMapImage = new BufferedImage(heightImage.getWidth(), heightImage.getHeight(), BufferedImage.TYPE_USHORT_565_RGB);
             heightMapImage = getNewBufferImage(heightImage.getWidth(), heightImage.getHeight());
             Graphics2D g = (Graphics2D) heightMapImage.getGraphics();
             g.drawImage( heightImage, 0, 0, heightImage.getWidth(), heightImage.getHeight(), null);

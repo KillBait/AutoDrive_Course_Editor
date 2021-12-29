@@ -262,6 +262,9 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_HEIGHTMAP_FIX:
                 fixNodeHeight();
                 break;
+            case MENU_SCAN_OVERLAP:
+                scanNetworkForOverlapNodes();
+                break;
             case MENU_HEIGHTMAP_IMPORT:
                 break;
         }
@@ -270,52 +273,50 @@ public class MenuListener implements ActionListener, ItemListener {
 
     @Override
     public void itemStateChanged(ItemEvent e) {
-        AbstractButton button = (AbstractButton) e.getItem();
-        switch (button.getActionCommand()) {
+        AbstractButton menuItem = (AbstractButton) e.getItem();
+        switch (menuItem.getActionCommand()) {
             case MENU_CHECKBOX_CONTINUECONNECT:
-                bContinuousConnections = button.isSelected();
+                bContinuousConnections = menuItem.isSelected();
                 break;
             case MENU_CHECKBOX_MIDDLEMOUSEMOVE:
-                bMiddleMouseMove = button.isSelected();
+                bMiddleMouseMove = menuItem.isSelected();
                 break;
             case MENU_GRID_SHOW:
-                bShowGrid = button.isSelected();
+                bShowGrid = menuItem.isSelected();
                 MapPanel.getMapPanel().repaint();
                 break;
             case MENU_GRID_SNAP:
-                bGridSnap = button.isSelected();
-                if (!button.isSelected()) {
+                bGridSnap = menuItem.isSelected();
+                if (!menuItem.isSelected()) {
                     bGridSnapSubs = false;
                     gridSnapSubDivisionMenuItem.setSelected(false);
                 }
                 break;
             case MENU_GRID_SNAP_SUBS:
-                bGridSnapSubs = button.isSelected();
+                bGridSnapSubs = menuItem.isSelected();
                 break;
             case MENU_DEBUG_SHOWID:
-                bDebugShowID = button.isSelected();
+                bDebugShowID = menuItem.isSelected();
                 mapPanel.repaint();
                 break;
             case MENU_DEBUG_SELECTED_LOCATION:
-                bDebugShowSelectedLocation = button.isSelected();
+                bDebugShowSelectedLocation = menuItem.isSelected();
                 break;
             case MENU_DEBUG_FILEIO:
-                bDebugFileIO = button.isSelected();
+                bDebugFileIO = menuItem.isSelected();
                 break;
             case MENU_DEBUG_PROFILE:
-                bDebugProfile = button.isSelected();
+                bDebugProfile = menuItem.isSelected();
                 break;
             case MENU_DEBUG_UNDO:
-                bDebugUndoRedo = button.isSelected();
+                bDebugUndoRedo = menuItem.isSelected();
                 break;
             case MENU_DEBUG_HEIGHTMAP:
-                bDebugHeightMap = button.isSelected();
-                if (!button.isSelected()) showInTextArea("", true);
+                bDebugHeightMap = menuItem.isSelected();
+                if (!menuItem.isSelected()) showInTextArea("", true);
                 break;
             case MENU_DEBUG_TEST:
-                bDebugTest = button.isSelected();
-                isDraggingNode = true;
-                MapPanel.getMapPanel().mouseDragged(-1, 0);
+                bDebugTest = menuItem.isSelected();
                 break;
         }
     }

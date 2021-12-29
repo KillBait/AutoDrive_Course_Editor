@@ -17,6 +17,8 @@ import static AutoDriveEditor.MapPanel.MapPanel.*;
 public class MouseListener implements java.awt.event.MouseListener, MouseMotionListener, MouseWheelListener {
 
     private final MapPanel mapPanel;
+    public static int currentMouseX;
+    public static int currentMouseY;
     public static int prevMousePosX;
     public static int prevMousePosY;
 
@@ -26,6 +28,7 @@ public class MouseListener implements java.awt.event.MouseListener, MouseMotionL
 
     @Override
     public void mouseClicked(MouseEvent e) {
+        storeCurrentMousePos(e.getX(), e.getY());
         if (e.getButton() == MouseEvent.BUTTON1) {
             mapPanel.mouseButton1Clicked(e.getX(), e.getY());
         }
@@ -41,6 +44,7 @@ public class MouseListener implements java.awt.event.MouseListener, MouseMotionL
 
     @Override
     public void mousePressed(MouseEvent e) {
+        storeCurrentMousePos(e.getX(), e.getY());
         if (e.getButton() == MouseEvent.BUTTON1) {
             mapPanel.mouseButton1Pressed(e.getX(), e.getY());
         }
@@ -55,6 +59,7 @@ public class MouseListener implements java.awt.event.MouseListener, MouseMotionL
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        storeCurrentMousePos(e.getX(), e.getY());
         if (e.getButton() == MouseEvent.BUTTON1) {
             mapPanel.mouseButton1Released(e.getX(), e.getY());
         }
@@ -77,37 +82,28 @@ public class MouseListener implements java.awt.event.MouseListener, MouseMotionL
 
     @Override
     public void mouseDragged(MouseEvent e) {
+        storeCurrentMousePos(e.getX(), e.getY());
         mapPanel.mouseDragged(e.getX(), e.getY());
         storePreviousMousePos(e.getX(), e.getY());
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
+        storeCurrentMousePos(e.getX(), e.getY());
         mapPanel.mouseMoved(e.getX(), e.getY());
-        if (bDebugHeightMap) {
-            if (image !=null && heightMapImage != null) {
-                double x, y;
-                Point2D point = MapPanel.screenPosToWorldPos(e.getX(), e.getY());
-                x = ((512 * mapZoomFactor)) + (int) Math.ceil(point.getX() / 2);
-                y = ((512 * mapZoomFactor)) + (int) Math.ceil(point.getY() / 2);
-                if (x <0) x = 0;
-                if (y <0) y = 0;
-                Color color = new Color(heightMapImage.getRGB((int)x, (int)y));
-                String colourText="Heightmap R = " + color.getRed() + " , G = " + color.getGreen() + " , B = " + color.getBlue() + " , (" + ((color.getRed()>>8) + color.getGreen()) + ")";
-                showInTextArea(colourText, true);
-                String pointerText = "Mouse X = " + x + ", Y =" + y;
-                showInTextArea(pointerText, false);
-            }
-        }
         storePreviousMousePos(e.getX(), e.getY());
     }
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
         mapPanel.increaseZoomLevelBy(e.getWheelRotation());
-        storePreviousMousePos(e.getX(), e.getY());
     }
 
+
+    private void storeCurrentMousePos(int x, int y) {
+        currentMouseX = x;
+        currentMouseY = y;
+    }
     private void storePreviousMousePos(int x, int y) {
         prevMousePosX = x;
         prevMousePosY = y;
