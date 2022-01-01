@@ -48,7 +48,7 @@ public class GameXML {
     public static boolean oldConfigFormat = false;
     public static int configVersion = 0;
 
-    public static void loadConfigFile(File fXmlFile) {
+    public static void  loadConfigFile(File fXmlFile) {
         LOG.info("loadFile: {}", fXmlFile.getAbsolutePath());
 
         try {

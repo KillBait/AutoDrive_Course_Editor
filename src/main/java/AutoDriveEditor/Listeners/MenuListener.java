@@ -58,7 +58,7 @@ public class MenuListener implements ActionListener, ItemListener {
                     isUsingConvertedImage = false;
                     saveImageEnabled(false);
                     getMapPanel().setStale(false);
-
+                    scanNetworkForOverlapNodes();
                 }
 
                 break;
@@ -264,6 +264,9 @@ public class MenuListener implements ActionListener, ItemListener {
                 break;
             case MENU_SCAN_OVERLAP:
                 scanNetworkForOverlapNodes();
+                break;
+            case MENU_SCAN_MERGE:
+                mergeOverlappingNodes();
                 break;
             case MENU_HEIGHTMAP_IMPORT:
                 break;

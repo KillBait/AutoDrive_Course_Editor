@@ -156,11 +156,13 @@ public class MapPanel extends JPanel{
             String Text;
             Point2D coord;
             Color colour;
+            boolean useBackground;
 
-            public TextDisplayStore(String text, Point2D textCoord, Color textColour) {
+            public TextDisplayStore(String text, Point2D textCoord, Color textColour, boolean background) {
                 this.Text = text;
                 this.coord = textCoord;
                 this.colour = textColour;
+                this.useBackground = background;
             }
         }
 
@@ -234,7 +236,7 @@ public class MapPanel extends JPanel{
 
                                 if (bDebugShowID) {
                                     Point2D newPoint =  new Point2D.Double(nodePos.getX() - 12 , nodePos.getY() + 30);
-                                    textList.add(new TextDisplayStore(String.valueOf(mapNode.id), newPoint, Color.WHITE));
+                                    textList.add(new TextDisplayStore(String.valueOf(mapNode.id), newPoint, Color.WHITE, false));
                                 }
                             }
                         } finally {
@@ -254,13 +256,20 @@ public class MapPanel extends JPanel{
                                 if (hoveredNode.id == mapMarker.mapNode.id) {
                                     String text = mapMarker.name + " ( " + mapMarker.group + " )";
                                     Point2D nodePosMarker = worldPosToScreenPos(mapMarker.mapNode.x - 1, mapMarker.mapNode.z - 1);
-                                    textList.add( new TextDisplayStore( text, nodePosMarker, Color.WHITE));
+                                    textList.add( new TextDisplayStore( text, nodePosMarker, Color.WHITE, false));
                                 }
                             }
                             if (bDebugShowSelectedLocation) {
-                                String text = "x = " + hoveredNode.x + " , y = " + hoveredNode.y + " , z = " + hoveredNode.z + " , flags = " + hoveredNode.flag;
+                                String text = "X = " + hoveredNode.x + " , Y = " + hoveredNode.y + " , Z = " + hoveredNode.z + " , Flags = " + hoveredNode.flag;
+                                if (hoveredNode.hasWarning) text +=" , " + (hoveredNode.warningNodes.size() + 1) + " Overlapping Nodes";
                                 Point2D nodePosMarker = worldPosToScreenPos(hoveredNode.x + 1, hoveredNode.z);
-                                textList.add( new TextDisplayStore( text, nodePosMarker, Color.WHITE));
+                                textList.add( new TextDisplayStore( text, nodePosMarker, Color.WHITE, false));
+                            }
+                            if (hoveredNode.hasWarning && !bDebugShowSelectedLocation ) {
+                                String text = (hoveredNode.warningNodes.size() + 1) + " Nodes Overlapping";
+                                Point2D nodePosMarker = worldPosToScreenPos(hoveredNode.x + 1, hoveredNode.z);
+                                textList.add( new TextDisplayStore( text, nodePosMarker, Color.WHITE, true));
+
                             }
                         }
 
@@ -270,7 +279,7 @@ public class MapPanel extends JPanel{
                         for (MapMarker mapMarker : mapMarkers) {
                             if (roadMap.mapNodes.contains(mapMarker.mapNode)) {
                                 Point2D nodePos = worldPosToScreenPos(mapMarker.mapNode.x - 1, mapMarker.mapNode.z - 1);
-                                textList.add(new TextDisplayStore(mapMarker.name, nodePos, Color.WHITE));
+                                textList.add(new TextDisplayStore(mapMarker.name, nodePos, Color.WHITE, false));
                             }
                         }
 
@@ -280,6 +289,17 @@ public class MapPanel extends JPanel{
                         try {
                             for (TextDisplayStore list : textList) {
                                 backBufferGraphics.setColor(list.colour);
+                                if (list.useBackground) {
+                                    FontMetrics fm = backBufferGraphics.getFontMetrics();
+                                    Rectangle2D rect = fm.getStringBounds(list.Text, backBufferGraphics);
+
+                                    backBufferGraphics.setColor(Color.YELLOW);
+                                    backBufferGraphics.fillRect((int)list.coord.getX(),
+                                            (int) list.coord.getY() - fm.getAscent(),
+                                            (int) rect.getWidth(),
+                                            (int) rect.getHeight() + 2);
+                                    backBufferGraphics.setColor(Color.BLACK);
+                                }
                                 backBufferGraphics.drawString(list.Text, (int) list.coord.getX(), (int) list.coord.getY());
                             }
                         } finally {
@@ -723,10 +743,11 @@ public class MapPanel extends JPanel{
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        long startTime = 0;
 
         if (bDebugProfile) {
             showInTextArea("", true);
-            startTimer();
+            startTime = System.currentTimeMillis();
         }
 
         if (image != null) {
@@ -750,7 +771,9 @@ public class MapPanel extends JPanel{
             }
         }
         if (bDebugProfile) {
-            LOG.info("PaintComponent() finished in {} ms", stopTimer());
+            String text = "PaintComponent() finished in " + (System.currentTimeMillis() - startTime) + " ms";
+            showInTextArea(text, false);
+            //LOG.info("PaintComponent() finished in {} ms", stopTimer());
         }
     }
 
@@ -1046,9 +1069,9 @@ public class MapPanel extends JPanel{
         }
     }
 
-    public void createNode(double worldX, double worldZ, int flag) {
+    public MapNode createNode(double worldX, double worldZ, int flag) {
         if ((roadMap == null) || (image == null)) {
-            return;
+            return null;
         }
         double heightMapY = getYValueFromHeightMap(worldX, worldZ);
         MapNode mapNode = new MapNode(roadMap.mapNodes.size()+1, worldX, heightMapY, worldZ, flag, false, false); //flag = 0 causes created node to be regular by default
@@ -1056,6 +1079,7 @@ public class MapPanel extends JPanel{
         this.repaint();
         changeManager.addChangeable( new AddNodeChanger(mapNode) );
         MapPanel.getMapPanel().setStale(true);
+        return mapNode;
     }
 
     public static Point2D screenPosToWorldPos(int screenX, int screenY) {
@@ -1495,6 +1519,7 @@ public class MapPanel extends JPanel{
     public void mouseDragged(int mousePosX, int mousePosY) {
         int diffX = mousePosX - prevMousePosX;
         int diffY = mousePosY - prevMousePosY;
+
         if (isDragging) {
             moveMapBy(diffX, diffY);
         }
@@ -1507,8 +1532,6 @@ public class MapPanel extends JPanel{
                 } else {
                     moveNodeBy(multiSelectList, diffX, diffY, false);
                 }
-
-            //}
         }
 
         if (isControlNodeSelected) {
@@ -1560,7 +1583,8 @@ public class MapPanel extends JPanel{
 
         if (editorState == EDITORSTATE_CREATE_PRIMARY_NODE) {
             Point2D worldPos = screenPosToWorldPos(mousePosX, mousePosY);
-            createNode(worldPos.getX(), worldPos.getY(),NODE_STANDARD);
+            MapNode newNode = createNode(worldPos.getX(), worldPos.getY(),NODE_STANDARD);
+            checkAreaForNodeOverlap(newNode);
         }
 
         if (editorState == EDITORSTATE_CHANGE_NODE_PRIORITY) {
@@ -1574,7 +1598,8 @@ public class MapPanel extends JPanel{
 
         if (editorState == EDITORSTATE_CREATE_SUBPRIO_NODE) {
             Point2D worldPos = screenPosToWorldPos(mousePosX, mousePosY);
-            createNode(worldPos.getX(), worldPos.getY(),NODE_SUBPRIO);
+            MapNode newNode = createNode(worldPos.getX(), worldPos.getY(),NODE_SUBPRIO);
+            checkAreaForNodeOverlap(newNode);
         }
 
         if (editorState == EDITORSTATE_CREATING_DESTINATION) {
@@ -1819,6 +1844,13 @@ public class MapPanel extends JPanel{
         }
         isDraggingNode = false;
         isControlNodeSelected=false;
+        if (movingNode == null) {
+            LOG.info("movingnode null");
+            MapNode node = getNodeAt(mousePosX, mousePosY);
+            if (node != null) checkAreaForNodeOverlap(node);
+        } else {
+            checkNodeOverlap(movingNode);
+        }
     }
 
     //
@@ -2347,52 +2379,89 @@ public class MapPanel extends JPanel{
     }
 
     public static void scanNetworkForOverlapNodes() {
-        if (DEBUG) startTimer();
-        int count = 0;
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            public Void doInBackground() {
+                long timer = 0;
+                LOG.info("Starting Background Scan for Overlapping Nodes");
+                if (bDebugProfile) timer = System.currentTimeMillis();
+                int count = 0;
 
-        for (MapNode node : roadMap.mapNodes) {
+                for (MapNode node : roadMap.mapNodes) {
+                    int result = checkAreaForNodeOverlap(node);
+                    if ( result > 0) count += 1;
+                }
 
-            int result = checkIfNodesOverlap(node);
-            if ( result > 0) {
-                count += 1;
-                node.hasWarning = true;
-                if (DEBUG) LOG.info("Found {} nodes overlapping ID {}", result, node.id);
-            } else {
-                node.hasWarning = false;
+
+                if (DEBUG && count > 0) LOG.info("Roadmap nodes = {} --- Found {} nodes overlapping", roadMap.mapNodes.size(), count);
+                String text = "Finished Background Scan";
+                if (bDebugProfile) text += " in " + (float)(System.currentTimeMillis() - timer)/1000 + "s";
+                LOG.info(text);
+                getMapPanel().repaint();
+                return null;
             }
-        }
-        if (DEBUG) LOG.info("scan time = {}s ", (float)stopTimer()/1000);
-        if (DEBUG && count > 0) LOG.info("Roadmap nodes = {} --- Found {} nodes overlapping", roadMap.mapNodes.size(), count);
-        getMapPanel().repaint();
+        };
+        worker.execute();
     }
 
-    public static int checkIfNodesOverlap(MapNode node) {
+    public static int checkAreaForNodeOverlap(MapNode node) {
 
         int result = 0;
 
         if (roadMap != null) {
             double searchArea = 0.05;
-            double worldStartX = node.x - (searchArea / 2);
-            double worldStartY = node.z - (searchArea / 2);
-            double width = (node.x + (searchArea / 2)) - (node.x - (searchArea / 2));
-            double height = (node.z + (searchArea / 2)) - (node.z - (searchArea / 2));
+            double searchAreaHalf = searchArea / 2;
+
+            double worldStartX = node.x - searchAreaHalf;
+            double worldStartY = node.y - searchAreaHalf;
+            double worldStartZ = node.z - searchAreaHalf;
+
+            double areaX = (node.x + searchAreaHalf) - worldStartX;
+            double areaY = (node.y + searchAreaHalf) - worldStartY;
+            double areaZ = (node.z + searchAreaHalf) - worldStartZ;
 
             for (MapNode mapNode : roadMap.mapNodes) {
                 if (mapNode != node) {
-                    //Point2D nodePos = worldPosToScreenPos(mapNode.x, mapNode.z);
-                    if (worldStartX < mapNode.x + searchArea &&
-                            (worldStartX + width) > mapNode.x - searchArea &&
-                            worldStartY < mapNode.z + searchArea &&
-                            (worldStartY + height) > mapNode.z - searchArea) {
+                    if (worldStartX < mapNode.x + searchArea && (worldStartX + areaX) > mapNode.x - searchArea &&
+                            worldStartY < mapNode.y + searchArea && (worldStartY + areaZ) > mapNode.y - searchArea &&
+                                worldStartZ < mapNode.z + searchArea && (worldStartZ + areaZ) > mapNode.z - searchArea) {
 
                         result += 1;
-                        mapNode.hasWarning = true;
-                        //mapNode.warningPos = new Point2D.Double(node.x, node.z);
-                        //LOG.info("     node {} - Found ID {}", node.id, mapNode.id);
+
+                        if (!mapNode.warningNodes.contains(node)) {
+                            //LOG.info("Adding {} to {} warning list",node.id, mapNode.id);
+                            mapNode.warningNodes.add(node);
+                            mapNode.hasWarning = true;
+                        }
+                        if (!node.warningNodes.contains(mapNode)) {
+                            //LOG.info("Adding {} to {} warning list",mapNode.id, node.id);
+                            node.warningNodes.add(mapNode);
+                            node.hasWarning = true;
+                        }
                     }
                 }
             }
+
         }
         return result;
+    }
+
+    public static void checkNodeOverlap(MapNode node) {
+        if (checkAreaForNodeOverlap(node) == 0 ) {
+            LOG.info("Node clear");
+
+            for (MapNode mapNode : node.warningNodes) {
+                //LOG.info("removing {} from {} warning list",node.id, mapNode.id);
+                mapNode.warningNodes.remove(node);
+                mapNode.hasWarning = mapNode.warningNodes.size() != 0;
+            }
+
+            node.hasWarning = false;
+            node.warningNodes.clear();
+        }
+    }
+
+    public static void mergeOverlappingNodes() {
+
     }
 }

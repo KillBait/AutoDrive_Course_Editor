@@ -183,21 +183,24 @@ public class ChangeManager {
             this.diffX = movedX;
             this.diffY = movedY;
             this.wasSnapMove = snapMove;
-            for (int i = 0; i <= mapNodesMoved.size() - 1 ; i++) {
-                MapNode mapNode = mapNodesMoved.get(i);
-                this.moveNodes.add(mapNode);
-            }
-           this.isStale = getMapPanel().isStale();
+            this.moveNodes.addAll(mapNodesMoved);
+            this.isStale = getMapPanel().isStale();
         }
 
         public void undo(){
             getMapPanel().moveNodeBy(this.moveNodes, -this.diffX, -this.diffY, true);
+            for (MapNode node : this.moveNodes) {
+                checkAreaForNodeOverlap(node);
+            }
             getMapPanel().repaint();
             getMapPanel().setStale(this.isStale);
         }
 
         public void redo(){
             getMapPanel().moveNodeBy(this.moveNodes, this.diffX, this.diffY, true);
+            for (MapNode node : this.moveNodes) {
+                checkAreaForNodeOverlap(node);
+            }
             getMapPanel().repaint();
             getMapPanel().setStale(true);
         }

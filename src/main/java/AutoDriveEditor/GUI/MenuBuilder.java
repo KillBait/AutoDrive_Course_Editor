@@ -43,6 +43,7 @@ public class MenuBuilder {
     public static final String MENU_ROTATE_CLOCKWISE="Rotate Clockwise";
     public static final String MENU_ROTATE_ANTICLOCKWISE="Rotate Anticlockwise";
     public static final String MENU_SCAN_OVERLAP="Scan Overlap";
+    public static final String MENU_SCAN_MERGE="Merge Overlap";
     public static final String MENU_ABOUT = "About";
 
 
