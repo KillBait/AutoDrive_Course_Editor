@@ -319,7 +319,7 @@ public class GUIBuilder {
         paste.setEnabled(enabled);
     }
 
-    public static void updateButtons() {
+    public static void  updateButtons() {
         moveNode.setSelected(false);
         createRegularConnection.setSelected(false);
         createPrimaryNode.setSelected(false);

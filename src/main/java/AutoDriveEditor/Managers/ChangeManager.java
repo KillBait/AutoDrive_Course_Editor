@@ -6,9 +6,11 @@ import AutoDriveEditor.MapPanel.LinearLine;
 import AutoDriveEditor.MapPanel.MapPanel;
 import AutoDriveEditor.RoadNetwork.MapMarker;
 import AutoDriveEditor.RoadNetwork.MapNode;
+import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import static AutoDriveEditor.AutoDriveEditor.EXPERIMENTAL;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
+import static AutoDriveEditor.Managers.ScanManager.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.DebugUtils.*;
 import static AutoDriveEditor.Utils.LoggerUtils.*;
@@ -237,24 +239,25 @@ public class ChangeManager {
     // Add node from LinkedList
     //
 
-    public static class AddMultiNodeChanger implements Changeable{
+    public static class  PasteSelectionChanger implements Changeable{
         private final LinkedList<MapNode> storeNodes;
         private final boolean isStale;
 
-        public AddMultiNodeChanger(LinkedList<MapNode> nodes){
+        public PasteSelectionChanger(LinkedList<MapNode> nodes){
             super();
             this.storeNodes = (LinkedList<MapNode>) nodes.clone();
             this.isStale = getMapPanel().isStale();
         }
 
         public void undo(){
-            roadMap.mapNodes.removeAll(this.storeNodes);
+            clearMultiSelection();
+            RoadMap.mapNodes.removeAll(this.storeNodes);
             getMapPanel().repaint();
             getMapPanel().setStale(this.isStale);
         }
 
         public void redo(){
-            roadMap.mapNodes.addAll(this.storeNodes);
+            RoadMap.mapNodes.addAll(this.storeNodes);
             getMapPanel().repaint();
             getMapPanel().setStale(true);
         }

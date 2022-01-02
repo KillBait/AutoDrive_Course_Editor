@@ -8,8 +8,8 @@ import static AutoDriveEditor.Utils.LoggerUtils.*;
 public class RoadMap {
 
     public String roadMapName;
-    public LinkedList<MapNode> mapNodes;
-    public LinkedList<MapMarker> mapMarkers;
+    public static LinkedList<MapNode> mapNodes;
+    public static LinkedList<MapMarker> mapMarkers;
 
     public RoadMap() {
         this.mapMarkers = new LinkedList<>();
@@ -57,7 +57,7 @@ public class RoadMap {
         }
     }
 
-    public void removeMapNode(MapNode toDelete) {
+    public static void removeMapNode(MapNode toDelete) {
         boolean deleted = false;
         /*if (mapNodes.contains(toDelete)) {*/
             mapNodes.remove(toDelete);
@@ -86,7 +86,7 @@ public class RoadMap {
         }
     }
 
-    public void removeMapMarker(MapMarker mapMarker) {
+    public static void removeMapMarker(MapMarker mapMarker) {
         LinkedList<MapMarker> mapMarkersToKeep = new LinkedList<>();
         for (MapMarker marker : mapMarkers) {
             if (marker.mapNode.id != mapMarker.mapNode.id) {

@@ -156,8 +156,9 @@ public class CopyPasteManager {
             roadMap.mapNodes.add(node);
             multiSelectList.add(node);
         }
+        isMultipleSelected = true;
 
-        changeManager.addChangeable( new ChangeManager.AddMultiNodeChanger(newNodes) );
+        changeManager.addChangeable( new ChangeManager.PasteSelectionChanger(newNodes) );
         MapPanel.getMapPanel().setStale(true);
         MapPanel.getMapPanel().repaint();
     }

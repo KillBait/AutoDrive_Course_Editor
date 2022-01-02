@@ -150,7 +150,6 @@ public class MapImage {
         getMapZoomFactor(mapName);
 
         MenuBuilder.mapMenuEnabled(true);
-        MenuBuilder.fixNodesEnabled(true);
         //editorState = GUIBuilder.EDITORSTATE_NOOP;
 
     }
@@ -163,15 +162,16 @@ public class MapImage {
         LOG.info("HeightMap path = {}", launchPath);
         try {
             heightImage = ImageIO.read(new File(launchPath));
-            //heightMapImage = new BufferedImage(heightImage.getWidth(), heightImage.getHeight(), BufferedImage.TYPE_USHORT_565_RGB);
-            heightMapImage = getNewBufferImage(heightImage.getWidth(), heightImage.getHeight());
+            heightMapImage = new BufferedImage(heightImage.getWidth(), heightImage.getHeight(), BufferedImage.TYPE_USHORT_565_RGB);
+            //heightMapImage = getNewBufferImage(heightImage.getWidth(), heightImage.getHeight());
+            LOG.info("type = {}", heightMapImage.toString());
             Graphics2D g = (Graphics2D) heightMapImage.getGraphics();
             g.drawImage( heightImage, 0, 0, heightImage.getWidth(), heightImage.getHeight(), null);
             g.dispose();
         } catch (IOException e) {
             JOptionPane.showMessageDialog(editor, localeString.getString("dialog_heightmap_not_found"), localeString.getString("dialog_heightmap_not_found_title"), JOptionPane.ERROR_MESSAGE);
             LOG.info("Failed to load HeightMap");
-            fixNodesMenuItem.setEnabled(false);
+            fixNodesHeightMenuItem.setEnabled(false);
             e.printStackTrace();
         }
     }

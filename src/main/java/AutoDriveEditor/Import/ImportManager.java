@@ -16,10 +16,13 @@ import static AutoDriveEditor.Utils.LoggerUtils.*;
 
 public class ImportManager {
 
+    public static final int FS19_IMAGE = 0;
+    public static final int FS22_IMAGE = 1;
+
     public static Boolean importFromFS19(String filename) {
 
         try {
-            createDDSBufferImage(filename, 0 , 0);
+            createDDSBufferImage(filename, FS19_IMAGE);
         } catch (IOException e) {
             e.printStackTrace();
             return false;
@@ -33,7 +36,7 @@ public class ImportManager {
     public static Boolean importFromFS22(String filename) {
 
         try {
-            createDDSBufferImage(filename, 1024, 1024);
+            createDDSBufferImage(filename, FS22_IMAGE);
         } catch (IOException e) {
             e.printStackTrace();
             return false;
@@ -43,7 +46,7 @@ public class ImportManager {
         return true;
     }
 
-    public static void createDDSBufferImage(String filename, int offsetX, int offsetY) throws IOException {
+    public static void  createDDSBufferImage(String filename, int gameImage) throws IOException {
         LOG.info("Creating Bufferimage from {}", filename );
 
         // load the DDS file into a buffer
@@ -58,7 +61,7 @@ public class ImportManager {
         int height = DDSReader.getHeight(buffer);
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         image.setRGB(0, 0, width, height, pixels, 0, width);
-        LOG.info(" {} , {}", image.getWidth(), image.getHeight());
+        LOG.info("Image size {} , {}", image.getWidth(), image.getHeight());
 
         // Scale the BufferImage to a size the editor can use ( 2048 x 2048 )
 
@@ -78,12 +81,17 @@ public class ImportManager {
         g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_DEFAULT);
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_DEFAULT);
         g.setRenderingHint(RenderingHints.KEY_RESOLUTION_VARIANT, RenderingHints.VALUE_RESOLUTION_VARIANT_SIZE_FIT);
-        if (offsetX != 0 || offsetY != 0) {
-            BufferedImage crop = image.getSubimage(offsetX, offsetY, 2048, 2048);
+        if (gameImage == FS19_IMAGE) {
+            g.drawImage( image, 0, 0, 2048, 2048, null);
+        } else if (gameImage == FS22_IMAGE) {
+            BufferedImage crop = image.getSubimage(image.getWidth() / 4, image.getHeight() /4, image.getWidth() / 2, image.getHeight() / 2);
             g.drawImage( crop, 0, 0, 2048, 2048, null);
+        }
+        /*if (offsetX != 0 || offsetY != 0) {
+
         } else {
             g.drawImage( image, 0, 0, 2048, 2048, null);
-        }
+        }*/
         g.dispose();
 
         // set the converted and resized image as the map image

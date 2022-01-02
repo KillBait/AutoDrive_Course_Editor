@@ -14,10 +14,11 @@ import AutoDriveEditor.MapPanel.MapPanel;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
-import static AutoDriveEditor.GUI.GUIUtils.showInTextArea;
+import static AutoDriveEditor.GUI.GUIUtils.*;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.Import.ImportManager.*;
 import static AutoDriveEditor.Locale.LocaleManager.*;
+import static AutoDriveEditor.Managers.ScanManager.*;
 import static AutoDriveEditor.MapPanel.MapImage.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.FileUtils.*;
@@ -263,12 +264,21 @@ public class MenuListener implements ActionListener, ItemListener {
                 fixNodeHeight();
                 break;
             case MENU_SCAN_OVERLAP:
-                scanNetworkForOverlapNodes();
+                mapPanel.showScanDialog();
                 break;
             case MENU_SCAN_MERGE:
                 mergeOverlappingNodes();
                 break;
             case MENU_HEIGHTMAP_IMPORT:
+                break;
+            case BUTTON_COPYPASTE_CUT:
+                cutSelected();
+                break;
+            case BUTTON_COPYPASTE_COPY:
+                copySelected();
+                break;
+            case BUTTON_COPYPASTE_PASTE:
+                pasteSelected();
                 break;
         }
 
@@ -317,6 +327,9 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_DEBUG_HEIGHTMAP:
                 bDebugHeightMap = menuItem.isSelected();
                 if (!menuItem.isSelected()) showInTextArea("", true);
+                break;
+            case MENU_DEBUG_MERGE:
+                bDebugMerge = menuItem.isSelected() ;
                 break;
             case MENU_DEBUG_TEST:
                 bDebugTest = menuItem.isSelected();

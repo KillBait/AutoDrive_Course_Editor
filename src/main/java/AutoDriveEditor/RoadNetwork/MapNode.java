@@ -16,6 +16,7 @@ public class MapNode {
     public boolean isSelected;
     public boolean hasWarning;
     public LinkedList<MapNode> warningNodes;
+    public boolean scheduleDelete;
 
     public MapNode(int id, double x, double y, double z, int flag, boolean isSelected, boolean isControlNode) {
         this.id = id;
@@ -32,5 +33,6 @@ public class MapNode {
         this.isControlNode = isControlNode;
         this.hasWarning = false;
         this.warningNodes = new LinkedList<>();
+        this.scheduleDelete = false;
     }
 }

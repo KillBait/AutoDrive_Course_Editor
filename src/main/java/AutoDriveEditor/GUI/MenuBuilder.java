@@ -54,6 +54,7 @@ public class MenuBuilder {
     public static final String MENU_DEBUG_UNDO = "DEBUG UNDO/REDO SYSTEM";
     public static final String MENU_DEBUG_ZOOMSCALE = "ZOOMSCALE";
     public static final String MENU_DEBUG_HEIGHTMAP = "DEBUG HEIGHTMAP";
+    public static final String MENU_DEBUG_MERGE = "DEBUG MERGE";
     public static final String MENU_DEBUG_TEST = "TEST";
 
     public static int InputEvent_NONE = 0;
@@ -85,7 +86,9 @@ public class MenuBuilder {
     public static JMenuItem rAntiClockwiseMenuItem;
     public static JMenuItem r90AntiClockwiseMenuItem;
 
-    public static JMenuItem fixNodesMenuItem;
+    public static JMenuItem fixNodesHeightMenuItem;
+    public static JMenuItem scanNetworkMenuItem;
+    public static JMenuItem mergeNodesMenuItem;
 
 
     public static boolean bDebugShowID;
@@ -94,7 +97,8 @@ public class MenuBuilder {
     public static boolean bDebugProfile;
     public static boolean bDebugUndoRedo;
     public static boolean bDebugZoomScale;
-    public static boolean bDebugHeightMap;
+    public static boolean  bDebugHeightMap;
+    public static boolean bDebugMerge;
     public static boolean bDebugTest;
 
     public static void createMenu() {
@@ -146,7 +150,7 @@ public class MenuBuilder {
 
         heightmapMenu = makeMenu("menu_heightmap", KeyEvent.VK_T, "menu_heightmap_accstring", menuBar);
         importHeightmapMenuItem = makeMenuItem("menu_heightmap_import", "menu_heightmap_import_accstring", heightmapMenu, menuListener, MENU_HEIGHTMAP_IMPORT,false);
-        fixNodesMenuItem = makeMenuItem("menu_heightmap_fix_nodes", "menu_heightmap_fix_nodes_accstring", heightmapMenu, menuListener, MENU_HEIGHTMAP_FIX,false);
+        fixNodesHeightMenuItem = makeMenuItem("menu_heightmap_fix_nodes", "menu_heightmap_fix_nodes_accstring", heightmapMenu, menuListener, MENU_HEIGHTMAP_FIX,false);
 
         // create the Options menu
 
@@ -176,12 +180,14 @@ public class MenuBuilder {
         // Ctreate the FixIt menu
 
         fixItMenu = makeMenu("menu_scan", KeyEvent.VK_S, "menu_scan_accstring", menuBar);
-        makeMenuItem("menu_scan_overlap", "menu_scan_overlap_accstring", KeyEvent.VK_O, InputEvent.ALT_DOWN_MASK, fixItMenu, menuListener, MENU_SCAN_OVERLAP, true);
+        scanNetworkMenuItem = makeMenuItem("menu_scan_overlap", "menu_scan_overlap_accstring", fixItMenu, menuListener, MENU_SCAN_OVERLAP, false);
+        mergeNodesMenuItem = makeMenuItem("menu_scan_merge", "menu_scan_merge_accstring", fixItMenu, menuListener, MENU_SCAN_MERGE, false);
 
         // Create the Help menu
 
         helpMenu = makeMenu("menu_help", KeyEvent.VK_H, "menu_help_accstring", menuBar);
         makeMenuItem("menu_help_about", "menu_help_about_accstring", KeyEvent.VK_H, InputEvent.ALT_DOWN_MASK, helpMenu, menuListener, MENU_ABOUT, true);
+
 
         if (DEBUG) {
             debugMenu = makeMenu("menu_debug", KeyEvent.VK_D, "menu_debug_accstring", menuBar);
@@ -196,6 +202,7 @@ public class MenuBuilder {
             makeCheckBoxMenuItem("menu_debug_zoom", "menu_debug_zoom_accstring", bDebugZoomScale, debugMenu, menuListener, MENU_DEBUG_ZOOMSCALE);
             makeCheckBoxMenuItem("menu_debug_fileio", "menu_debug_fileio_accstring", bDebugFileIO, debugMenu, menuListener, MENU_DEBUG_FILEIO);
             makeCheckBoxMenuItem("menu_debug_undo", "menu_debug_undo_accstring", bDebugUndoRedo, debugMenu, menuListener, MENU_DEBUG_UNDO);
+            makeCheckBoxMenuItem("menu_debug_merge", "menu_debug_merge_accstring", bDebugMerge, debugMenu, menuListener, MENU_DEBUG_MERGE);
 
         }
     }
@@ -211,11 +218,22 @@ public class MenuBuilder {
     }
 
     public static void fixNodesEnabled(boolean enabled) {
-        fixNodesMenuItem.setEnabled(enabled);
+        scanNetworkMenuItem.setEnabled(enabled);
+        if (EXPERIMENTAL) {
+            mergeNodesMenuItem.setEnabled(enabled);
+        } else {
+            mergeNodesMenuItem.setEnabled(false);
+        }
+
     }
 
 
     public static void saveMenuEnabled(boolean enabled) {
+        saveConfigMenuItem.setEnabled(enabled);
+        saveConfigAsMenuItem.setEnabled(enabled);
+    }
+
+    public static void scanMenuEnabled(boolean enabled) {
         saveConfigMenuItem.setEnabled(enabled);
         saveConfigAsMenuItem.setEnabled(enabled);
     }
