@@ -4,7 +4,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.util.LinkedList;
 
-import AutoDriveEditor.AutoDriveEditor;
 import AutoDriveEditor.GUI.MenuBuilder;
 import AutoDriveEditor.MapPanel.MapPanel;
 import AutoDriveEditor.RoadNetwork.MapNode;
@@ -52,7 +51,7 @@ public class CopyPasteManager {
         }
         changeManager.addChangeable( new ChangeManager.DeleteNodeChanger(deleteNodeList));
         CopySelection(nodesToCopy);
-        MapPanel.getMapPanel().removeNodes();
+        MapPanel.getMapPanel().removeDeleteListNodes();
         clearMultiSelection();
     }
 
@@ -69,6 +68,7 @@ public class CopyPasteManager {
             nodeCache = createNewMapNodesFromList(tempCache, 0, 0);
             MenuBuilder.rotationMenuEnabled(true);
         }
+        clearMultiSelection();
     }
 
     public void PasteSelection() {
@@ -227,7 +227,7 @@ public class CopyPasteManager {
             Point2D bottomRight = worldPosToScreenPos(bottomRightX, bottomRightY);
             Point2D rectSize = worldPosToScreenPos(rectSizeX, rectSizeY);
             Point2D rectCentre = worldPosToScreenPos(centreX, centreY);
-            if (AutoDriveEditor.DEBUG) LOG.info("## SCREEN_COORDINATES ## Rectangle start = {} : end = {} : size = {} : Centre = {} ", topLeft, bottomRight, rectSize, rectCentre);
+            if (DEBUG) LOG.info("## SCREEN_COORDINATES ## Rectangle start = {} : end = {} : size = {} : Centre = {} ", topLeft, bottomRight, rectSize, rectCentre);
             return new rectangleInfo(topLeft, bottomRight, rectSize, rectCentre);
         } else {
             LOG.info("No return type specified for getSelectionBounds() - returning null");

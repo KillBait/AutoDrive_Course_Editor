@@ -95,7 +95,7 @@ public class MapImage {
                     String fullPath;
                     if (location != null) {
                         String gitPath = "https://github.com/KillBait/FS19_AutoDrive_MapImages/raw/main/mapImages/" + mapName + ".png";
-                        showInTextArea(localeString.getString("mapimage_github_check") + mapName + ".png", true);
+                        showInTextArea(localeString.getString("mapimage_github_check") + mapName + ".png", true, false);
                         LOG.info("Checking GitHub repository for {}",gitPath);
                         URL gitUrl = null;
                         try {
@@ -116,11 +116,11 @@ public class MapImage {
                         if (loadImage != null) {
                             try {
                                 mapImage = ImageIO.read(loadImage);
-                                showInTextArea(mapName + ".png " + localeString.getString("mapimage_github_repo_download"), true);
+                                showInTextArea(mapName + ".png " + localeString.getString("mapimage_github_repo_download"), true, false);
                                 bImageFound = true;
                             } catch (IOException ex) {
                                 ex.printStackTrace();
-                                showInTextArea(mapName + ".png " + localeString.getString("mapimage_github_repo_not_found"), true);
+                                showInTextArea(mapName + ".png " + localeString.getString("mapimage_github_repo_not_found"), true, false);
                                 bImageFound = false;
                             }
 
@@ -130,8 +130,7 @@ public class MapImage {
                         bImageFound = false;
                     }
                 } else {
-                    showInTextArea(localeString.getString("mapimage_github_bypass"), true);
-                    LOG.info("{}", localeString.getString("mapimage_github_bypass"));
+                    showInTextArea(localeString.getString("mapimage_github_bypass"), true, true);
                 }
             }
         }

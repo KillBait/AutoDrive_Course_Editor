@@ -223,7 +223,7 @@ public class ChangeManager {
         }
 
         public void undo(){
-            roadMap.removeMapNode(storeNode);
+            RoadMap.removeMapNode(storeNode);
             getMapPanel().repaint();
             getMapPanel().setStale(this.isStale);
         }
@@ -618,19 +618,20 @@ public class ChangeManager {
         private final Boolean isStale;
         private final LinkedList<ZStore> nodeList;
 
-        public AlignmentChanger(LinkedList<MapNode> multiSelectList, double x, double z){
+        public AlignmentChanger(LinkedList<MapNode> multiSelectList, double x, double y, double z){
             super();
             this.isStale = getMapPanel().isStale();
             this.nodeList = new LinkedList<>();
 
             for (MapNode node : multiSelectList) {
-                nodeList.add(new ZStore(node, x, z));
+                nodeList.add(new ZStore(node, x, y, z));
             }
         }
 
         public void undo() {
             for (ZStore storedNode : nodeList) {
                 storedNode.mapNode.x += storedNode.diffX;
+                storedNode.mapNode.y += storedNode.diffY;
                 storedNode.mapNode.z += storedNode.diffZ;
             }
             getMapPanel().repaint();
@@ -640,6 +641,7 @@ public class ChangeManager {
         public void redo() {
             for (ZStore storedNode : nodeList) {
                 storedNode.mapNode.x += -storedNode.diffX;
+                storedNode.mapNode.y += -storedNode.diffY;
                 storedNode.mapNode.z += -storedNode.diffZ;
             }
             getMapPanel().repaint();
@@ -649,14 +651,20 @@ public class ChangeManager {
         private static class ZStore {
             private final MapNode mapNode;
             private final double diffX;
+            private final double diffY;
             private final double diffZ;
 
-            public ZStore(MapNode node, double dX, double dZ) {
+            public ZStore(MapNode node, double dX, double dY, double dZ) {
                 this.mapNode = node;
                 if (dX == 0) {
                     this.diffX = 0;
                 } else {
                     this.diffX = node.x - dX;
+                }
+                if (dY == 0) {
+                    this.diffY = 0;
+                } else {
+                    this.diffY = node.y - dY;
                 }
                 if (dZ == 0) {
                     this.diffZ = 0;

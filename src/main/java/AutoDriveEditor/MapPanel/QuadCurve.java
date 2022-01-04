@@ -8,6 +8,7 @@ import AutoDriveEditor.AutoDriveEditor;
 import AutoDriveEditor.GUI.GUIBuilder;
 import AutoDriveEditor.Managers.ChangeManager;
 import AutoDriveEditor.RoadNetwork.MapNode;
+import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
@@ -24,8 +25,8 @@ public class QuadCurve extends MouseAdapter {
     private MapNode curveStartNode;
     private MapNode curveEndNode;
     private MapNode controlPoint1;
-    private Point2D.Double virtualControlPoint1;
-    private double movementScaler = 1;
+    private final Point2D.Double virtualControlPoint1;
+    private final double movementScaler;
 
     private int numInterpolationPoints;
     private int nodeType;
@@ -38,11 +39,11 @@ public class QuadCurve extends MouseAdapter {
         this.curveEndNode = endNode;
         this.numInterpolationPoints = GUIBuilder.numIterationsSlider.getValue();
         if (this.numInterpolationPoints < 2) this.numInterpolationPoints = 2;
-        this.controlPoint1 = new MapNode(0, startNode.x, 0, endNode.z, NODE_CONTROLPOINT, false, true);
+        this.controlPoint1 = new MapNode(0, startNode.x, 0, endNode.z, NODE_FLAG_CONTROL_POINT, false, true);
         this.virtualControlPoint1 = new Point2D.Double(controlPoint1.x, controlPoint1.z);
         this.isReversePath = GUIBuilder.curvePathReverse.isSelected();
         this.isDualPath = GUIBuilder.curvePathDual.isSelected();
-        this.nodeType = GUIBuilder.curvePathRegular.isSelected() ? NODE_STANDARD : NODE_SUBPRIO;
+        this.nodeType = GUIBuilder.curvePathRegular.isSelected() ? NODE_FLAG_STANDARD : NODE_FLAG_SUBPRIO;
         this.movementScaler = controlPointMoveScaler;
         this.updateCurve();
         GUIBuilder.curvePanel.setVisible(true);
@@ -75,7 +76,7 @@ public class QuadCurve extends MouseAdapter {
         int id = 0;
         for (double i = step; i + step < 1.0001; i += step) {
             Point2D.Double point = pointsForQuadraticBezier(startNode, endNode, this.virtualControlPoint1.x, this.virtualControlPoint1.y, i);
-            curveNodesList.add(new MapNode(id, point.getX(), -1, point.getY(), NODE_STANDARD, false, false));
+            curveNodesList.add(new MapNode(id, point.getX(), -1, point.getY(), NODE_FLAG_STANDARD, false, false));
             if (i + step >= 1.0001)
                 LOG.info("WARNING -- last node was not calculated, this should not happen!! -- step = {} ,  ", i + step);
             id++;
@@ -103,11 +104,22 @@ public class QuadCurve extends MouseAdapter {
 
         mergeNodesList.add(curveStartNode);
 
+        if (this.curveStartNode.y != -1 && this.curveEndNode.y == -1) {
+            this.curveEndNode.y = this.curveStartNode.y;
+        }
+        if (this.curveEndNode.y != -1 && this.curveStartNode.y == -1) {
+            this.curveStartNode.y = this.curveEndNode.y;
+        }
+        float yInterpolation = (float) ((curveEndNode.y - curveStartNode.y) / (this.curveNodesList.size() - 1));
+
         for (int j = 1; j < curveNodesList.size() - 1; j++) {
             MapNode tempNode = curveNodesList.get(j);
             double heightMapY = getYValueFromHeightMap(tempNode.x, tempNode.z);
-            MapNode newNode = new MapNode(roadMap.mapNodes.size() + 1, tempNode.x, heightMapY, tempNode.z, this.nodeType, false, false);
-            roadMap.mapNodes.add(newNode);
+            if (heightMapY == -1) {
+                heightMapY = curveStartNode.y + ( yInterpolation * j);
+            }
+            MapNode newNode = new MapNode(RoadMap.mapNodes.size() + 1, tempNode.x, heightMapY, tempNode.z, this.nodeType, false, false);
+            RoadMap.mapNodes.add(newNode);
             mergeNodesList.add(newNode);
         }
 
@@ -243,7 +255,7 @@ public class QuadCurve extends MouseAdapter {
 
     public void setNodeType(int nodeType) {
         this.nodeType = nodeType;
-        if (nodeType == NODE_SUBPRIO) {
+        if (nodeType == NODE_FLAG_SUBPRIO) {
             for (int j = 1; j < curveNodesList.size() - 1; j++) {
                 MapNode tempNode = curveNodesList.get(j);
                 tempNode.flag = 1;

@@ -3,10 +3,10 @@ package AutoDriveEditor.MapPanel;
 import java.awt.geom.Point2D;
 import java.util.LinkedList;
 
-import AutoDriveEditor.AutoDriveEditor;
 import AutoDriveEditor.GUI.GUIBuilder;
 import AutoDriveEditor.Managers.ChangeManager.CurveChanger;
 import AutoDriveEditor.RoadNetwork.MapNode;
+import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
@@ -40,13 +40,13 @@ public class CubicCurve {
         this.curveEndNode = endNode;
         this.numInterpolationPoints = GUIBuilder.numIterationsSlider.getValue();
         if (this.numInterpolationPoints < 2 ) this.numInterpolationPoints = 2 ;
-        this.controlPoint1 = new MapNode(0, startNode.x,0, endNode.z, NODE_CONTROLPOINT, false, true);
-        this.controlPoint2 = new MapNode(1, endNode.x,0, startNode.z, NODE_CONTROLPOINT, false, true);
+        this.controlPoint1 = new MapNode(0, startNode.x,0, endNode.z, NODE_FLAG_CONTROL_POINT, false, true);
+        this.controlPoint2 = new MapNode(1, endNode.x,0, startNode.z, NODE_FLAG_CONTROL_POINT, false, true);
         this.virtualControlPoint1 = new Point2D.Double(controlPoint1.x,controlPoint1.z);
         this.virtualControlPoint2 = new Point2D.Double(controlPoint2.x,controlPoint2.z);
         this.isReversePath = GUIBuilder.curvePathReverse.isSelected();
         this.isDualPath = GUIBuilder.curvePathDual.isSelected();
-        this.nodeType = GUIBuilder.curvePathRegular.isSelected() ? NODE_STANDARD : NODE_SUBPRIO;
+        this.nodeType = GUIBuilder.curvePathRegular.isSelected() ? NODE_FLAG_STANDARD : NODE_FLAG_SUBPRIO;
         this.movementScaler = controlPointMoveScaler;
         this.updateCurve();
         GUIBuilder.curvePanel.setVisible(true);
@@ -79,7 +79,7 @@ public class CubicCurve {
         int id = 0;
         for(double i=step;i+step<1.0001;i += step) {
             Point2D.Double point = pointsForCubicBezier(startNode, endNode, this.virtualControlPoint1.x, this.virtualControlPoint1.y, this.virtualControlPoint2.x, this.virtualControlPoint2.y, i);
-            curveNodesList.add(new MapNode(id,point.getX(),-1,point.getY(),NODE_STANDARD, false, false));
+            curveNodesList.add(new MapNode(id,point.getX(),-1,point.getY(), NODE_FLAG_STANDARD, false, false));
             if (i+step >=1.0001 ) LOG.info("WARNING -- last node was not calculated, this should not happen!! -- step = {} ,  ", i+step);
             id++;
         }
@@ -106,11 +106,23 @@ public class CubicCurve {
 
         mergeNodesList.add(curveStartNode);
 
+        if (this.curveStartNode.y != -1 && this.curveEndNode.y == -1) {
+            this.curveEndNode.y = this.curveStartNode.y;
+        }
+        if (this.curveEndNode.y != -1 && this.curveStartNode.y == -1) {
+            this.curveStartNode.y = this.curveEndNode.y;
+        }
+
+        float yInterpolation = (float) ((curveEndNode.y - curveStartNode.y) / (this.curveNodesList.size() - 1));
+
         for (int j = 1; j < curveNodesList.size() - 1; j++) {
             MapNode tempNode = curveNodesList.get(j);
             double heightMapY = getYValueFromHeightMap(tempNode.x, tempNode.z);
-            MapNode newNode = new MapNode(roadMap.mapNodes.size() + 1, tempNode.x, heightMapY, tempNode.z, this.nodeType, false, false);
-            roadMap.mapNodes.add(newNode);
+            if (heightMapY == -1) {
+                heightMapY = curveStartNode.y + ( yInterpolation * j);
+            }
+            MapNode newNode = new MapNode(RoadMap.mapNodes.size() + 1, tempNode.x, heightMapY, tempNode.z, this.nodeType, false, false);
+            RoadMap.mapNodes.add(newNode);
             mergeNodesList.add(newNode);
         }
 
@@ -118,7 +130,7 @@ public class CubicCurve {
         changeManager.addChangeable( new CurveChanger(mergeNodesList, isReversePath, isDualPath));
         connectNodes(mergeNodesList, isReversePath, isDualPath);
 
-        if (AutoDriveEditor.DEBUG) LOG.info("CubicCurve created {} nodes", mergeNodesList.size() - 2 );
+        if (DEBUG) LOG.info("CubicCurve created {} nodes", mergeNodesList.size() - 2 );
     }
 
     public static void connectNodes(LinkedList<MapNode> mergeNodesList, boolean reversePath, boolean dualPath)  {
@@ -263,7 +275,7 @@ public class CubicCurve {
 
     public void setNodeType(int nodeType) {
         this.nodeType = nodeType;
-        if (nodeType == NODE_SUBPRIO) {
+        if (nodeType == NODE_FLAG_SUBPRIO) {
             for (int j = 1; j < curveNodesList.size() - 1; j++) {
                 MapNode tempNode = curveNodesList.get(j);
                 tempNode.flag = 1;

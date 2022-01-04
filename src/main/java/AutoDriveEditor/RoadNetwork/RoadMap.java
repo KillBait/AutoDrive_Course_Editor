@@ -12,8 +12,8 @@ public class RoadMap {
     public static LinkedList<MapMarker> mapMarkers;
 
     public RoadMap() {
-        this.mapMarkers = new LinkedList<>();
-        this.mapNodes = new LinkedList<>();
+        mapMarkers = new LinkedList<>();
+        mapNodes = new LinkedList<>();
         this.roadMapName = null;
 
     }

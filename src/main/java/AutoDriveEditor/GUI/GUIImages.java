@@ -18,6 +18,7 @@ public class GUIImages {
     public static BufferedImage curveNodeImage;
     public static BufferedImage rotateRing;
     public static BufferedImage warningImage;
+    public static BufferedImage warningYImage;
 
     public static ImageIcon markerIcon;
     public static ImageIcon regularConnectionIcon;
@@ -41,6 +42,7 @@ public class GUIImages {
         // node images for MapPanel
         nodeImage = loadImage("editor/nodes/node.png");
         warningImage = loadImage("editor/nodes/node_warning.png");
+        warningYImage = loadImage("editor/nodes/node_warning_y.png");
         nodeImageSelected = loadImage("editor/nodes/node_selected.png");
         subPrioNodeImage = loadImage("editor/nodes/subprionode.png");
         subPrioNodeImageSelected = loadImage("editor/nodes/subprionode_selected.png");

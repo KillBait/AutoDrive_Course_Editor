@@ -113,12 +113,6 @@ public class AutoDriveEditor extends JFrame {
         }
 
         for (String arg : args) {
-            if (Objects.equals(arg, "-DEBUG")) {
-                DEBUG = true;
-                LOG.info("##");
-                LOG.info("## WARNING ..... Debug mode active, editor performance may be slower then normal");
-                LOG.info("##");
-            }
             if (Objects.equals(arg, "-EXPERIMENTAL")) {
                 EXPERIMENTAL = true;
                 LOG.info("##");

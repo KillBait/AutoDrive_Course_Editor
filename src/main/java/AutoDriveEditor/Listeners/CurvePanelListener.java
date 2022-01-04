@@ -21,17 +21,17 @@ public class CurvePanelListener implements ItemListener, ChangeListener {
         switch (button.getActionCommand()) {
             case RADIOBUTTON_PATHTYPE_REGULAR:
                 if (quadCurve != null && isQuadCurveCreated) {
-                    quadCurve.setNodeType(NODE_STANDARD);
+                    quadCurve.setNodeType(NODE_FLAG_STANDARD);
                 } else if (cubicCurve != null && isCubicCurveCreated) {
-                    cubicCurve.setNodeType(NODE_STANDARD);
+                    cubicCurve.setNodeType(NODE_FLAG_STANDARD);
                 }
                 mapPanel.repaint();
                 break;
             case RADIOBUTTON_PATHTYPE_SUBPRIO:
                 if (quadCurve != null && isQuadCurveCreated) {
-                    quadCurve.setNodeType(NODE_SUBPRIO);
+                    quadCurve.setNodeType(NODE_FLAG_SUBPRIO);
                 } else if (cubicCurve != null && isCubicCurveCreated) {
-                    cubicCurve.setNodeType(NODE_SUBPRIO);
+                    cubicCurve.setNodeType(NODE_FLAG_SUBPRIO);
                 }
                 mapPanel.repaint();
                 break;

@@ -326,7 +326,7 @@ public class MenuListener implements ActionListener, ItemListener {
                 break;
             case MENU_DEBUG_HEIGHTMAP:
                 bDebugHeightMap = menuItem.isSelected();
-                if (!menuItem.isSelected()) showInTextArea("", true);
+                if (!menuItem.isSelected()) showInTextArea("", true, false);
                 break;
             case MENU_DEBUG_MERGE:
                 bDebugMerge = menuItem.isSelected() ;
@@ -334,6 +334,12 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_DEBUG_TEST:
                 bDebugTest = menuItem.isSelected();
                 break;
+            case MENU_DEBUG_ENABLE:
+                bDebugEnable = menuItem.isSelected();
+                debugMenu.setVisible(menuItem.isSelected());
+                DEBUG = menuItem.isSelected();
+                break;
+
         }
     }
 

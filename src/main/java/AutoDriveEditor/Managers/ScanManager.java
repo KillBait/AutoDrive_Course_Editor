@@ -13,6 +13,8 @@ import java.util.concurrent.ExecutionException;
 import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
+import static AutoDriveEditor.RoadNetwork.MapNode.NODE_WARNING_NONE;
+import static AutoDriveEditor.RoadNetwork.MapNode.NODE_WARNING_OVERLAP;
 import static AutoDriveEditor.RoadNetwork.RoadMap.*;
 import static AutoDriveEditor.Utils.LoggerUtils.*;
 
@@ -31,7 +33,9 @@ public class ScanManager {
         networkScanned = false;
         searchDistance = distance;
         for (MapNode node : RoadMap.mapNodes) {
-            node.hasWarning = false;
+            node.clearWarning();
+            //node.hasWarning = false;
+            //node.warningType = NODE_WARNING_NONE;
             node.warningNodes.clear();
         }
         ScanNetworkWorker scanThread = new ScanNetworkWorker(searchDistance);
@@ -72,8 +76,7 @@ public class ScanManager {
 
             String text = "Roadmap nodes = " + mapNodes.size() + " --- Found " + count + " nodes overlapping --- Time Taken " +
                     (float) (System.currentTimeMillis() - timer) / 1000 + " seconds" ;
-            GUIUtils.showInTextArea(text, true);
-            LOG.info(text);
+            GUIUtils.showInTextArea(text, true, true);
             getMapPanel().repaint();
             return count;
         }
@@ -115,14 +118,14 @@ public class ScanManager {
                         result += 1;
 
                         if (!mapNode.warningNodes.contains(node)) {
-                            //LOG.info("Adding {} to {} warning list",node.id, mapNode.id);
                             mapNode.warningNodes.add(node);
                             mapNode.hasWarning = true;
+                            mapNode.warningType = NODE_WARNING_OVERLAP;
                         }
                         if (!node.warningNodes.contains(mapNode)) {
-                            //LOG.info("Adding {} to {} warning list",mapNode.id, node.id);
                             node.warningNodes.add(mapNode);
                             node.hasWarning = true;
+                            node.warningType = NODE_WARNING_OVERLAP;
                         }
                     }
                 }
@@ -134,15 +137,23 @@ public class ScanManager {
 
     public static void checkNodeOverlap(MapNode node) {
         if (checkAreaForNodeOverlap(node) == 0 ) {
-            LOG.info("Node clear");
+            //LOG.info("Node clear");
 
             for (MapNode mapNode : node.warningNodes) {
                 //LOG.info("removing {} from {} warning list",node.id, mapNode.id);
                 mapNode.warningNodes.remove(node);
-                mapNode.hasWarning = mapNode.warningNodes.size() != 0;
+                //mapNode.hasWarning = mapNode.warningNodes.size() != 0;
+                if (mapNode.warningNodes.size() != 0) {
+                    mapNode.hasWarning = true;
+                    mapNode.warningType = NODE_WARNING_OVERLAP;
+                } else {
+                    //mapNode.hasWarning = false;
+                    mapNode.clearWarning();
+                }
             }
 
-            node.hasWarning = false;
+            node.clearWarning();
+            //node.hasWarning = false;
             node.warningNodes.clear();
         }
     }
@@ -164,11 +175,7 @@ public class ScanManager {
 
                     for (MapNode overlapNode : mapNode.warningNodes) {
 
-                        mergedIncoming.clear();
-                        mergedOutgoing.clear();
                         if (bDebugMerge) LOG.info("Storing incoming for {}", overlapNode.id);
-
-                        //LOG.info("incoming size = {} , merge size before = {}", overlapNode.incoming.size(), mergedIncoming.size());
 
                         for (MapNode overlapNodeIncoming : overlapNode.incoming) {
                             if (overlapNodeIncoming != mapNode && !mergedIncoming.contains(overlapNodeIncoming)) {
@@ -182,8 +189,6 @@ public class ScanManager {
                                 }
                             }
                         }
-
-                        //LOG.info("merge size after = {}", mergedIncoming.size());
 
                         if (bDebugMerge) LOG.info("Storing outgoing for {}", overlapNode.id);
 
@@ -201,12 +206,10 @@ public class ScanManager {
                         for (MapNode reverseNode : RoadMap.mapNodes) {
                             if (reverseNode.outgoing.contains(overlapNode) && !overlapNode.incoming.contains(reverseNode)) {
                                 if (bDebugMerge) LOG.info("#### reverse incoming Connection from {}", reverseNode.id);
-                                //reverseNode.outgoing.remove(overlapNode);
                                 if (!reverseNode.outgoing.contains(mapNode)) reverseNode.outgoing.add(mapNode);
                             }
                             if (reverseNode.incoming.contains(overlapNode)) {
                                 if (bDebugMerge) LOG.info("#### reverse incoming Connection from {}", reverseNode.id);
-                                //reverseNode.incoming.remove(overlapNode);
                                 if (!reverseNode.incoming.contains(mapNode)) reverseNode.incoming.add(mapNode);
                             }
                         }
@@ -222,9 +225,6 @@ public class ScanManager {
                         if (bDebugMerge) LOG.info("stored Connections - Deleting node {}", overlapNode.id);
                         overlapNode.scheduleDelete = true;
                         deleteNodeList.add(overlapNode);
-                        if ( mergedIncoming.size() >50 || mergedOutgoing.size() > 50 ) {
-                            LOG.info("ID {} -- incoming {} , outgoing {}", overlapNode.id, mergedIncoming.size(), mergedOutgoing.size());
-                        }
                     }
                     if (bDebugMerge) LOG.info("Adding all connections to mapNode {}", mapNode.id);
 
@@ -239,11 +239,12 @@ public class ScanManager {
                     mapNode.incoming.addAll(mergedIncoming);
                     mapNode.outgoing.addAll(mergedOutgoing);
                     mergeNodeList.add(mapNode);
+                    mergedIncoming.clear();
+                    mergedOutgoing.clear();
                 }
             }
             String text = "Merging nodes completed - Removing " + deleteNodeList.size() + " nodes";
-            GUIUtils.showInTextArea(text, true);
-            LOG.info("Removing {} nodes", deleteNodeList.size());
+            GUIUtils.showInTextArea(text, true, true);
             for (MapNode nodeToDelete : deleteNodeList) {
                 removeMapNode(nodeToDelete);
             }
@@ -255,6 +256,12 @@ public class ScanManager {
                     getMapPanel().repaint();
                 } else {
                     LOG.info("mapnode is still overlapping");
+                }
+            }
+
+            for (MapNode node : RoadMap.mapNodes) {
+                if ( node.incoming.size() >10 || node.outgoing.size() > 10 ) {
+                    LOG.info(" #### HIGH CONNECTION COUNT #### ID {} -- incoming {} , outgoing {}", node.id, node.incoming.size(), node.outgoing.size());
                 }
             }
 
