@@ -55,6 +55,7 @@ public class GUIBuilder {
     public static final String BUTTON_COPYPASTE_CUT = "CopyPaste Cut";
     public static final String BUTTON_COPYPASTE_COPY = "CopyPaste Copy";
     public static final String BUTTON_COPYPASTE_PASTE = "CopyPaste Paste";
+    public static final String BUTTON_COPYPASTE_PASTE_ORIGINAL = "CopyPaste Paste Original Location";
 
     // OCD modes
 

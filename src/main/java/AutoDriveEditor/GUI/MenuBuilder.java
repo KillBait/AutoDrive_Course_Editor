@@ -78,6 +78,7 @@ public class MenuBuilder {
     public static JMenuItem cutMenuItem;
     public static JMenuItem copyMenuItem;
     public static JMenuItem pasteMenuItem;
+    public static JMenuItem pasteOriginalLocationMenuItem;
     public static JMenuItem zoomOneX;
     public static JMenuItem zoomFourX;
     public static JMenuItem zoomSixteenX;
@@ -130,6 +131,7 @@ public class MenuBuilder {
         cutMenuItem = makeMenuItem("menu_edit_cut",  "menu_edit_cut_accstring", KeyEvent.VK_X, InputEvent.CTRL_DOWN_MASK, editMenu, menuListener, BUTTON_COPYPASTE_CUT, false );
         copyMenuItem = makeMenuItem("menu_edit_copy",  "menu_edit_copy_accstring", KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK, editMenu, menuListener, BUTTON_COPYPASTE_COPY, false );
         pasteMenuItem = makeMenuItem("menu_edit_paste",  "menu_edit_paste_accstring", KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK, editMenu, menuListener, BUTTON_COPYPASTE_PASTE, false );
+        pasteOriginalLocationMenuItem = makeMenuItem("menu_edit_paste_original_location",  "menu_edit_paste_original_location_accstring", KeyEvent.VK_V, InputEvent.SHIFT_DOWN_MASK, editMenu, menuListener, BUTTON_COPYPASTE_PASTE_ORIGINAL, false );
 
 
 
@@ -250,6 +252,7 @@ public class MenuBuilder {
         cutMenuItem.setEnabled(enabled);
         copyMenuItem.setEnabled(enabled);
         pasteMenuItem.setEnabled(enabled);
+        pasteOriginalLocationMenuItem.setEnabled(enabled);
     }
 
     public static void rotationMenuEnabled(boolean enabled) {

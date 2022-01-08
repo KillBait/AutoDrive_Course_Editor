@@ -64,9 +64,9 @@ public class CopyPasteManager {
         if (recInfo != null) {
             centrePoint = recInfo.recCentre;
             // rebuild the selected nodes and there connections to a new arrayList
-            tempCache = createNewMapNodesFromList(nodesToCopy, (int) centrePoint.getX(), (int) centrePoint.getY());
+            tempCache = createNewMapNodesFromList(nodesToCopy);
             // create a cached LinkedList so we can paste this in as many times as needed
-            nodeCache = createNewMapNodesFromList(tempCache, 0, 0);
+            nodeCache = createNewMapNodesFromList(tempCache);
             MenuBuilder.rotationMenuEnabled(true);
         }
         clearMultiSelection();
@@ -74,7 +74,7 @@ public class CopyPasteManager {
 
     public void PasteSelection(boolean inOriginalLocation) {
         if (nodeCache.size() > 0 ) {
-            LinkedList<MapNode> tempCache = createNewMapNodesFromList(nodeCache, 0, 0);
+            LinkedList<MapNode> tempCache = createNewMapNodesFromList(nodeCache);
             addNodesToNetwork(tempCache, inOriginalLocation);
         } else {
             LOG.info("Cannot Paste - Buffer empty");
@@ -82,7 +82,7 @@ public class CopyPasteManager {
     }
 
 
-    public LinkedList<MapNode> createNewMapNodesFromList(LinkedList<MapNode> list, int rectCentreX, int rectCentreY) {
+    public LinkedList<MapNode> createNewMapNodesFromList(LinkedList<MapNode> list) {
 
         // create a new MapNode for each node in the list
 
@@ -91,7 +91,7 @@ public class CopyPasteManager {
 
         int n = 1;
         for (MapNode node : list) {
-            MapNode workBufferNode = new MapNode(n++, node.x - rectCentreX, node.y, node.z - rectCentreY, node.flag, true, false);
+            MapNode workBufferNode = new MapNode(n++, node.x, node.y, node.z, node.flag, true, false);
             workBuffer.add(new NodeTransform(node, workBufferNode));
         }
 
@@ -149,7 +149,7 @@ public class CopyPasteManager {
         if (!originalLocation) {
             selectionCentre = screenPosToWorldPos(getMapPanel().getWidth() / 2, getMapPanel().getHeight() / 2);
         } else {
-            selectionCentre = new Point2D.Double(0,0);
+            selectionCentre = new Point2D.Double(0, 0);
         }
         clearMultiSelection();
 

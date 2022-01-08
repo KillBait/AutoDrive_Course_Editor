@@ -2107,8 +2107,8 @@ public class MapPanel extends JPanel{
         updateButtons();
     }
 
-    public static void pasteSelected() {
-        cnpManager.PasteSelection(false);
+    public static void pasteSelected(boolean pasteInOriginalLocation) {
+        cnpManager.PasteSelection(pasteInOriginalLocation);
         editorState = EDITORSTATE_NOOP;
         updateButtons();
 

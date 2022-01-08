@@ -123,7 +123,7 @@ public class EditorListener implements ActionListener, MouseListener {
                 break;
             case BUTTON_COPYPASTE_PASTE:
                 MapPanel.getMapPanel().isMultiSelectAllowed = false;
-                pasteSelected();
+                pasteSelected(false);
                 break;
         }
         updateButtons();

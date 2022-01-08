@@ -282,7 +282,10 @@ public class MenuListener implements ActionListener, ItemListener {
                 copySelected();
                 break;
             case BUTTON_COPYPASTE_PASTE:
-                pasteSelected();
+                pasteSelected(false);
+                break;
+            case BUTTON_COPYPASTE_PASTE_ORIGINAL:
+                pasteSelected(true);
                 break;
             case MENU_DEBUG_MOVETO_NODE:
                 centreNode();
