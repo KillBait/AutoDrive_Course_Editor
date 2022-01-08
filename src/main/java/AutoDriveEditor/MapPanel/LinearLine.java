@@ -42,14 +42,14 @@ public class LinearLine {
 
         double lineLength = Math.sqrt( powX + powY);
 
-        int multiplier = (int)lineLength/this.interpolationPointDistance;
+        int multiplier = (int)lineLength/(this.interpolationPointDistance / mapZoomFactor);
         int id = 1;
 
         for(int i=0;i<=multiplier;i++) {
             Point2D.Double point = new Point2D.Double();
             point.x = startNode.x * ((double)1 - ((double)i/(double)multiplier)) + endX * ((double)i / (double)multiplier);
             point.y = startNode.z * (1 - (i/(double)multiplier)) + endY * (i / (double)multiplier);
-            lineNodeList.add(new MapNode(id,point.getX(),point.getY(),0, NODE_FLAG_STANDARD, false, false));
+            lineNodeList.add(new MapNode(id,point.getX(),0,point.getY(), NODE_FLAG_STANDARD, false, false));
             id++;
         }
     }
@@ -66,6 +66,8 @@ public class LinearLine {
     }
 
     public void commit(MapNode lineEndNode, int connectionType, int nodeType) {
+        canAutoSave = false;
+
         LinkedList<MapNode> mergeNodesList  = new LinkedList<>();
 
         if (DEBUG) LOG.info("LinearLine size = {}",this.lineNodeList.size());
@@ -74,7 +76,11 @@ public class LinearLine {
         if (lineEndNode.y == -1 && lineStartNode.y != -1) lineEndNode.y = lineStartNode.y;
         if (lineEndNode.y != -1 && lineStartNode.y == -1) lineStartNode.y = lineEndNode.y;
 
+
+
         float yInterpolation = (float) ((lineEndNode.y - lineStartNode.y) / (this.lineNodeList.size() - 1));
+
+        LOG.info(" start = {} , end = {}, interp = {}", lineStartNode.y, lineEndNode.y, yInterpolation );
 
         for (int j = 1; j < this.lineNodeList.size() - 1; j++) {
             MapNode tempNode = this.lineNodeList.get(j);
@@ -82,7 +88,7 @@ public class LinearLine {
             if (heightMapY == -1) {
                 heightMapY = lineStartNode.y + ( yInterpolation * j);
             }
-            MapNode newNode = new MapNode(RoadMap.mapNodes.size() + 1, tempNode.x, heightMapY, tempNode.y, nodeType, false, false);
+            MapNode newNode = new MapNode(RoadMap.mapNodes.size() + 1, tempNode.x, heightMapY, tempNode.z, nodeType, false, false);
             RoadMap.mapNodes.add(newNode);
             mergeNodesList.add(newNode);
         }
@@ -92,15 +98,18 @@ public class LinearLine {
         changeManager.addChangeable( new ChangeManager.LinearLineChanger(this.lineStartNode, lineEndNode, mergeNodesList, connectionType));
         connectNodes(mergeNodesList, connectionType);
 
+        canAutoSave = true;
 
     }
 
     public static void connectNodes(LinkedList<MapNode> mergeNodesList, int connectionType)  {
+        canAutoSave = false;
         for (int j = 0; j < mergeNodesList.size() - 1; j++) {
             MapNode startNode = mergeNodesList.get(j);
             MapNode endNode = mergeNodesList.get(j+1);
             MapPanel.createConnectionBetween(startNode,endNode,connectionType);
         }
+        canAutoSave = true;
     }
 
     public boolean isLineCreated() {

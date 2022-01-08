@@ -102,6 +102,7 @@ public class CubicCurve {
     }
 
     public void commitCurve() {
+        canAutoSave = false;
         LinkedList<MapNode> mergeNodesList  = new LinkedList<>();
 
         mergeNodesList.add(curveStartNode);
@@ -129,6 +130,8 @@ public class CubicCurve {
         mergeNodesList.add(curveEndNode);
         changeManager.addChangeable( new CurveChanger(mergeNodesList, isReversePath, isDualPath));
         connectNodes(mergeNodesList, isReversePath, isDualPath);
+
+        canAutoSave = true;
 
         if (DEBUG) LOG.info("CubicCurve created {} nodes", mergeNodesList.size() - 2 );
     }

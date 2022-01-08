@@ -1,8 +1,6 @@
 package AutoDriveEditor.GUI;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
@@ -35,6 +33,7 @@ public class MenuBuilder {
     public static final String MENU_HEIGHTMAP_FIX = "Fix Node Height";
     public static final String MENU_CHECKBOX_CONTINUECONNECT = "Continuous Connections";
     public static final String MENU_CHECKBOX_MIDDLEMOUSEMOVE = "Middle Mouse Move";
+    public static final String MENU_AUTOSAVE_INTERVAL = "Autosave Interval";
     public static final String MENU_GRID_SET = "Grid Set";
     public static final String MENU_GRID_SHOW = "Grid Show";
     public static final String MENU_GRID_SNAP = "Grid Snap";
@@ -49,7 +48,7 @@ public class MenuBuilder {
     public static final String MENU_ABOUT = "About";
     public static final String MENU_DEBUG_ENABLE = "Enable Debug";
 
-
+    public static final String MENU_DEBUG_MOVETO_NODE = "DEBUG MOVETO NODE";
     public static final String MENU_DEBUG_SHOWID = "DEBUG ID";
     public static final String MENU_DEBUG_FILEIO = "DEBUG CONFIG";
     public static final String MENU_DEBUG_SELECTED_LOCATION = "DEBUG SELECTED LOCATION";
@@ -133,6 +132,7 @@ public class MenuBuilder {
         pasteMenuItem = makeMenuItem("menu_edit_paste",  "menu_edit_paste_accstring", KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK, editMenu, menuListener, BUTTON_COPYPASTE_PASTE, false );
 
 
+
         // Create the Map Menu and it's scale sub menu
 
         mapMenu = makeMenu("menu_map", KeyEvent.VK_M, "menu_map_accstring", menuBar);
@@ -158,8 +158,10 @@ public class MenuBuilder {
         // create the Options menu
 
         optionsMenu = makeMenu("menu_options", KeyEvent.VK_O, "menu_options_accstring", menuBar);
-        makeCheckBoxMenuItem("menu_conconnect", "menu_conconnect_accstring", KeyEvent.VK_4, bContinuousConnections, optionsMenu, menuListener, MENU_CHECKBOX_CONTINUECONNECT);
-        makeCheckBoxMenuItem("menu_middlemousemove", "menu_middlemousemove_accstring", KeyEvent.VK_5, bMiddleMouseMove, optionsMenu, menuListener, MENU_CHECKBOX_MIDDLEMOUSEMOVE);
+        makeMenuItem("menu_options_set_autosave_interval", "menu_options_set_autosave_interval_accstring", optionsMenu, menuListener, MENU_AUTOSAVE_INTERVAL, true );
+        optionsMenu.addSeparator();
+        makeCheckBoxMenuItem("menu_options_conconnect", "menu_options_conconnect_accstring", KeyEvent.VK_4, bContinuousConnections, optionsMenu, menuListener, MENU_CHECKBOX_CONTINUECONNECT);
+        makeCheckBoxMenuItem("menu_options_middlemousemove", "menu_options_middlemousemove_accstring", KeyEvent.VK_5, bMiddleMouseMove, optionsMenu, menuListener, MENU_CHECKBOX_MIDDLEMOUSEMOVE);
 
         // create the grid snap menu
 
@@ -180,7 +182,7 @@ public class MenuBuilder {
         rotationMenu.addSeparator();
         makeMenuItem("menu_rotate_set_step", "menu_rotate_set_step_accstring", KeyEvent.VK_Y, InputEvent.SHIFT_DOWN_MASK, rotationMenu, menuListener, MENU_ROTATE_SET, true );
 
-        // Ctreate the FixIt menu
+        // Create the FixIt menu
 
         fixItMenu = makeMenu("menu_scan", KeyEvent.VK_S, "menu_scan_accstring", menuBar);
         scanNetworkMenuItem = makeMenuItem("menu_scan_overlap", "menu_scan_overlap_accstring", fixItMenu, menuListener, MENU_SCAN_OVERLAP, false);
@@ -194,6 +196,8 @@ public class MenuBuilder {
 
         debugMenu = makeMenu("menu_debug", KeyEvent.VK_D, "menu_debug_accstring", menuBar);
         debugMenu.setVisible(false);
+        makeMenuItem("menu_debug_movetonode", "menu_debug_movetonode_accstring", debugMenu, menuListener, MENU_DEBUG_MOVETO_NODE, true);
+        debugMenu.addSeparator();
         makeCheckBoxMenuItem("menu_debug_showID", "menu_debug_showID_accstring", KeyEvent.VK_6, InputEvent.ALT_DOWN_MASK, bDebugShowID, debugMenu, menuListener, MENU_DEBUG_SHOWID);
         makeCheckBoxMenuItem("menu_debug_showselectedlocation", "menu_debug_showselectedlocation_accstring", KeyEvent.VK_7, InputEvent.ALT_DOWN_MASK, bDebugShowSelectedLocation, debugMenu, menuListener, MENU_DEBUG_SELECTED_LOCATION);
         makeCheckBoxMenuItem("menu_debug_profile", "menu_debug_profile_accstring", bDebugProfile, debugMenu, menuListener, MENU_DEBUG_PROFILE);

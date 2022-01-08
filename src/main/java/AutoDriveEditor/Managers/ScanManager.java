@@ -2,6 +2,7 @@ package AutoDriveEditor.Managers;
 
 import javax.swing.*;
 
+import AutoDriveEditor.AutoDriveEditor;
 import AutoDriveEditor.GUI.GUIUtils;
 import AutoDriveEditor.GUI.MenuBuilder;
 import AutoDriveEditor.RoadNetwork.MapNode;
@@ -10,14 +11,14 @@ import AutoDriveEditor.RoadNetwork.RoadMap;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutionException;
 
-import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
+import static AutoDriveEditor.Locale.LocaleManager.localeString;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.RoadNetwork.MapNode.NODE_WARNING_NONE;
-import static AutoDriveEditor.RoadNetwork.MapNode.NODE_WARNING_OVERLAP;
+import static AutoDriveEditor.RoadNetwork.MapNode.*;
 import static AutoDriveEditor.RoadNetwork.RoadMap.*;
 import static AutoDriveEditor.Utils.LoggerUtils.*;
-
+import static AutoDriveEditor.XMLConfig.GameXML.autoSaveConfigFile;
+import static AutoDriveEditor.XMLConfig.GameXML.saveMergeBackupConfigFile;
 
 
 public class ScanManager {
@@ -153,118 +154,122 @@ public class ScanManager {
             }
 
             node.clearWarning();
-            //node.hasWarning = false;
             node.warningNodes.clear();
         }
     }
 
     public static void  mergeOverlappingNodes() {
-        if (!networkScanned) {
-            LOG.info("need to run network scan first");
-        } else {
-            LinkedList<MapNode> mergedIncoming = new LinkedList<>();
-            LinkedList<MapNode> mergedOutgoing = new LinkedList<>();
-            LinkedList<MapNode> deleteNodeList = new LinkedList<>();
-            LinkedList<MapNode> mergeNodeList = new LinkedList<>();
+        int response = JOptionPane.showConfirmDialog(AutoDriveEditor.editor, localeString.getString("dialog_merge_confirm"), "AutoDrive Editor", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (response == JOptionPane.YES_OPTION) {
+            if (!networkScanned) {
+                LOG.info("need to run network scan first");
+            } else {
+                saveMergeBackupConfigFile();
+                canAutoSave = false;
+                LinkedList<MapNode> mergedIncoming = new LinkedList<>();
+                LinkedList<MapNode> mergedOutgoing = new LinkedList<>();
+                LinkedList<MapNode> deleteNodeList = new LinkedList<>();
+                LinkedList<MapNode> mergeNodeList = new LinkedList<>();
 
-            LOG.info("Running merge nodes");
-            for (MapNode mapNode : RoadMap.mapNodes) {
-                if (mapNode.hasWarning && !mapNode.scheduleDelete) {
+                LOG.info("Running merge nodes");
+                for (MapNode mapNode : RoadMap.mapNodes) {
+                    if (mapNode.hasWarning && !mapNode.scheduleDelete) {
 
-                    if (bDebugMerge) LOG.info("Merging overlapping nodes into ID {}", mapNode.id);
+                        if (bDebugMerge) LOG.info("Merging overlapping nodes into ID {}", mapNode.id);
 
-                    for (MapNode overlapNode : mapNode.warningNodes) {
+                        for (MapNode overlapNode : mapNode.warningNodes) {
 
-                        if (bDebugMerge) LOG.info("Storing incoming for {}", overlapNode.id);
+                            if (bDebugMerge) LOG.info("Storing incoming for {}", overlapNode.id);
 
-                        for (MapNode overlapNodeIncoming : overlapNode.incoming) {
-                            if (overlapNodeIncoming != mapNode && !mergedIncoming.contains(overlapNodeIncoming)) {
-                                if (bDebugMerge) LOG.info("adding {} to mergedIncoming", overlapNodeIncoming.id);
-                                mergedIncoming.add(overlapNodeIncoming);
-                            }
-                            if (overlapNodeIncoming.outgoing.contains(overlapNode)) {
-                                if (!overlapNodeIncoming.outgoing.contains(mapNode)) {
-                                    if (bDebugMerge) LOG.info("adding {} to {}.outgoing", mapNode.id, overlapNodeIncoming.id);
-                                    overlapNodeIncoming.outgoing.add(mapNode);
+                            for (MapNode overlapNodeIncoming : overlapNode.incoming) {
+                                if (overlapNodeIncoming != mapNode && !mergedIncoming.contains(overlapNodeIncoming)) {
+                                    if (bDebugMerge) LOG.info("adding {} to mergedIncoming", overlapNodeIncoming.id);
+                                    mergedIncoming.add(overlapNodeIncoming);
+                                }
+                                if (overlapNodeIncoming.outgoing.contains(overlapNode)) {
+                                    if (!overlapNodeIncoming.outgoing.contains(mapNode)) {
+                                        if (bDebugMerge) LOG.info("adding {} to {}.outgoing", mapNode.id, overlapNodeIncoming.id);
+                                        overlapNodeIncoming.outgoing.add(mapNode);
+                                    }
                                 }
                             }
+
+                            if (bDebugMerge) LOG.info("Storing outgoing for {}", overlapNode.id);
+
+                            for (MapNode outgoingNode : overlapNode.outgoing) {
+                                if (!mergedOutgoing.contains(outgoingNode)) {
+                                    if (bDebugMerge) LOG.info("adding {} to mergedOutgoing", outgoingNode.id);
+                                    if (outgoingNode != mapNode) mergedOutgoing.add(outgoingNode);
+                                }
+                                if (outgoingNode.incoming.contains(overlapNode)) {
+                                    if (bDebugMerge) LOG.info("adding {} to {}.outgoing", mapNode.id, outgoingNode.id);
+                                    if (!outgoingNode.incoming.contains(mapNode)) outgoingNode.incoming.add(mapNode);
+                                }
+                            }
+
+                            for (MapNode reverseNode : RoadMap.mapNodes) {
+                                if (reverseNode.outgoing.contains(overlapNode) && !overlapNode.incoming.contains(reverseNode)) {
+                                    if (bDebugMerge) LOG.info("#### reverse incoming Connection from {}", reverseNode.id);
+                                    if (!reverseNode.outgoing.contains(mapNode)) reverseNode.outgoing.add(mapNode);
+                                }
+                                if (reverseNode.incoming.contains(overlapNode)) {
+                                    if (bDebugMerge) LOG.info("#### reverse incoming Connection from {}", reverseNode.id);
+                                    if (!reverseNode.incoming.contains(mapNode)) reverseNode.incoming.add(mapNode);
+                                }
+                            }
+
+                            // edge case #1 - remove self references
+                            for (MapNode node : mapNode.incoming) {
+                                if (node == mapNode) mapNode.incoming.remove(mapNode);
+                            }
+                            for (MapNode node : mapNode.outgoing) {
+                                if (node == mapNode) mapNode.outgoing.remove(mapNode);
+                            }
+
+                            if (bDebugMerge) LOG.info("stored Connections - Deleting node {}", overlapNode.id);
+                            overlapNode.scheduleDelete = true;
+                            deleteNodeList.add(overlapNode);
                         }
+                        if (bDebugMerge) LOG.info("Adding all connections to mapNode {}", mapNode.id);
 
-                        if (bDebugMerge) LOG.info("Storing outgoing for {}", overlapNode.id);
-
-                        for (MapNode outgoingNode : overlapNode.outgoing) {
-                            if (!mergedOutgoing.contains(outgoingNode)) {
-                                if (bDebugMerge) LOG.info("adding {} to mergedOutgoing", outgoingNode.id);
-                                if (outgoingNode != mapNode) mergedOutgoing.add(outgoingNode);
-                            }
-                            if (outgoingNode.incoming.contains(overlapNode)) {
-                                if (bDebugMerge) LOG.info("adding {} to {}.outgoing", mapNode.id, outgoingNode.id);
-                                if (!outgoingNode.incoming.contains(mapNode)) outgoingNode.incoming.add(mapNode);
-                            }
-                        }
-
-                        for (MapNode reverseNode : RoadMap.mapNodes) {
-                            if (reverseNode.outgoing.contains(overlapNode) && !overlapNode.incoming.contains(reverseNode)) {
-                                if (bDebugMerge) LOG.info("#### reverse incoming Connection from {}", reverseNode.id);
-                                if (!reverseNode.outgoing.contains(mapNode)) reverseNode.outgoing.add(mapNode);
-                            }
-                            if (reverseNode.incoming.contains(overlapNode)) {
-                                if (bDebugMerge) LOG.info("#### reverse incoming Connection from {}", reverseNode.id);
-                                if (!reverseNode.incoming.contains(mapNode)) reverseNode.incoming.add(mapNode);
-                            }
-                        }
-
-                        // edge case #1 - remove self references
                         for (MapNode node : mapNode.incoming) {
-                            if (node == mapNode) mapNode.incoming.remove(mapNode);
+                            if (!mergedIncoming.contains(node) && !node.scheduleDelete) mergedIncoming.add(node);
                         }
                         for (MapNode node : mapNode.outgoing) {
-                            if (node == mapNode) mapNode.outgoing.remove(mapNode);
+                            if (!mergedOutgoing.contains(node) && !node.scheduleDelete) mergedOutgoing.add(node);
                         }
-
-                        if (bDebugMerge) LOG.info("stored Connections - Deleting node {}", overlapNode.id);
-                        overlapNode.scheduleDelete = true;
-                        deleteNodeList.add(overlapNode);
+                        mapNode.incoming.clear();
+                        mapNode.outgoing.clear();
+                        mapNode.incoming.addAll(mergedIncoming);
+                        mapNode.outgoing.addAll(mergedOutgoing);
+                        mergeNodeList.add(mapNode);
+                        mergedIncoming.clear();
+                        mergedOutgoing.clear();
                     }
-                    if (bDebugMerge) LOG.info("Adding all connections to mapNode {}", mapNode.id);
+                }
+                String text = "Merging nodes completed - Removing " + deleteNodeList.size() + " nodes";
+                GUIUtils.showInTextArea(text, true, true);
+                for (MapNode nodeToDelete : deleteNodeList) {
+                    removeMapNode(nodeToDelete);
+                }
 
-                    for (MapNode node : mapNode.incoming) {
-                        if (!mergedIncoming.contains(node) && !node.scheduleDelete) mergedIncoming.add(node);
+                for (MapNode mergedNode : mergeNodeList) {
+                    if (checkAreaForNodeOverlap(mergedNode) == 0) {
+                        mergedNode.hasWarning = false;
+                        mergedNode.warningNodes.clear();
+                        getMapPanel().repaint();
+                    } else {
+                        LOG.info("mapnode is still overlapping");
                     }
-                    for (MapNode node : mapNode.outgoing) {
-                        if (!mergedOutgoing.contains(node) && !node.scheduleDelete) mergedOutgoing.add(node);
+                }
+
+                for (MapNode node : RoadMap.mapNodes) {
+                    if ( node.incoming.size() >10 || node.outgoing.size() > 10 ) {
+                        LOG.info(" #### HIGH CONNECTION COUNT #### ID {} -- incoming {} , outgoing {}", node.id, node.incoming.size(), node.outgoing.size());
                     }
-                    mapNode.incoming.clear();
-                    mapNode.outgoing.clear();
-                    mapNode.incoming.addAll(mergedIncoming);
-                    mapNode.outgoing.addAll(mergedOutgoing);
-                    mergeNodeList.add(mapNode);
-                    mergedIncoming.clear();
-                    mergedOutgoing.clear();
                 }
+                canAutoSave = true;
             }
-            String text = "Merging nodes completed - Removing " + deleteNodeList.size() + " nodes";
-            GUIUtils.showInTextArea(text, true, true);
-            for (MapNode nodeToDelete : deleteNodeList) {
-                removeMapNode(nodeToDelete);
-            }
-
-            for (MapNode mergedNode : mergeNodeList) {
-                if (checkAreaForNodeOverlap(mergedNode) == 0) {
-                    mergedNode.hasWarning = false;
-                    mergedNode.warningNodes.clear();
-                    getMapPanel().repaint();
-                } else {
-                    LOG.info("mapnode is still overlapping");
-                }
-            }
-
-            for (MapNode node : RoadMap.mapNodes) {
-                if ( node.incoming.size() >10 || node.outgoing.size() > 10 ) {
-                    LOG.info(" #### HIGH CONNECTION COUNT #### ID {} -- incoming {} , outgoing {}", node.id, node.incoming.size(), node.outgoing.size());
-                }
-            }
-
         }
     }
 }

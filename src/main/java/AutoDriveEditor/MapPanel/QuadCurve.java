@@ -100,6 +100,8 @@ public class QuadCurve extends MouseAdapter {
     }
 
     public void commitCurve() {
+        canAutoSave = false;
+
         LinkedList<MapNode> mergeNodesList = new LinkedList<>();
 
         mergeNodesList.add(curveStartNode);
@@ -127,10 +129,13 @@ public class QuadCurve extends MouseAdapter {
         changeManager.addChangeable(new ChangeManager.CurveChanger(mergeNodesList, isReversePath, isDualPath));
         connectNodes(mergeNodesList, isReversePath, isDualPath);
 
+        canAutoSave = true;
+
         if (AutoDriveEditor.DEBUG) LOG.info("QuadCurve created {} nodes", mergeNodesList.size() - 2);
     }
 
     public static void connectNodes(LinkedList<MapNode> mergeNodesList, boolean reversePath, boolean dualPath) {
+        canAutoSave = false;
         for (int j = 0; j < mergeNodesList.size() - 1; j++) {
             MapNode startNode = mergeNodesList.get(j);
             MapNode endNode = mergeNodesList.get(j + 1);
@@ -142,6 +147,7 @@ public class QuadCurve extends MouseAdapter {
                 MapPanel.createConnectionBetween(startNode, endNode, CONNECTION_STANDARD);
             }
         }
+        canAutoSave = true;
     }
 
     public void clear() {

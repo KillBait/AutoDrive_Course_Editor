@@ -87,6 +87,7 @@ public class ChangeManager {
 
     public void undo(){
         //validate
+        canAutoSave = false;
         if ( !canUndo() ){
             LOG.info("Reached Beginning of Undo History.");
             return;
@@ -100,6 +101,7 @@ public class ChangeManager {
         }
         //set index
         moveLeft();
+        canAutoSave = true;
     }
 
     /**
@@ -133,6 +135,7 @@ public class ChangeManager {
 
     public void redo(){
         //validate
+        canAutoSave = false;
         if ( !canRedo() ){
             LOG.info("Reached End of Undo History.");
             return;
@@ -145,6 +148,7 @@ public class ChangeManager {
         } else {
             LOG.info("Unable to Redo");
         }
+        canAutoSave = true;
     }
 
     /**
@@ -534,7 +538,7 @@ public class ChangeManager {
         }
 
         public void undo(){
-            roadMap.removeMapMarker(this.markerToChange);
+            RoadMap.removeMapMarker(this.markerToChange);
             getMapPanel().repaint();
             getMapPanel().setStale(this.isStale);
         }

@@ -161,8 +161,8 @@ public class MapImage {
         LOG.info("HeightMap path = {}", launchPath);
         try {
             heightImage = ImageIO.read(new File(launchPath));
-            heightMapImage = new BufferedImage(heightImage.getWidth(), heightImage.getHeight(), BufferedImage.TYPE_USHORT_565_RGB);
-            //heightMapImage = getNewBufferImage(heightImage.getWidth(), heightImage.getHeight());
+            //heightMapImage = new BufferedImage(heightImage.getWidth(), heightImage.getHeight(), BufferedImage.TYPE_USHORT_565_RGB);
+            heightMapImage = getNewBufferImage(heightImage.getWidth(), heightImage.getHeight());
             LOG.info("type = {}", heightMapImage.toString());
             Graphics2D g = (Graphics2D) heightMapImage.getGraphics();
             g.drawImage( heightImage, 0, 0, heightImage.getWidth(), heightImage.getHeight(), null);

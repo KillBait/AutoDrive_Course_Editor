@@ -171,8 +171,8 @@ public class GUIBuilder {
         alignHorizontal = makeImageToggleButton("buttons/horizontalalign","buttons/horizontalalign_selected", BUTTON_ALIGN_HORIZONTAL,"align_horizontal_tooltip","align_horizontal_alt", alignBox, null, false, editorListener);
         alignVertical = makeImageToggleButton("buttons/verticalalign","buttons/verticalalign_selected", BUTTON_ALIGN_VERTICAL,"align_vertical_tooltip","align_vertical_alt", alignBox, null, false, editorListener);
         alignDepth = makeImageToggleButton("buttons/depthalign","buttons/depthalign_selected", BUTTON_ALIGN_DEPTH,"align_depth_tooltip","align_depth_alt", alignBox, null, false, editorListener);
-        editNode = makeImageToggleButton("buttons/editlocation","buttons/editlocation_selected", BUTTON_ALIGN_EDIT_NODE,"align_node_edit_tooltip","align_node_edit_alt", alignBox, null, false, editorListener);
         alignBox.add(Box.createRigidArea(new Dimension(16, 0)));
+        editNode = makeImageToggleButton("buttons/editlocation","buttons/editlocation_selected", BUTTON_ALIGN_EDIT_NODE,"align_node_edit_tooltip","align_node_edit_alt", alignBox, null, false, editorListener);
 
         //
         // copy/paste panel

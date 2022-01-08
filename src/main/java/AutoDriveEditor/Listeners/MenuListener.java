@@ -33,14 +33,14 @@ public class MenuListener implements ActionListener, ItemListener {
         LOG.info("ActionCommand: {}", e.getActionCommand());
         getMapPanel().isMultiSelectAllowed = false;
 
-        JFileChooser fc = new JFileChooser();
+        JFileChooser fc = new JFileChooser(lastLoadLocation);
 
         switch (e.getActionCommand()) {
             case MENU_LOAD_CONFIG:
                 if (getMapPanel().isStale()) {
                     int response = JOptionPane.showConfirmDialog(editor, localeString.getString("dialog_exit_unsaved"), "AutoDrive", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                     if (response == JOptionPane.YES_OPTION) {
-                        saveConfigFile(null);
+                        saveConfigFile(null, false);
                     }
                 }
 
@@ -51,6 +51,7 @@ public class MenuListener implements ActionListener, ItemListener {
                 fc.addChoosableFileFilter(filter);
 
                 if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
+                    lastLoadLocation = fc.getCurrentDirectory().getAbsolutePath();
                     getMapPanel().confirmCurve();
                     File fileName = fc.getSelectedFile();
                     loadConfigFile(fileName);
@@ -64,7 +65,7 @@ public class MenuListener implements ActionListener, ItemListener {
 
                 break;
             case MENU_SAVE_CONFIG:
-                saveConfigFile(null);
+                saveConfigFile(null, false);
                 break;
             case MENU_SAVE_SAVEAS:
                 if (xmlConfigFile == null) break;
@@ -77,7 +78,7 @@ public class MenuListener implements ActionListener, ItemListener {
 
                 if (fc.showSaveDialog(editor) == JFileChooser.APPROVE_OPTION) {
                     LOG.info("{} {}", localeString.getString("console_config_saveas"), getSelectedFileWithExtension(fc));
-                    saveConfigFile(getSelectedFileWithExtension(fc).toString());
+                    saveConfigFile(getSelectedFileWithExtension(fc).toString(), false);
                 }
                 break;
             case MENU_EXIT:
@@ -269,6 +270,9 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_SCAN_MERGE:
                 mergeOverlappingNodes();
                 break;
+            case MENU_AUTOSAVE_INTERVAL:
+                mapPanel.showAutoSaveIntervalDialog();
+                break;
             case MENU_HEIGHTMAP_IMPORT:
                 break;
             case BUTTON_COPYPASTE_CUT:
@@ -279,6 +283,9 @@ public class MenuListener implements ActionListener, ItemListener {
                 break;
             case BUTTON_COPYPASTE_PASTE:
                 pasteSelected();
+                break;
+            case MENU_DEBUG_MOVETO_NODE:
+                centreNode();
                 break;
         }
 
@@ -333,6 +340,7 @@ public class MenuListener implements ActionListener, ItemListener {
                 break;
             case MENU_DEBUG_TEST:
                 bDebugTest = menuItem.isSelected();
+                //canAutoSave = menuItem.isSelected();
                 break;
             case MENU_DEBUG_ENABLE:
                 bDebugEnable = menuItem.isSelected();

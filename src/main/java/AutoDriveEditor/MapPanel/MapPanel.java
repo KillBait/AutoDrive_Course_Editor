@@ -14,7 +14,7 @@ import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -40,6 +40,7 @@ import static AutoDriveEditor.RoadNetwork.MapNode.*;
 import static AutoDriveEditor.Utils.LoggerUtils.*;
 import static AutoDriveEditor.Utils.MathUtils.*;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
+import static AutoDriveEditor.XMLConfig.GameXML.autoSaveConfigFile;
 
 public class MapPanel extends JPanel{
 
@@ -50,8 +51,11 @@ public class MapPanel extends JPanel{
 
     public Thread nodeDrawThread;
     public Thread connectionDrawThread;
+    public static ScheduledExecutorService scheduledExecutorService;
+    public static ScheduledFuture scheduledFuture;
     private static final Lock drawLock = new ReentrantLock();
     private static CountDownLatch latch;
+    public static volatile boolean canAutoSave= true;
 
 
     public int offsetX, oldOffsetX;
@@ -141,7 +145,30 @@ public class MapPanel extends JPanel{
             LOG.info("Initializing CopyPaste Manager");
             cnpManager = new CopyPasteManager();
         }
+
+        LOG.info("Starting AutoSave Thread");
+        startAutoSaveThread();
+
     }
+
+    public static void startAutoSaveThread() {
+        scheduledExecutorService = Executors.newScheduledThreadPool(1);
+
+        scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(() -> {
+            //LOG.info("Executed!");
+            if (roadMap != null && image != null) {
+                autoSaveConfigFile();
+            }
+        }, autoSaveInterval, autoSaveInterval,TimeUnit.MINUTES);
+    }
+
+    public static void restartAutoSaveThread() {
+        scheduledExecutorService.shutdownNow();
+        LOG.info("restarting AutoSave Thread");
+        startAutoSaveThread();
+    }
+
+
 
     //
     // The NodeDraw thread is at least 2 or 3 times quicker to execute that connectionDraw(), so we
@@ -331,8 +358,8 @@ public class MapPanel extends JPanel{
                                     MapNode firstPos = linearLine.lineNodeList.get(j);
                                     MapNode secondPos = linearLine.lineNodeList.get(j+1);
 
-                                    Point2D startNodePos = worldPosToScreenPos(firstPos.x, firstPos.y);
-                                    Point2D endNodePos = worldPosToScreenPos(secondPos.x, secondPos.y);
+                                    Point2D startNodePos = worldPosToScreenPos(firstPos.x, firstPos.z);
+                                    Point2D endNodePos = worldPosToScreenPos(secondPos.x, secondPos.z);
 
                                     // don't draw the circle for the last node in the array
                                     if (j < linearLine.lineNodeList.size() - 1 ) {
@@ -877,6 +904,8 @@ public class MapPanel extends JPanel{
         double scaledDiffX;
         double scaledDiffY;
 
+        canAutoSave = false;
+
         Point2D p = screenPosToWorldPos( prevMousePosX + diffX, prevMousePosY + diffY);
         double newX, newY;
         if (bGridSnapSubs) {
@@ -922,12 +951,17 @@ public class MapPanel extends JPanel{
                 }
             }
         }
+
+        canAutoSave = true;
+
         this.repaint();
     }
 
     public void moveNodeBy(LinkedList<MapNode> nodeList, int diffX, int diffY, boolean snapOverride) {
         double scaledDiffX;
         double scaledDiffY;
+
+        canAutoSave = false;
 
         for (MapNode node : nodeList) {
             if (bGridSnap && !snapOverride) {
@@ -989,6 +1023,9 @@ public class MapPanel extends JPanel{
                 }
             }
         }
+
+        canAutoSave = true;
+
         this.repaint();
     }
 
@@ -1049,16 +1086,23 @@ public class MapPanel extends JPanel{
     }
 
     public void removeDeleteListNodes() {
+        canAutoSave = false;
+
         for (NodeLinks nodeLinks : deleteNodeList) {
             MapNode inList = nodeLinks.node;
             RoadMap.removeMapNode(inList);
         }
+
+        canAutoSave = true;
+
         setStale(true);
         hoveredNode = null;
         this.repaint();
     }
 
     public void removeDestination(MapNode toDelete) {
+        canAutoSave = false;
+
         MapMarker destinationToDelete = null;
         LinkedList<MapMarker> mapMarkers = RoadMap.mapMarkers;
         for (MapMarker mapMarker : mapMarkers) {
@@ -1072,9 +1116,13 @@ public class MapPanel extends JPanel{
             setStale(true);
             this.repaint();
         }
+
+        canAutoSave = true;
+
     }
 
     public MapNode createNode(double worldX, double worldZ, int flag) {
+        canAutoSave = false;
         if ((roadMap == null) || (image == null)) {
             return null;
         }
@@ -1084,6 +1132,7 @@ public class MapPanel extends JPanel{
         this.repaint();
         changeManager.addChangeable( new AddNodeChanger(mapNode) );
         MapPanel.getMapPanel().setStale(true);
+        canAutoSave = true;
         return mapNode;
     }
 
@@ -1241,12 +1290,15 @@ public class MapPanel extends JPanel{
             if (bDebugUndoRedo) LOG.info("Added ID {} to delete list", node.id);
         }
         changeManager.addChangeable( new DeleteNodeChanger(deleteNodeList));
+        canAutoSave = false;
         removeDeleteListNodes();
+        canAutoSave = true;
         deleteNodeList.clear();
         clearMultiSelection();
     }
 
     public void changeAllNodesPriInScreenArea(Point2D rectangleStartScreen, Point2D rectangleEndScreen) {
+        canAutoSave = false;
 
         getAllNodesInScreenArea(rectangleStartScreen, rectangleEndScreen);
         if (!multiSelectList.isEmpty()) {
@@ -1257,6 +1309,7 @@ public class MapPanel extends JPanel{
         changeManager.addChangeable( new NodePriorityChanger(multiSelectList));
         setStale(true);
         clearMultiSelection();
+        canAutoSave = true;
     }
 
    public void getAllNodesInScreenArea(Point2D rectangleStartScreen, Point2D rectangleEndScreen) {
@@ -1650,12 +1703,14 @@ public class MapPanel extends JPanel{
             if (isMultipleSelected && multiSelectList != null && movingNode != null) {
                 LOG.info("Horizontal Align {} nodes at {}",multiSelectList.size(), movingNode.y);
                 changeManager.addChangeable( new AlignmentChanger(multiSelectList, 0, 0, movingNode.z));
+                canAutoSave = false;
                 for (MapNode node : multiSelectList) {
                     node.z = movingNode.z;
                 }
                 if (isQuadCurveCreated) {
                     quadCurve.updateCurve();
                 }
+                canAutoSave = true;
                 setStale(true);
                 clearMultiSelection();
                 this.repaint();
@@ -1666,12 +1721,14 @@ public class MapPanel extends JPanel{
             if (isMultipleSelected && multiSelectList != null && movingNode != null) {
                 LOG.info("Vertical Align {} nodes at {}",multiSelectList.size(), movingNode.x);
                 changeManager.addChangeable( new AlignmentChanger(multiSelectList, movingNode.x, 0,0));
+                canAutoSave = false;
                 for (MapNode node : multiSelectList) {
                     node.x = movingNode.x;
                 }
                 if (isQuadCurveCreated) {
                     quadCurve.updateCurve();
                 }
+                canAutoSave = true;
                 setStale(true);
                 clearMultiSelection();
                 this.repaint();
@@ -1684,12 +1741,14 @@ public class MapPanel extends JPanel{
             if (isMultipleSelected && multiSelectList != null && movingNode != null) {
                 LOG.info("Depth Aligning {} nodes at {}",multiSelectList.size(), movingNode.y);
                 changeManager.addChangeable( new AlignmentChanger(multiSelectList, 0, movingNode.y, 0));
+                canAutoSave = false;
                 for (MapNode node : multiSelectList) {
                     node.y = movingNode.y;
                 }
                 if (isQuadCurveCreated) {
                     quadCurve.updateCurve();
                 }
+                canAutoSave = true;
                 setStale(true);
                 clearMultiSelection();
                 this.repaint();
@@ -2049,9 +2108,30 @@ public class MapPanel extends JPanel{
     }
 
     public static void pasteSelected() {
-        cnpManager.PasteSelection();
+        cnpManager.PasteSelection(false);
         editorState = EDITORSTATE_NOOP;
         updateButtons();
+
+    }
+
+    public static void pasteSelectedInOriginalLocation() {
+        cnpManager.PasteSelection(true);
+        editorState = EDITORSTATE_NOOP;
+        updateButtons();
+
+    }
+
+    public static void centreNode() {
+        if (roadMap != null && mapImage != null ) {
+            int result = mapPanel.showCentreNodeDialog();
+            if (result != -1) {
+                MapNode node = RoadMap.mapNodes.get(result);
+                Point2D target = worldPosToScreenPos(node.x, node.z);
+                double x = (getMapPanel().getWidth() >> 1) - target.getX();
+                double y = (getMapPanel().getHeight() >> 1) - target.getY();
+                getMapPanel().moveMapBy((int)x,(int)y);
+            }
+        }
 
     }
 
@@ -2062,7 +2142,7 @@ public class MapPanel extends JPanel{
                 for (MapNode node : RoadMap.mapNodes) {
                     double heightMapY = getYValueFromHeightMap(node.x, node.z);
                     if (node.y == -1) {
-                        LOG.info("ID {} ({}) adjusting Y to {}", node.id, node.y, heightMapY);
+                        //LOG.info("ID {} ({}) adjusting Y to {}", node.id, node.y, heightMapY);
                         node.y = heightMapY;
                     }
                 }
@@ -2072,6 +2152,34 @@ public class MapPanel extends JPanel{
         }
 
 
+    }
+
+    //
+    // Dialog for Rotation Angle
+    //
+
+    public void showAutoSaveIntervalDialog() {
+        JTextField autoSaveText = new JTextField(String.valueOf(autoSaveInterval));
+        JLabel autoSaveLabel = new JLabel(" ");
+        PlainDocument docAutoSaveInterval = (PlainDocument) autoSaveText.getDocument();
+        docAutoSaveInterval.setDocumentFilter(new NumberFilter(autoSaveLabel, 1, 60, false));
+
+        JTextField maxAutoSavesText = new JTextField(String.valueOf(maxAutoSaveSlots));
+        JLabel maxAutoSavesLabel = new JLabel(" ");
+        PlainDocument docMaxAutoSaves = (PlainDocument) autoSaveText.getDocument();
+        docMaxAutoSaves.setDocumentFilter(new NumberFilter(maxAutoSavesLabel, 1, 20, false));
+
+        Object[] inputFields = {localeString.getString("dialog_autosave_interval_set"), autoSaveText, autoSaveLabel,
+                localeString.getString("dialog_autosave_max_saves"), maxAutoSavesText, maxAutoSavesLabel};
+
+        int option = JOptionPane.showConfirmDialog(this, inputFields, ""+ localeString.getString("dialog_rotation_set"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+
+        if (option == JOptionPane.OK_OPTION) {
+            autoSaveInterval = Integer.parseInt(autoSaveText.getText());
+            maxAutoSaveSlots = Integer.parseInt(maxAutoSavesText.getText());
+            restartAutoSaveThread();
+            this.repaint();
+        }
     }
 
     //
@@ -2094,6 +2202,27 @@ public class MapPanel extends JPanel{
             rotationAngle = (int) Double.parseDouble(rotText.getText());
             this.repaint();
         }
+    }
+
+    //
+    // Dialog for Centre Node
+    //
+
+    public Integer showCentreNodeDialog() {
+
+        JTextField centreNode = new JTextField(String.valueOf(1));
+        JLabel labelNode = new JLabel(" ");
+        PlainDocument docX = (PlainDocument) centreNode.getDocument();
+        docX.setDocumentFilter(new NumberFilter(labelNode, 0, RoadMap.mapNodes.size(), false));
+
+        Object[] inputFields = {localeString.getString("dialog_centre_node"), centreNode, labelNode};
+
+        int option = JOptionPane.showConfirmDialog(this, inputFields, ""+ localeString.getString("dialog_centre_node_title"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+
+        if (option == JOptionPane.OK_OPTION) {
+            return Integer.parseInt(centreNode.getText()) - 1 ;
+        }
+        return -1;
     }
 
     //
