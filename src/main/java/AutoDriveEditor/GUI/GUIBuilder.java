@@ -32,12 +32,11 @@ public class GUIBuilder {
     public static final int EDITORSTATE_DELETING_DESTINATION = 8;
     public static final int EDITORSTATE_ALIGN_HORIZONTAL = 9;
     public static final int EDITORSTATE_ALIGN_VERTICAL = 10;
-    public static final int EDITORSTATE_CNP_SELECT = 11;
-    public static final int EDITORSTATE_CNP_CUT = 12;
-    public static final int EDITORSTATE_CNP_COPY = 13;
-    public static final int EDITORSTATE_CNP_PASTE = 14;
-    public static final int EDITORSTATE_QUADRATICBEZIER = 15;
-    public static final int EDITORSTATE_CUBICBEZIER = 16;
+    public static final int EDITORSTATE_ALIGN_DEPTH = 11;
+    public static final int EDITORSTATE_ALIGN_EDIT_NODE = 12;
+    public static final int EDITORSTATE_CNP_SELECT = 13;
+    public static final int EDITORSTATE_QUADRATICBEZIER = 14;
+    public static final int EDITORSTATE_CUBICBEZIER = 15;
 
     public static int editorState = GUIBuilder.EDITORSTATE_NOOP;
 
@@ -56,11 +55,14 @@ public class GUIBuilder {
     public static final String BUTTON_COPYPASTE_CUT = "CopyPaste Cut";
     public static final String BUTTON_COPYPASTE_COPY = "CopyPaste Copy";
     public static final String BUTTON_COPYPASTE_PASTE = "CopyPaste Paste";
+    public static final String BUTTON_COPYPASTE_PASTE_ORIGINAL = "CopyPaste Paste Original Location";
 
     // OCD modes
 
     public static final String BUTTON_ALIGN_HORIZONTAL = "Horizontally Align Nodes";
     public static final String BUTTON_ALIGN_VERTICAL = "Vertically Align Nodes";
+    public static final String BUTTON_ALIGN_DEPTH = "Depth Align Nodes";
+    public static final String BUTTON_ALIGN_EDIT_NODE = "Edit Node Location";
     public static final String BUTTON_CREATE_QUADRATICBEZIER = "Quadratic Bezier";
     public static final String BUTTON_CREATE_CUBICBEZIER = "Cubic Bezier";
     public static final String BUTTON_COMMIT_CURVE = "Confirm Curve";
@@ -87,7 +89,8 @@ public class GUIBuilder {
     public static JToggleButton editDestination;
     public static JToggleButton alignHorizontal;
     public static JToggleButton alignVertical;
-    public static JToggleButton linearLine;
+    public static JToggleButton alignDepth;
+    public static JToggleButton editNode;
     public static JToggleButton quadBezier;
     public static JToggleButton cubicBezier;
     public static JToggleButton commitCurve;
@@ -108,8 +111,7 @@ public class GUIBuilder {
     public static MapPanel createMapPanel(AutoDriveEditor editor, EditorListener listener) {
 
         mapPanel = new MapPanel();
-        mapPanel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(), localeString.getString("panels_map")));
+        mapPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLoweredBevelBorder(), BorderFactory.createRaisedBevelBorder()));
         mapPanel.add( new AlphaContainer(initCurvePanel(listener)));
 
         //JRotation rot = new JRotation();
@@ -122,6 +124,7 @@ public class GUIBuilder {
     public static JPanel createButtonPanel(EditorListener editorListener) {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        //JToolBar buttonPanel = new JToolBar(BorderLayout.PAGE_START);
 
         //
         // Create node panel
@@ -131,19 +134,19 @@ public class GUIBuilder {
         nodeBox.setBorder(BorderFactory.createTitledBorder(localeString.getString("panel_nodes")));
         buttonPanel.add(nodeBox);
 
-        moveNode = makeImageToggleButton("buttons/movenode", "buttons/movenode_selected", BUTTON_MOVE_NODES,"nodes_move_tooltip","nodes_move_alt", nodeBox, editorListener);
-        createRegularConnection = makeStateChangeImageToggleButton("buttons/connectregular", "buttons/connectregular_selected", BUTTON_CONNECT_NODES,"nodes_connect_tooltip","nodes_connect_alt", nodeBox, editorListener);
-        createPrimaryNode = makeImageToggleButton("buttons/createprimary","buttons/createprimary_selected", BUTTON_CREATE_PRIMARY_NODE,"nodes_createprimary_tooltip","nodes_createprimary_alt", nodeBox, editorListener);
-        createDualConnection = makeStateChangeImageToggleButton("buttons/connectdual","buttons/connectdual_selected", BUTTON_CREATE_DUAL_CONNECTION,"nodes_createdual_tooltip","nodes_createdual_alt", nodeBox, editorListener);
-        changePriority = makeImageToggleButton("buttons/swappriority","buttons/swappriority_selected", BUTTON_CHANGE_NODE_PRIORITY,"nodes_priority_tooltip","nodes_priority_alt", nodeBox, editorListener);
-        createSecondaryNode = makeImageToggleButton("buttons/createsecondary","buttons/createsecondary_selected", BUTTON_CREATE_SUBPRIO_NODE,"nodes_createsecondary_tooltip","nodes_createsecondary_alt", nodeBox, editorListener);
-        createReverseConnection = makeStateChangeImageToggleButton("buttons/connectreverse","buttons/connectreverse_selected", BUTTON_CREATE_REVERSE_CONNECTION,"nodes_createreverse_tooltip","nodes_createreverse_alt", nodeBox, editorListener);
+        moveNode = makeImageToggleButton("buttons/movenode", "buttons/movenode_selected", BUTTON_MOVE_NODES,"nodes_move_tooltip","nodes_move_alt", nodeBox, null, false, editorListener);
+        createRegularConnection = makeStateChangeImageToggleButton("buttons/connectregular", "buttons/connectregular_selected", BUTTON_CONNECT_NODES,"nodes_connect_tooltip","nodes_connect_alt", nodeBox, null, false, editorListener);
+        createPrimaryNode = makeImageToggleButton("buttons/createprimary","buttons/createprimary_selected", BUTTON_CREATE_PRIMARY_NODE,"nodes_createprimary_tooltip","nodes_createprimary_alt", nodeBox, null, false, editorListener);
+        createDualConnection = makeStateChangeImageToggleButton("buttons/connectdual","buttons/connectdual_selected", BUTTON_CREATE_DUAL_CONNECTION,"nodes_createdual_tooltip","nodes_createdual_alt", nodeBox, null, false, editorListener);
+        changePriority = makeImageToggleButton("buttons/swappriority","buttons/swappriority_selected", BUTTON_CHANGE_NODE_PRIORITY,"nodes_priority_tooltip","nodes_priority_alt", nodeBox, null, false, editorListener);
+        createSecondaryNode = makeImageToggleButton("buttons/createsecondary","buttons/createsecondary_selected", BUTTON_CREATE_SUBPRIO_NODE,"nodes_createsecondary_tooltip","nodes_createsecondary_alt", nodeBox, null, false, editorListener);
+        createReverseConnection = makeStateChangeImageToggleButton("buttons/connectreverse","buttons/connectreverse_selected", BUTTON_CREATE_REVERSE_CONNECTION,"nodes_createreverse_tooltip","nodes_createreverse_alt", nodeBox, null, false, editorListener);
 
         nodeBox.add(Box.createRigidArea(new Dimension(8, 0)));
-        quadBezier = makeImageToggleButton("buttons/quadcurve","buttons/quadcurve_selected", BUTTON_CREATE_QUADRATICBEZIER,"helper_quadbezier_tooltip","helper_quadbezier_alt", nodeBox, editorListener);
-        cubicBezier = makeImageToggleButton("buttons/cubiccurve","buttons/cubiccurve_selected", BUTTON_CREATE_CUBICBEZIER,"helper_cubicbezier_tooltip","helper_cubicbezier_alt", nodeBox, editorListener);
+        quadBezier = makeImageToggleButton("buttons/quadcurve","buttons/quadcurve_selected", BUTTON_CREATE_QUADRATICBEZIER,"helper_quadbezier_tooltip","helper_quadbezier_alt", nodeBox, null, false, editorListener);
+        cubicBezier = makeImageToggleButton("buttons/cubiccurve","buttons/cubiccurve_selected", BUTTON_CREATE_CUBICBEZIER,"helper_cubicbezier_tooltip","helper_cubicbezier_alt", nodeBox, null,  false, editorListener);
         nodeBox.add(Box.createRigidArea(new Dimension(8, 0)));
-        removeNode = makeImageToggleButton("buttons/deletenodes","buttons/deletenodes_selected", BUTTON_REMOVE_NODES,"nodes_remove_tooltip","nodes_remove_alt", nodeBox, editorListener);
+        removeNode = makeImageToggleButton("buttons/deletenodes","buttons/deletenodes_selected", BUTTON_REMOVE_NODES,"nodes_remove_tooltip","nodes_remove_alt", nodeBox, null, false, editorListener);
 
         //
         // Create markers panel
@@ -153,10 +156,10 @@ public class GUIBuilder {
         markerBox.setBorder(BorderFactory.createTitledBorder(localeString.getString("panel_markers")));
         buttonPanel.add(markerBox);
 
-        createDestination = makeImageToggleButton("buttons/addmarker","buttons/addmarker_selected", BUTTON_CREATE_DESTINATIONS,"markers_add_tooltip","markers_add_alt", markerBox, editorListener);
-        editDestination = makeImageToggleButton("buttons/editmarker","buttons/editmarker_selected", BUTTON_EDIT_DESTINATIONS_GROUPS,"markers_edit_tooltip","markers_edit_alt", markerBox, editorListener);
+        createDestination = makeImageToggleButton("buttons/addmarker","buttons/addmarker_selected", BUTTON_CREATE_DESTINATIONS,"markers_add_tooltip","markers_add_alt", markerBox, null, false, editorListener);
+        editDestination = makeImageToggleButton("buttons/editmarker","buttons/editmarker_selected", BUTTON_EDIT_DESTINATIONS_GROUPS,"markers_edit_tooltip","markers_edit_alt", markerBox, null, false, editorListener);
         markerBox.add(Box.createRigidArea(new Dimension(8, 0)));
-        removeDestination = makeImageToggleButton("buttons/deletemarker","buttons/deletemarker_selected", BUTTON_DELETE_DESTINATIONS,"markers_delete_tooltip","markers_delete_alt", markerBox, editorListener);
+        removeDestination = makeImageToggleButton("buttons/deletemarker","buttons/deletemarker_selected", BUTTON_DELETE_DESTINATIONS,"markers_delete_tooltip","markers_delete_alt", markerBox, null, false, editorListener);
 
         //
         // Create alignment panel
@@ -166,9 +169,11 @@ public class GUIBuilder {
         alignBox.setBorder(BorderFactory.createTitledBorder(localeString.getString("panel_align")));
         buttonPanel.add(alignBox);
 
-        alignHorizontal = makeImageToggleButton("buttons/horizontalalign","buttons/horizontalalign_selected", BUTTON_ALIGN_HORIZONTAL,"align_horizontal_tooltip","align_horizontal_alt", alignBox, editorListener);
-        alignVertical = makeImageToggleButton("buttons/verticalalign","buttons/verticalalign_selected", BUTTON_ALIGN_VERTICAL,"align_vertical_tooltip","align_vertical_alt", alignBox, editorListener);
+        alignHorizontal = makeImageToggleButton("buttons/horizontalalign","buttons/horizontalalign_selected", BUTTON_ALIGN_HORIZONTAL,"align_horizontal_tooltip","align_horizontal_alt", alignBox, null, false, editorListener);
+        alignVertical = makeImageToggleButton("buttons/verticalalign","buttons/verticalalign_selected", BUTTON_ALIGN_VERTICAL,"align_vertical_tooltip","align_vertical_alt", alignBox, null, false, editorListener);
+        alignDepth = makeImageToggleButton("buttons/depthalign","buttons/depthalign_selected", BUTTON_ALIGN_DEPTH,"align_depth_tooltip","align_depth_alt", alignBox, null, false, editorListener);
         alignBox.add(Box.createRigidArea(new Dimension(16, 0)));
+        editNode = makeImageToggleButton("buttons/editlocation","buttons/editlocation_selected", BUTTON_ALIGN_EDIT_NODE,"align_node_edit_tooltip","align_node_edit_alt", alignBox, null, false, editorListener);
 
         //
         // copy/paste panel
@@ -179,10 +184,10 @@ public class GUIBuilder {
         copyBox.setVisible(true);
         buttonPanel.add(copyBox);
 
-        select = makeImageToggleButton("buttons/select","buttons/select_selected", BUTTON_COPYPASTE_SELECT, "copypaste_select_tooltip","copypaste_select_alt", copyBox, editorListener);
-        cut = makeImageToggleButton("buttons/cut","buttons/cut_selected", BUTTON_COPYPASTE_CUT, "copypaste_cut_tooltip","copypaste_cut_alt", copyBox, editorListener);
-        copy = makeImageToggleButton("buttons/copy","buttons/copy_selected", BUTTON_COPYPASTE_COPY, "copypaste_copy_tooltip","copypaste_copy_alt", copyBox, editorListener);
-        paste = makeImageToggleButton("buttons/paste","buttons/paste_selected", BUTTON_COPYPASTE_PASTE, "copypaste_paste_tooltip","copypaste_paste_alt", copyBox, editorListener);
+        select = makeImageToggleButton("buttons/select","buttons/select_selected", BUTTON_COPYPASTE_SELECT, "copypaste_select_tooltip","copypaste_select_alt", copyBox, null, false, editorListener);
+        cut = makeImageToggleButton("buttons/cut","buttons/cut_selected", BUTTON_COPYPASTE_CUT, "copypaste_cut_tooltip","copypaste_cut_alt", copyBox, null, false, editorListener);
+        copy = makeImageToggleButton("buttons/copy","buttons/copy_selected", BUTTON_COPYPASTE_COPY, "copypaste_copy_tooltip","copypaste_copy_alt", copyBox, null, false, editorListener);
+        paste = makeImageToggleButton("buttons/paste","buttons/paste_selected", BUTTON_COPYPASTE_PASTE, "copypaste_paste_tooltip","copypaste_paste_alt", copyBox, null, false, editorListener);
 
         //
         // create experimental panel
@@ -221,10 +226,10 @@ public class GUIBuilder {
 
         ButtonGroup pathNodeGroup = new ButtonGroup();
 
-        curvePathRegular = makeRadioButton("panel_slider_radio_regular", RADIOBUTTON_PATHTYPE_REGULAR,"panel_slider_radio_regular_tooltip", Color.ORANGE,true, false, curveRadioPanel, pathNodeGroup, null, curvePanelListener);
-        curvePathSubPrio = makeRadioButton("panel_slider_radio_subprio", RADIOBUTTON_PATHTYPE_SUBPRIO,"panel_slider_radio_subprio_tooltip", Color.ORANGE,false, false,curveRadioPanel, pathNodeGroup, null, curvePanelListener);
-        curvePathReverse = makeRadioButton("panel_slider_radio_reverse", RADIOBUTTON_PATHTYPE_REVERSE,"panel_slider_radio_reverse_tooltip", Color.ORANGE,false, false,curveRadioPanel, null, null, curvePanelListener);
-        curvePathDual = makeRadioButton("panel_slider_radio_dual", RADIOBUTTON_PATHTYPE_DUAL,"panel_slider_radio_dual_tooltip", Color.ORANGE,false, false,curveRadioPanel, null, null, curvePanelListener);
+        curvePathRegular = makeRadioButton("panel_slider_radio_regular", RADIOBUTTON_PATHTYPE_REGULAR,"panel_slider_radio_regular_tooltip", Color.ORANGE,true, false, curveRadioPanel, pathNodeGroup, false, curvePanelListener);
+        curvePathSubPrio = makeRadioButton("panel_slider_radio_subprio", RADIOBUTTON_PATHTYPE_SUBPRIO,"panel_slider_radio_subprio_tooltip", Color.ORANGE,false, false,curveRadioPanel, pathNodeGroup, false, curvePanelListener);
+        curvePathReverse = makeRadioButton("panel_slider_radio_reverse", RADIOBUTTON_PATHTYPE_REVERSE,"panel_slider_radio_reverse_tooltip", Color.ORANGE,false, false,curveRadioPanel, null, false, curvePanelListener);
+        curvePathDual = makeRadioButton("panel_slider_radio_dual", RADIOBUTTON_PATHTYPE_DUAL,"panel_slider_radio_dual_tooltip", Color.ORANGE,false, false,curveRadioPanel, null, false, curvePanelListener);
 
         curvePanel.add(curveRadioPanel);
 
@@ -254,9 +259,9 @@ public class GUIBuilder {
         curvePanel.add(interpSliderPanel);
 
         curvePanel.add(Box.createRigidArea(new Dimension(8, 0)));
-        commitCurve = makeImageToggleButton("curvepanel/confirm","curvepanel/confirm_select", BUTTON_COMMIT_CURVE,"panel_slider_confirm_curve","panel_slider_confirm_curve_alt", curvePanel, editorListener);
+        commitCurve = makeImageToggleButton("curvepanel/confirm","curvepanel/confirm_select", BUTTON_COMMIT_CURVE,"panel_slider_confirm_curve","panel_slider_confirm_curve_alt", curvePanel, null, false, editorListener);
         curvePanel.add(Box.createRigidArea(new Dimension(8, 0)));
-        cancelCurve = makeImageToggleButton("curvepanel/cancel","curvepanel/cancel_select", BUTTON_CANCEL_CURVE,"panel_slider_cancel_curve","panel_slider_cancel_curve_alt", curvePanel, editorListener);
+        cancelCurve = makeImageToggleButton("curvepanel/cancel","curvepanel/cancel_select", BUTTON_CANCEL_CURVE,"panel_slider_cancel_curve","panel_slider_cancel_curve_alt", curvePanel, null, false, editorListener);
         curvePanel.add(Box.createRigidArea(new Dimension(8, 0)));
 
 
@@ -309,6 +314,8 @@ public class GUIBuilder {
     private static void alignBoxSetEnabled(boolean enabled) {
         alignHorizontal.setEnabled(enabled);
         alignVertical.setEnabled(enabled);
+        alignDepth.setEnabled(enabled);
+        editNode.setEnabled(enabled);
     }
 
     private static void copypasteBoxSetEnabled(boolean enabled) {
@@ -318,7 +325,7 @@ public class GUIBuilder {
         paste.setEnabled(enabled);
     }
 
-    public static void updateButtons() {
+    public static void  updateButtons() {
         moveNode.setSelected(false);
         createRegularConnection.setSelected(false);
         createPrimaryNode.setSelected(false);
@@ -336,6 +343,8 @@ public class GUIBuilder {
 
         alignHorizontal.setSelected(false);
         alignVertical.setSelected(false);
+        alignDepth.setSelected(false);
+        editNode.setSelected(false);
 
         select.setSelected(false);
         cut.setSelected(false);
@@ -345,7 +354,7 @@ public class GUIBuilder {
         switch (editorState) {
             case EDITORSTATE_MOVING:
                 moveNode.setSelected(true);
-                showInTextArea("Left click ( or area select ) and drag to move", true);
+                showInTextArea("Left click ( or area select ) and drag to move", true, false);
                 break;
             case EDITORSTATE_CONNECTING:
                 if (connectionType == CONNECTION_STANDARD) {
@@ -357,55 +366,63 @@ public class GUIBuilder {
                 } else if (connectionType == CONNECTION_DUAL) {
                     createDualConnection.setSelected(true);
                 }
-                showInTextArea("click on start node then on end node to create a connection", true);
+                showInTextArea("click on start node then on end node to create a connection", true, false);
                 break;
             case EDITORSTATE_CREATE_PRIMARY_NODE:
                 createPrimaryNode.setSelected(true);
-                showInTextArea("click on map to create a primary node", true);
+                showInTextArea("click on map to create a primary node", true, false);
                 break;
             case EDITORSTATE_CHANGE_NODE_PRIORITY:
                 changePriority.setSelected(true);
-                showInTextArea("click on a node to change it's priority, or area select to swap multiple nodes", true);
+                showInTextArea("click on a node to change it's priority, or area select to swap multiple nodes", true, false);
                 break;
             case EDITORSTATE_CREATE_SUBPRIO_NODE:
                 createSecondaryNode.setSelected(true);
-                showInTextArea("click on map to create a secondary node", true);
+                showInTextArea("click on map to create a secondary node", true, false);
                 break;
             case EDITORSTATE_DELETE_NODES:
                 removeNode.setSelected(true);
-                showInTextArea("click to delete a node, or area select to delete multiple nodes", true);
+                showInTextArea("click to delete a node, or area select to delete multiple nodes", true, false);
                 break;
             case EDITORSTATE_CREATING_DESTINATION:
                 createDestination.setSelected(true);
-                showInTextArea("click on a node to create a map marker", true);
+                showInTextArea("click on a node to create a map marker", true, false);
                 break;
             case EDITORSTATE_EDITING_DESTINATION:
                 editDestination.setSelected(true);
-                showInTextArea("click on a marker to edit", true);
+                showInTextArea("click on a marker to edit", true, false);
                 break;
             case EDITORSTATE_DELETING_DESTINATION:
                 removeDestination.setSelected(true);
-                showInTextArea("click on a node to delete it's map marker", true);
+                showInTextArea("click on a node to delete it's map marker", true, false);
                 break;
             case EDITORSTATE_ALIGN_HORIZONTAL:
                 alignHorizontal.setSelected(true);
-                showInTextArea("Hold Right click and drag to area select nodes, then click node to align too", true);
+                showInTextArea("Hold Right click and drag to area select nodes, then click node to align too", true, false);
                 break;
             case EDITORSTATE_ALIGN_VERTICAL:
                 alignVertical.setSelected(true);
-                showInTextArea("Hold Right click and drag to area select nodes, then click node to align too", true);
+                showInTextArea("Hold Right click and drag to area select nodes, then click node to align too", true, false);
+                break;
+            case EDITORSTATE_ALIGN_DEPTH:
+                alignDepth.setSelected(true);
+                showInTextArea("Hold Right click and drag to area select nodes, then click node to align too", true, false);
+                break;
+            case EDITORSTATE_ALIGN_EDIT_NODE:
+                editNode.setSelected(true);
+                showInTextArea("click on a node to edit it's world location", true, false);
                 break;
             case EDITORSTATE_CNP_SELECT:
                 select.setSelected(true);
-                showInTextArea("Hold Right click and drag to area select", true);
+                showInTextArea("Hold Right click and drag to area select", true, false);
                 break;
             case EDITORSTATE_QUADRATICBEZIER:
                 quadBezier.setSelected(true);
-                showInTextArea("click start node, then end node to create curve", true);
+                showInTextArea("click start node, then end node to create curve", true, false);
                 break;
             case EDITORSTATE_CUBICBEZIER:
                 cubicBezier.setSelected(true);
-                showInTextArea("click start node, then end node to create curve", true);
+                showInTextArea("click start node, then end node to create curve", true, false);
                 break;
         }
     }

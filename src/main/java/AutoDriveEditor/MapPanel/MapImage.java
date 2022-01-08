@@ -95,7 +95,7 @@ public class MapImage {
                     String fullPath;
                     if (location != null) {
                         String gitPath = "https://github.com/KillBait/FS19_AutoDrive_MapImages/raw/main/mapImages/" + mapName + ".png";
-                        showInTextArea(localeString.getString("mapimage_github_check") + mapName + ".png", true);
+                        showInTextArea(localeString.getString("mapimage_github_check") + mapName + ".png", true, false);
                         LOG.info("Checking GitHub repository for {}",gitPath);
                         URL gitUrl = null;
                         try {
@@ -116,11 +116,11 @@ public class MapImage {
                         if (loadImage != null) {
                             try {
                                 mapImage = ImageIO.read(loadImage);
-                                showInTextArea(mapName + ".png " + localeString.getString("mapimage_github_repo_download"), true);
+                                showInTextArea(mapName + ".png " + localeString.getString("mapimage_github_repo_download"), true, false);
                                 bImageFound = true;
                             } catch (IOException ex) {
                                 ex.printStackTrace();
-                                showInTextArea(mapName + ".png " + localeString.getString("mapimage_github_repo_not_found"), true);
+                                showInTextArea(mapName + ".png " + localeString.getString("mapimage_github_repo_not_found"), true, false);
                                 bImageFound = false;
                             }
 
@@ -130,8 +130,7 @@ public class MapImage {
                         bImageFound = false;
                     }
                 } else {
-                    showInTextArea(localeString.getString("mapimage_github_bypass"), true);
-                    LOG.info("{}", localeString.getString("mapimage_github_bypass"));
+                    showInTextArea(localeString.getString("mapimage_github_bypass"), true, true);
                 }
             }
         }
@@ -150,12 +149,11 @@ public class MapImage {
         getMapZoomFactor(mapName);
 
         MenuBuilder.mapMenuEnabled(true);
-        MenuBuilder.fixNodesEnabled(true);
         //editorState = GUIBuilder.EDITORSTATE_NOOP;
 
     }
 
-    public static void loadHeightMap(File path) {
+    public static void  loadHeightMap(File path) {
         BufferedImage heightImage;
         String pathStr = path.toString();
         //pathStr.replaceAll("/", "V\");
@@ -163,14 +161,16 @@ public class MapImage {
         LOG.info("HeightMap path = {}", launchPath);
         try {
             heightImage = ImageIO.read(new File(launchPath));
+            //heightMapImage = new BufferedImage(heightImage.getWidth(), heightImage.getHeight(), BufferedImage.TYPE_USHORT_565_RGB);
             heightMapImage = getNewBufferImage(heightImage.getWidth(), heightImage.getHeight());
+            LOG.info("type = {}", heightMapImage.toString());
             Graphics2D g = (Graphics2D) heightMapImage.getGraphics();
             g.drawImage( heightImage, 0, 0, heightImage.getWidth(), heightImage.getHeight(), null);
             g.dispose();
         } catch (IOException e) {
             JOptionPane.showMessageDialog(editor, localeString.getString("dialog_heightmap_not_found"), localeString.getString("dialog_heightmap_not_found_title"), JOptionPane.ERROR_MESSAGE);
             LOG.info("Failed to load HeightMap");
-            fixNodesMenuItem.setEnabled(false);
+            fixNodesHeightMenuItem.setEnabled(false);
             e.printStackTrace();
         }
     }

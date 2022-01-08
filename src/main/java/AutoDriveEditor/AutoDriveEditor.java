@@ -14,6 +14,7 @@ import AutoDriveEditor.Listeners.EditorListener;
 import AutoDriveEditor.Locale.LocaleManager;
 import AutoDriveEditor.Managers.ChangeManager;
 import AutoDriveEditor.Managers.VersionManager;
+import AutoDriveEditor.MapPanel.MapPanel;
 
 import static AutoDriveEditor.GUI.GUIImages.*;
 import static AutoDriveEditor.Locale.LocaleManager.*;
@@ -24,7 +25,7 @@ import static AutoDriveEditor.XMLConfig.GameXML.*;
 
 public class AutoDriveEditor extends JFrame {
 
-    public static final String AUTODRIVE_INTERNAL_VERSION = "0.60.2";
+    public static final String AUTODRIVE_INTERNAL_VERSION = "0.70.0";
     public static final String AUTODRIVE_COURSE_EDITOR_TITLE = "AutoDrive Course Editor " + AUTODRIVE_INTERNAL_VERSION + " Beta";
 
 
@@ -56,7 +57,7 @@ public class AutoDriveEditor extends JFrame {
                 if (getMapPanel().isStale()) {
                     int response = JOptionPane.showConfirmDialog(e.getComponent(), localeString.getString("dialog_exit_unsaved"), "AutoDrive", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                     if (response == JOptionPane.YES_OPTION) {
-                        saveConfigFile(null);
+                        saveConfigFile(null, false);
                     }
                 }
                 if ( getMapPanel().connectionDrawThread != null ) {
@@ -68,6 +69,13 @@ public class AutoDriveEditor extends JFrame {
                     NodeDrawThread.stop();
                     getMapPanel().nodeDrawThread.interrupt();
                 }
+
+                if ( getMapPanel().scheduledExecutorService != null ) {
+
+                    getMapPanel().scheduledExecutorService.shutdownNow();
+                    LOG.info("AutoSave Timer Thread exiting");
+                }
+
 
                 saveEditorXMLConfig();
                 super.windowClosing(e);
@@ -113,12 +121,6 @@ public class AutoDriveEditor extends JFrame {
         }
 
         for (String arg : args) {
-            if (Objects.equals(arg, "-DEBUG")) {
-                DEBUG = true;
-                LOG.info("##");
-                LOG.info("## WARNING ..... Debug mode active, editor performance may be slower then normal");
-                LOG.info("##");
-            }
             if (Objects.equals(arg, "-EXPERIMENTAL")) {
                 EXPERIMENTAL = true;
                 LOG.info("##");

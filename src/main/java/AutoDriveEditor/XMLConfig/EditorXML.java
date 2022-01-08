@@ -43,6 +43,8 @@ public class EditorXML {
     public static double gridSpacingY = 2;
     public static int gridSubDivisions = 4;
     public static int rotationAngle = 5;
+    public static int autoSaveInterval = 10;
+    public static int maxAutoSaveSlots = 10;
 
     public static ArrayList<MapZoomStore> mapZoomStore  = new ArrayList<>();
 
@@ -65,6 +67,8 @@ public class EditorXML {
 
             lastRunVersion = getTextValue(lastRunVersion, e, "Version");
             bShowUpdateMessage = getBooleanValue(bShowUpdateMessage, e, "ShowUpdateMessage");
+            autoSaveInterval = getIntegerValue(autoSaveInterval, e, "AutoSave_Interval");
+            maxAutoSaveSlots = getIntegerValue(maxAutoSaveSlots, e, "AutoSave_Slots");
 
             x = getIntegerValue(x, e, "WindowX");
             y = getIntegerValue(y, e, "WindowY");
@@ -131,6 +135,8 @@ public class EditorXML {
 
             setTextValue("Version", doc, AUTODRIVE_INTERNAL_VERSION, root);
             setBooleanValue("ShowUpdateMessage", doc, bShowUpdateMessage, root);
+            setIntegerValue("AutoSave_Interval", doc, autoSaveInterval, root);
+            setIntegerValue("AutoSave_Slots", doc, maxAutoSaveSlots, root);
             setIntegerValue("WindowX", doc, editor.getBounds().x, root);
             setIntegerValue("WindowY", doc, editor.getBounds().y, root);
             setIntegerValue("WindowWidth", doc, editor.getBounds().width, root);

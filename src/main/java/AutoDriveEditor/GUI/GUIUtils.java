@@ -12,7 +12,7 @@ import AutoDriveEditor.Listeners.MenuListener;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.Locale.LocaleManager.*;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.Utils.LoggerUtils.*;
 
 public class GUIUtils {
 
@@ -60,22 +60,29 @@ public class GUIUtils {
     // Button Creation functions
     //
 
-    public static JButton makeButton(String actionCommand,String toolTipText,String altText, JPanel panel, EditorListener editorListener) {
+    public static JButton makeButton(String actionCommand,String toolTipText,String altText, JPanel panel, ButtonGroup group, boolean isGroupDefault, EditorListener editorListener) {
         JButton button = new JButton();
         button.setActionCommand(actionCommand);
         button.setToolTipText(localeString.getString(toolTipText));
         button.addActionListener(editorListener);
         button.setText(localeString.getString(altText));
         panel.add(button);
+        if (group != null) {
+            group.add(button);
+            if (isGroupDefault) {
+                //ButtonModel groupDefault = menuItem.getModel();
+                group.setSelected(button.getModel(), true);
+            }
+        }
 
         return button;
     }
 
-    public static JToggleButton makeImageToggleButton(String imageName, String actionCommand, String toolTipText, String altText, JPanel panel, EditorListener editorListener) {
-        return makeImageToggleButton(imageName, null, actionCommand, toolTipText, altText, panel, editorListener);
+    public static JToggleButton makeImageToggleButton(String imageName, String actionCommand, String toolTipText, String altText, JPanel panel, ButtonGroup group, boolean isGroupDefault, EditorListener editorListener) {
+        return makeImageToggleButton(imageName, null, actionCommand, toolTipText, altText, panel, group, isGroupDefault, editorListener);
     }
 
-    public static JToggleButton makeImageToggleButton(String imageName, String selectedImageName, String actionCommand, String toolTipText, String altText, JPanel panel, EditorListener editorListener) {
+    public static JToggleButton makeImageToggleButton(String imageName, String selectedImageName, String actionCommand, String toolTipText, String altText, JPanel panel, ButtonGroup group, boolean isGroupDefault, EditorListener editorListener) {
 
         JToggleButton toggleButton = new JToggleButton();
 
@@ -107,6 +114,13 @@ public class GUIUtils {
         }
 
         panel.add(toggleButton);
+        if (group != null) {
+            group.add(toggleButton);
+            if (isGroupDefault) {
+                //ButtonModel groupDefault = menuItem.getModel();
+                group.setSelected(toggleButton.getModel(), true);
+            }
+        }
 
         return toggleButton;
     }
@@ -115,17 +129,22 @@ public class GUIUtils {
     // special version of JToggleButton using a separate listener to change it's right click behaviour
 
     //
-    public static JToggleButton makeStateChangeImageToggleButton (String imageName, String selectedImageName, String actionCommand, String toolTipText, String altText, JPanel panel, EditorListener editorListener) {
-        JToggleButton button = makeImageToggleButton(imageName, selectedImageName, actionCommand, toolTipText, altText, panel, editorListener);
+    public static JToggleButton makeStateChangeImageToggleButton (String imageName, String selectedImageName, String actionCommand, String toolTipText, String altText, JPanel panel, ButtonGroup group,  boolean isGroupDefault, EditorListener editorListener) {
+        JToggleButton button = makeImageToggleButton(imageName, selectedImageName, actionCommand, toolTipText, altText, panel, group, isGroupDefault, editorListener);
         button.addMouseListener(editorListener);
+
         return button;
     }
 
-    public static JRadioButton makeRadioButton(String text, String actionCommand, String toolTipText, Color textColour, boolean isSelected, boolean isOpaque, JPanel panel, ButtonGroup group, EditorListener actionListener) {
-        return makeRadioButton(text, actionCommand, toolTipText, textColour, isSelected, isOpaque, panel, group, actionListener, null);
+    public static JRadioButton makeRadioButton(String text, String actionCommand, String toolTipText, Color textColour, boolean isSelected, boolean isOpaque, JPanel panel, ButtonGroup group,  boolean isGroupDefault, EditorListener actionListener) {
+        return makeRadioButton(text, actionCommand, toolTipText, textColour, isSelected, isOpaque, panel, group, isGroupDefault, actionListener, null);
     }
 
-    public static JRadioButton makeRadioButton(String text, String actionCommand, String toolTipText, Color textColour, boolean isSelected, boolean isOpaque, JPanel panel, ButtonGroup group, EditorListener actionListener, CurvePanelListener itemListener) {
+    public static JRadioButton makeRadioButton(String text, String actionCommand, String toolTipText, Color textColour, boolean isSelected, boolean isOpaque, JPanel panel, ButtonGroup group,  boolean isGroupDefault, CurvePanelListener itemListener) {
+        return makeRadioButton(text, actionCommand, toolTipText, textColour, isSelected, isOpaque, panel, group, isGroupDefault, null, itemListener);
+    }
+
+    public static JRadioButton makeRadioButton(String text, String actionCommand, String toolTipText, Color textColour, boolean isSelected, boolean isOpaque, JPanel panel, ButtonGroup group,  boolean isGroupDefault, EditorListener actionListener, CurvePanelListener itemListener) {
         TransparentRadioButton radioButton = new TransparentRadioButton(localeString.getString(text));
         radioButton.setActionCommand(actionCommand);
         radioButton.setToolTipText(localeString.getString(toolTipText));
@@ -136,7 +155,13 @@ public class GUIUtils {
         if (actionListener != null ) radioButton.addActionListener(actionListener);
         if (itemListener !=null ) radioButton.addItemListener(itemListener);
         panel.add(radioButton);
-        if (group != null) group.add(radioButton);
+        if (group != null) {
+            group.add(radioButton);
+            if (isGroupDefault) {
+                //ButtonModel groupDefault = menuItem.getModel();
+                group.setSelected(radioButton.getModel(), true);
+            }
+        }
 
         return radioButton;
     }
@@ -222,12 +247,12 @@ public class GUIUtils {
         return menuItem;
     }
 
-    public static void showInTextArea(String text, boolean clearAll) {
+    public static void showInTextArea(String text, boolean clearAll, boolean outputToLogFile) {
         if (clearAll) {
             textArea.selectAll();
             textArea.replaceSelection("");
         }
-        //LOG.info(text);
+        if (outputToLogFile) LOG.info(text);
         textArea.append(text + "\n");
     }
 }

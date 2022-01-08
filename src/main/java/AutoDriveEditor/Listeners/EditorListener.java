@@ -87,6 +87,14 @@ public class EditorListener implements ActionListener, MouseListener {
                 editorState = EDITORSTATE_ALIGN_VERTICAL;
                 MapPanel.getMapPanel().isMultiSelectAllowed = true;
                 break;
+            case BUTTON_ALIGN_DEPTH:
+                editorState = EDITORSTATE_ALIGN_DEPTH;
+                MapPanel.getMapPanel().isMultiSelectAllowed = true;
+                break;
+            case BUTTON_ALIGN_EDIT_NODE:
+                editorState = EDITORSTATE_ALIGN_EDIT_NODE;
+                MapPanel.getMapPanel().isMultiSelectAllowed = false;
+                break;
             case BUTTON_CREATE_QUADRATICBEZIER:
                 editorState = EDITORSTATE_QUADRATICBEZIER;
                 MapPanel.getMapPanel().isMultiSelectAllowed = false;
@@ -106,13 +114,16 @@ public class EditorListener implements ActionListener, MouseListener {
                 MapPanel.getMapPanel().isMultiSelectAllowed = true;
                 break;
             case BUTTON_COPYPASTE_CUT:
+                MapPanel.getMapPanel().isMultiSelectAllowed = false;
                 cutSelected();
                 break;
             case BUTTON_COPYPASTE_COPY:
+                MapPanel.getMapPanel().isMultiSelectAllowed = false;
                 copySelected();
                 break;
             case BUTTON_COPYPASTE_PASTE:
-                pasteSelected();
+                MapPanel.getMapPanel().isMultiSelectAllowed = false;
+                pasteSelected(false);
                 break;
         }
         updateButtons();
@@ -125,7 +136,7 @@ public class EditorListener implements ActionListener, MouseListener {
             if (toggleStateButton.isEnabled()) {
                 if (toggleStateButton == GUIBuilder.createRegularConnection) {
                     createRegularConnectionState = 1 - createRegularConnectionState;
-                    if (createRegularConnectionState == NODE_STANDARD) { // == 0
+                    if (createRegularConnectionState == NODE_FLAG_STANDARD) { // == 0
                         createRegularConnection.setIcon(regularConnectionIcon);
                         createRegularConnection.setSelectedIcon(regularConnectionSelectedIcon);
                     } else {
@@ -134,7 +145,7 @@ public class EditorListener implements ActionListener, MouseListener {
                     }
                 } else if (toggleStateButton == createDualConnection) {
                     createDualConnectionState = 1 - createDualConnectionState;
-                    if (createDualConnectionState == NODE_STANDARD) { // == 0
+                    if (createDualConnectionState == NODE_FLAG_STANDARD) { // == 0
                         createDualConnection.setIcon(dualConnectionIcon);
                         createDualConnection.setSelectedIcon(dualConnectionSelectedIcon);
                     } else {
@@ -143,7 +154,7 @@ public class EditorListener implements ActionListener, MouseListener {
                     }
                 } else if (toggleStateButton == createReverseConnection) {
                     createReverseConnectionState = 1 - createReverseConnectionState;
-                    if (createReverseConnectionState == NODE_STANDARD) { // == 0
+                    if (createReverseConnectionState == NODE_FLAG_STANDARD) { // == 0
                         createReverseConnection.setIcon(reverseConnectionIcon);
                         createReverseConnection.setSelectedIcon(reverseConnectionSelectedIcon);
                     } else {

@@ -14,10 +14,11 @@ import AutoDriveEditor.MapPanel.MapPanel;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
-import static AutoDriveEditor.GUI.GUIUtils.showInTextArea;
+import static AutoDriveEditor.GUI.GUIUtils.*;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.Import.ImportManager.*;
 import static AutoDriveEditor.Locale.LocaleManager.*;
+import static AutoDriveEditor.Managers.ScanManager.*;
 import static AutoDriveEditor.MapPanel.MapImage.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.FileUtils.*;
@@ -32,14 +33,14 @@ public class MenuListener implements ActionListener, ItemListener {
         LOG.info("ActionCommand: {}", e.getActionCommand());
         getMapPanel().isMultiSelectAllowed = false;
 
-        JFileChooser fc = new JFileChooser();
+        JFileChooser fc = new JFileChooser(lastLoadLocation);
 
         switch (e.getActionCommand()) {
             case MENU_LOAD_CONFIG:
                 if (getMapPanel().isStale()) {
                     int response = JOptionPane.showConfirmDialog(editor, localeString.getString("dialog_exit_unsaved"), "AutoDrive", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                     if (response == JOptionPane.YES_OPTION) {
-                        saveConfigFile(null);
+                        saveConfigFile(null, false);
                     }
                 }
 
@@ -50,6 +51,7 @@ public class MenuListener implements ActionListener, ItemListener {
                 fc.addChoosableFileFilter(filter);
 
                 if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
+                    lastLoadLocation = fc.getCurrentDirectory().getAbsolutePath();
                     getMapPanel().confirmCurve();
                     File fileName = fc.getSelectedFile();
                     loadConfigFile(fileName);
@@ -58,12 +60,12 @@ public class MenuListener implements ActionListener, ItemListener {
                     isUsingConvertedImage = false;
                     saveImageEnabled(false);
                     getMapPanel().setStale(false);
-
+                    scanNetworkForOverlapNodes();
                 }
 
                 break;
             case MENU_SAVE_CONFIG:
-                saveConfigFile(null);
+                saveConfigFile(null, false);
                 break;
             case MENU_SAVE_SAVEAS:
                 if (xmlConfigFile == null) break;
@@ -76,7 +78,7 @@ public class MenuListener implements ActionListener, ItemListener {
 
                 if (fc.showSaveDialog(editor) == JFileChooser.APPROVE_OPTION) {
                     LOG.info("{} {}", localeString.getString("console_config_saveas"), getSelectedFileWithExtension(fc));
-                    saveConfigFile(getSelectedFileWithExtension(fc).toString());
+                    saveConfigFile(getSelectedFileWithExtension(fc).toString(), false);
                 }
                 break;
             case MENU_EXIT:
@@ -262,7 +264,31 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_HEIGHTMAP_FIX:
                 fixNodeHeight();
                 break;
+            case MENU_SCAN_OVERLAP:
+                mapPanel.showScanDialog();
+                break;
+            case MENU_SCAN_MERGE:
+                mergeOverlappingNodes();
+                break;
+            case MENU_AUTOSAVE_INTERVAL:
+                mapPanel.showAutoSaveIntervalDialog();
+                break;
             case MENU_HEIGHTMAP_IMPORT:
+                break;
+            case BUTTON_COPYPASTE_CUT:
+                cutSelected();
+                break;
+            case BUTTON_COPYPASTE_COPY:
+                copySelected();
+                break;
+            case BUTTON_COPYPASTE_PASTE:
+                pasteSelected(false);
+                break;
+            case BUTTON_COPYPASTE_PASTE_ORIGINAL:
+                pasteSelected(true);
+                break;
+            case MENU_DEBUG_MOVETO_NODE:
+                centreNode();
                 break;
         }
 
@@ -270,53 +296,61 @@ public class MenuListener implements ActionListener, ItemListener {
 
     @Override
     public void itemStateChanged(ItemEvent e) {
-        AbstractButton button = (AbstractButton) e.getItem();
-        switch (button.getActionCommand()) {
+        AbstractButton menuItem = (AbstractButton) e.getItem();
+        switch (menuItem.getActionCommand()) {
             case MENU_CHECKBOX_CONTINUECONNECT:
-                bContinuousConnections = button.isSelected();
+                bContinuousConnections = menuItem.isSelected();
                 break;
             case MENU_CHECKBOX_MIDDLEMOUSEMOVE:
-                bMiddleMouseMove = button.isSelected();
+                bMiddleMouseMove = menuItem.isSelected();
                 break;
             case MENU_GRID_SHOW:
-                bShowGrid = button.isSelected();
+                bShowGrid = menuItem.isSelected();
                 MapPanel.getMapPanel().repaint();
                 break;
             case MENU_GRID_SNAP:
-                bGridSnap = button.isSelected();
-                if (!button.isSelected()) {
+                bGridSnap = menuItem.isSelected();
+                if (!menuItem.isSelected()) {
                     bGridSnapSubs = false;
                     gridSnapSubDivisionMenuItem.setSelected(false);
                 }
                 break;
             case MENU_GRID_SNAP_SUBS:
-                bGridSnapSubs = button.isSelected();
+                bGridSnapSubs = menuItem.isSelected();
                 break;
             case MENU_DEBUG_SHOWID:
-                bDebugShowID = button.isSelected();
+                bDebugShowID = menuItem.isSelected();
                 mapPanel.repaint();
                 break;
             case MENU_DEBUG_SELECTED_LOCATION:
-                bDebugShowSelectedLocation = button.isSelected();
+                bDebugShowSelectedLocation = menuItem.isSelected();
                 break;
             case MENU_DEBUG_FILEIO:
-                bDebugFileIO = button.isSelected();
+                bDebugFileIO = menuItem.isSelected();
                 break;
             case MENU_DEBUG_PROFILE:
-                bDebugProfile = button.isSelected();
+                bDebugProfile = menuItem.isSelected();
                 break;
             case MENU_DEBUG_UNDO:
-                bDebugUndoRedo = button.isSelected();
+                bDebugUndoRedo = menuItem.isSelected();
                 break;
             case MENU_DEBUG_HEIGHTMAP:
-                bDebugHeightMap = button.isSelected();
-                if (!button.isSelected()) showInTextArea("", true);
+                bDebugHeightMap = menuItem.isSelected();
+                if (!menuItem.isSelected()) showInTextArea("", true, false);
+                break;
+            case MENU_DEBUG_MERGE:
+                bDebugMerge = menuItem.isSelected() ;
                 break;
             case MENU_DEBUG_TEST:
-                bDebugTest = button.isSelected();
-                isDraggingNode = true;
-                MapPanel.getMapPanel().mouseDragged(-1, 0);
+                bDebugTest = menuItem.isSelected();
+                //canAutoSave = menuItem.isSelected();
                 break;
+            case MENU_DEBUG_ENABLE:
+                bDebugEnable = menuItem.isSelected();
+                debugMenu.setVisible(menuItem.isSelected());
+                DEBUG = menuItem.isSelected();
+                break;
+
         }
     }
 

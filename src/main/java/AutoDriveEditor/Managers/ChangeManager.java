@@ -6,9 +6,11 @@ import AutoDriveEditor.MapPanel.LinearLine;
 import AutoDriveEditor.MapPanel.MapPanel;
 import AutoDriveEditor.RoadNetwork.MapMarker;
 import AutoDriveEditor.RoadNetwork.MapNode;
+import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import static AutoDriveEditor.AutoDriveEditor.EXPERIMENTAL;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
+import static AutoDriveEditor.Managers.ScanManager.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.DebugUtils.*;
 import static AutoDriveEditor.Utils.LoggerUtils.*;
@@ -85,6 +87,7 @@ public class ChangeManager {
 
     public void undo(){
         //validate
+        canAutoSave = false;
         if ( !canUndo() ){
             LOG.info("Reached Beginning of Undo History.");
             return;
@@ -98,6 +101,7 @@ public class ChangeManager {
         }
         //set index
         moveLeft();
+        canAutoSave = true;
     }
 
     /**
@@ -131,6 +135,7 @@ public class ChangeManager {
 
     public void redo(){
         //validate
+        canAutoSave = false;
         if ( !canRedo() ){
             LOG.info("Reached End of Undo History.");
             return;
@@ -143,6 +148,7 @@ public class ChangeManager {
         } else {
             LOG.info("Unable to Redo");
         }
+        canAutoSave = true;
     }
 
     /**
@@ -183,21 +189,24 @@ public class ChangeManager {
             this.diffX = movedX;
             this.diffY = movedY;
             this.wasSnapMove = snapMove;
-            for (int i = 0; i <= mapNodesMoved.size() - 1 ; i++) {
-                MapNode mapNode = mapNodesMoved.get(i);
-                this.moveNodes.add(mapNode);
-            }
-           this.isStale = getMapPanel().isStale();
+            this.moveNodes.addAll(mapNodesMoved);
+            this.isStale = getMapPanel().isStale();
         }
 
         public void undo(){
             getMapPanel().moveNodeBy(this.moveNodes, -this.diffX, -this.diffY, true);
+            for (MapNode node : this.moveNodes) {
+                checkAreaForNodeOverlap(node);
+            }
             getMapPanel().repaint();
             getMapPanel().setStale(this.isStale);
         }
 
         public void redo(){
             getMapPanel().moveNodeBy(this.moveNodes, this.diffX, this.diffY, true);
+            for (MapNode node : this.moveNodes) {
+                checkAreaForNodeOverlap(node);
+            }
             getMapPanel().repaint();
             getMapPanel().setStale(true);
         }
@@ -218,7 +227,7 @@ public class ChangeManager {
         }
 
         public void undo(){
-            roadMap.removeMapNode(storeNode);
+            RoadMap.removeMapNode(storeNode);
             getMapPanel().repaint();
             getMapPanel().setStale(this.isStale);
         }
@@ -234,24 +243,25 @@ public class ChangeManager {
     // Add node from LinkedList
     //
 
-    public static class AddMultiNodeChanger implements Changeable{
+    public static class  PasteSelectionChanger implements Changeable{
         private final LinkedList<MapNode> storeNodes;
         private final boolean isStale;
 
-        public AddMultiNodeChanger(LinkedList<MapNode> nodes){
+        public PasteSelectionChanger(LinkedList<MapNode> nodes){
             super();
             this.storeNodes = (LinkedList<MapNode>) nodes.clone();
             this.isStale = getMapPanel().isStale();
         }
 
         public void undo(){
-            roadMap.mapNodes.removeAll(this.storeNodes);
+            clearMultiSelection();
+            RoadMap.mapNodes.removeAll(this.storeNodes);
             getMapPanel().repaint();
             getMapPanel().setStale(this.isStale);
         }
 
         public void redo(){
-            roadMap.mapNodes.addAll(this.storeNodes);
+            RoadMap.mapNodes.addAll(this.storeNodes);
             getMapPanel().repaint();
             getMapPanel().setStale(true);
         }
@@ -528,7 +538,7 @@ public class ChangeManager {
         }
 
         public void undo(){
-            roadMap.removeMapMarker(this.markerToChange);
+            RoadMap.removeMapMarker(this.markerToChange);
             getMapPanel().repaint();
             getMapPanel().setStale(this.isStale);
         }
@@ -612,19 +622,20 @@ public class ChangeManager {
         private final Boolean isStale;
         private final LinkedList<ZStore> nodeList;
 
-        public AlignmentChanger(LinkedList<MapNode> multiSelectList, double x, double z){
+        public AlignmentChanger(LinkedList<MapNode> multiSelectList, double x, double y, double z){
             super();
             this.isStale = getMapPanel().isStale();
             this.nodeList = new LinkedList<>();
 
             for (MapNode node : multiSelectList) {
-                nodeList.add(new ZStore(node, x, z));
+                nodeList.add(new ZStore(node, x, y, z));
             }
         }
 
         public void undo() {
             for (ZStore storedNode : nodeList) {
                 storedNode.mapNode.x += storedNode.diffX;
+                storedNode.mapNode.y += storedNode.diffY;
                 storedNode.mapNode.z += storedNode.diffZ;
             }
             getMapPanel().repaint();
@@ -634,6 +645,7 @@ public class ChangeManager {
         public void redo() {
             for (ZStore storedNode : nodeList) {
                 storedNode.mapNode.x += -storedNode.diffX;
+                storedNode.mapNode.y += -storedNode.diffY;
                 storedNode.mapNode.z += -storedNode.diffZ;
             }
             getMapPanel().repaint();
@@ -643,14 +655,20 @@ public class ChangeManager {
         private static class ZStore {
             private final MapNode mapNode;
             private final double diffX;
+            private final double diffY;
             private final double diffZ;
 
-            public ZStore(MapNode node, double dX, double dZ) {
+            public ZStore(MapNode node, double dX, double dY, double dZ) {
                 this.mapNode = node;
                 if (dX == 0) {
                     this.diffX = 0;
                 } else {
                     this.diffX = node.x - dX;
+                }
+                if (dY == 0) {
+                    this.diffY = 0;
+                } else {
+                    this.diffY = node.y - dY;
                 }
                 if (dZ == 0) {
                     this.diffZ = 0;

@@ -4,10 +4,10 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.util.LinkedList;
 
-import AutoDriveEditor.AutoDriveEditor;
 import AutoDriveEditor.GUI.MenuBuilder;
 import AutoDriveEditor.MapPanel.MapPanel;
 import AutoDriveEditor.RoadNetwork.MapNode;
+import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.MapPanel.MapImage.*;
@@ -52,7 +52,7 @@ public class CopyPasteManager {
         }
         changeManager.addChangeable( new ChangeManager.DeleteNodeChanger(deleteNodeList));
         CopySelection(nodesToCopy);
-        MapPanel.getMapPanel().removeNodes();
+        MapPanel.getMapPanel().removeDeleteListNodes();
         clearMultiSelection();
     }
 
@@ -64,24 +64,25 @@ public class CopyPasteManager {
         if (recInfo != null) {
             centrePoint = recInfo.recCentre;
             // rebuild the selected nodes and there connections to a new arrayList
-            tempCache = createNewMapNodesFromList(nodesToCopy, (int) centrePoint.getX(), (int) centrePoint.getY());
+            tempCache = createNewMapNodesFromList(nodesToCopy);
             // create a cached LinkedList so we can paste this in as many times as needed
-            nodeCache = createNewMapNodesFromList(tempCache, 0, 0);
+            nodeCache = createNewMapNodesFromList(tempCache);
             MenuBuilder.rotationMenuEnabled(true);
         }
+        clearMultiSelection();
     }
 
-    public void PasteSelection() {
+    public void PasteSelection(boolean inOriginalLocation) {
         if (nodeCache.size() > 0 ) {
-            LinkedList<MapNode> tempCache = createNewMapNodesFromList(nodeCache, 0, 0);
-            addNodesToNetwork(tempCache);
+            LinkedList<MapNode> tempCache = createNewMapNodesFromList(nodeCache);
+            addNodesToNetwork(tempCache, inOriginalLocation);
         } else {
             LOG.info("Cannot Paste - Buffer empty");
         }
     }
 
 
-    public LinkedList<MapNode> createNewMapNodesFromList(LinkedList<MapNode> list, int rectCentreX, int rectCentreY) {
+    public LinkedList<MapNode> createNewMapNodesFromList(LinkedList<MapNode> list) {
 
         // create a new MapNode for each node in the list
 
@@ -90,7 +91,7 @@ public class CopyPasteManager {
 
         int n = 1;
         for (MapNode node : list) {
-            MapNode workBufferNode = new MapNode(n++, node.x - rectCentreX, node.y, node.z - rectCentreY, node.flag, true, false);
+            MapNode workBufferNode = new MapNode(n++, node.x, node.y, node.z, node.flag, true, false);
             workBuffer.add(new NodeTransform(node, workBufferNode));
         }
 
@@ -139,36 +140,53 @@ public class CopyPasteManager {
         return tempCache;
     }
 
-    public void addNodesToNetwork(LinkedList<MapNode> newNodes) {
+    public void addNodesToNetwork(LinkedList<MapNode> newNodes, boolean originalLocation) {
+        Point2D selectionCentre;
         if ((roadMap == null) || (image == null)) {
             return;
         }
-        Point2D selectionCentre = screenPosToWorldPos(getMapPanel().getWidth() / 2, getMapPanel().getHeight() / 2);
+
+        if (!originalLocation) {
+            selectionCentre = screenPosToWorldPos(getMapPanel().getWidth() / 2, getMapPanel().getHeight() / 2);
+        } else {
+            selectionCentre = new Point2D.Double(0, 0);
+        }
         clearMultiSelection();
 
-        int startID = roadMap.mapNodes.size() + 1;
+        canAutoSave = false;
+
+        int startID = RoadMap.mapNodes.size() + 1;
         for (MapNode node : newNodes) {
             node.id = startID++;
             node.x += selectionCentre.getX();
             node.z += selectionCentre.getY();
-            node.y = getYValueFromHeightMap(node.x, node.z);
+            double yValue = getYValueFromHeightMap(node.x, node.z);
+            if (yValue != -1) {
+                node.y = yValue;
+            }
             node.isSelected = true;
-            roadMap.mapNodes.add(node);
+            RoadMap.mapNodes.add(node);
             multiSelectList.add(node);
         }
 
-        changeManager.addChangeable( new ChangeManager.AddMultiNodeChanger(newNodes) );
+        canAutoSave = true;
+
+        isMultipleSelected = true;
+
+        changeManager.addChangeable( new ChangeManager.PasteSelectionChanger(newNodes) );
         MapPanel.getMapPanel().setStale(true);
         MapPanel.getMapPanel().repaint();
     }
 
     public static void rotateSelected(double angle) {
         rectangleInfo recInfo = getSelectionBounds(multiSelectList, WORLD_COORDINATES);
+        canAutoSave = false;
         for (MapNode node : multiSelectList) {
             if ( recInfo != null ) {
                 rotate(node, recInfo.recCentre, angle);
             }
         }
+        canAutoSave = true;
         MapPanel.getMapPanel().repaint();
         getSelectionBounds(multiSelectList, WORLD_COORDINATES);
     }
@@ -226,7 +244,7 @@ public class CopyPasteManager {
             Point2D bottomRight = worldPosToScreenPos(bottomRightX, bottomRightY);
             Point2D rectSize = worldPosToScreenPos(rectSizeX, rectSizeY);
             Point2D rectCentre = worldPosToScreenPos(centreX, centreY);
-            if (AutoDriveEditor.DEBUG) LOG.info("## SCREEN_COORDINATES ## Rectangle start = {} : end = {} : size = {} : Centre = {} ", topLeft, bottomRight, rectSize, rectCentre);
+            if (DEBUG) LOG.info("## SCREEN_COORDINATES ## Rectangle start = {} : end = {} : size = {} : Centre = {} ", topLeft, bottomRight, rectSize, rectCentre);
             return new rectangleInfo(topLeft, bottomRight, rectSize, rectCentre);
         } else {
             LOG.info("No return type specified for getSelectionBounds() - returning null");

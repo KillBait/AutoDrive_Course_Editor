@@ -23,9 +23,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import AutoDriveEditor.RoadNetwork.MapMarker;
 import AutoDriveEditor.RoadNetwork.MapNode;
@@ -35,8 +33,10 @@ import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.Locale.LocaleManager.*;
 import static AutoDriveEditor.MapPanel.MapImage.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
+import static AutoDriveEditor.Utils.FileUtils.*;
 import static AutoDriveEditor.Utils.LoggerUtils.*;
 import static AutoDriveEditor.Utils.XMLUtils.*;
+import static AutoDriveEditor.XMLConfig.EditorXML.maxAutoSaveSlots;
 
 public class GameXML {
 
@@ -44,12 +44,14 @@ public class GameXML {
     public static int FS22_CONFIG = 2;
 
     public static File xmlConfigFile;
+    public static String lastLoadLocation;
     private static boolean hasFlagTag = false; // indicates if the loaded XML file has the <flags> tag in the <waypoints> element
     public static boolean oldConfigFormat = false;
     public static int configVersion = 0;
+    private static int saveSlot = 1;
 
     public static void loadConfigFile(File fXmlFile) {
-        LOG.info("loadFile: {}", fXmlFile.getAbsolutePath());
+        LOG.info("config loadFile: {}", fXmlFile.getAbsolutePath());
 
         try {
             RoadMap roadMap = loadXmlConfigFile(fXmlFile);
@@ -67,19 +69,62 @@ public class GameXML {
         }
     }
 
-    public static void saveConfigFile(String newName) {
-        LOG.info("{}", localeString.getString("console_config_save_start"));
-        RoadMap roadMap = getMapPanel().getRoadMap();
+    public static void saveConfigFile(String newName, boolean isAutoSave) {
+        if (isAutoSave) {
+            LOG.info("{}", localeString.getString("console_config_autosave_start"));
+        } else {
+            LOG.info("{}", localeString.getString("console_config_save_start"));
+        }
 
         try
         {
             if (xmlConfigFile == null) return;
-            saveXmlConfig(xmlConfigFile, roadMap, newName);
+            saveXmlConfig(xmlConfigFile, newName, isAutoSave);
             getMapPanel().setStale(false);
-            JOptionPane.showMessageDialog(editor, xmlConfigFile.getName() + " " + localeString.getString("dialog_save_success"), "AutoDrive", JOptionPane.INFORMATION_MESSAGE);
+            if (!isAutoSave) {
+                JOptionPane.showMessageDialog(editor, xmlConfigFile.getName() + " " + localeString.getString("dialog_save_success"), "AutoDrive", JOptionPane.INFORMATION_MESSAGE);
+            }
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
             JOptionPane.showMessageDialog(editor, localeString.getString("dialog_save_fail"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public static void saveMergeBackupConfigFile() {
+        LOG.info("{}", localeString.getString("console_config_merge_backup"));
+        //LOG.info("{}", removeExtension(xmlConfigFile.getAbsolutePath()));
+        String filename = removeExtension(xmlConfigFile.getAbsolutePath()) + "_mergeBackup.xml";
+        saveConfigFile(filename, true);
+
+    }
+
+    public static void autoSaveConfigFile() {
+        while (!canAutoSave) {
+            try {
+                LOG.info("canAutoSave = false --- Waiting");
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        String filename = removeExtension(xmlConfigFile.getAbsolutePath()) + "_autosave_" + saveSlot + ".xml";
+        File file = new File(filename);
+        try {
+            if (file.exists()) {
+                if (file.isDirectory())
+                    throw new IOException("File '" + file + "' is a directory");
+
+                if (!file.canWrite())
+                    throw new IOException("File '" + file + "' cannot be written");
+            }
+            saveConfigFile(filename, true);
+            LOG.info("{}", filename);
+            saveSlot++;
+            if (saveSlot == maxAutoSaveSlots + 1 ) saveSlot = 1;
+        }
+        catch(IOException ioEx) {
+            ioEx.printStackTrace();
         }
     }
 
@@ -112,7 +157,7 @@ public class GameXML {
             } else if (configSemver.getMajor() == 2) {
                 LOG.info("FS22 Config detected");
                 configVersion = FS22_CONFIG;
-            };
+            }
             LOG.info("{} '{}'", localeString.getString("console_config_version"), version);
             oldConfigFormat = false;
         }
@@ -258,8 +303,8 @@ public class GameXML {
         }
 
         RoadMap roadMap = new RoadMap();
-        roadMap.mapNodes = nodes;
-        roadMap.mapMarkers = mapMarkers;
+        RoadMap.mapNodes = nodes;
+        RoadMap.mapMarkers = mapMarkers;
 
         // check for MapName element
 
@@ -276,7 +321,7 @@ public class GameXML {
         return roadMap;
     }
 
-    private static void saveXmlConfig(File file, RoadMap roadMap, String newName) throws ParserConfigurationException, IOException, SAXException, TransformerException, XPathExpressionException {
+    private static void saveXmlConfig(File file, String newName, boolean isAutoSave) throws ParserConfigurationException, IOException, SAXException, TransformerException, XPathExpressionException {
 
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -301,10 +346,10 @@ public class GameXML {
 
             if ("id".equals(node.getNodeName())) {
                 StringBuilder ids = new StringBuilder();
-                for (int j = 0; j < roadMap.mapNodes.size(); j++) {
-                    MapNode mapNode = roadMap.mapNodes.get(j);
+                for (int j = 0; j < RoadMap.mapNodes.size(); j++) {
+                    MapNode mapNode = RoadMap.mapNodes.get(j);
                     ids.append(mapNode.id);
-                    if (j < (roadMap.mapNodes.size() - 1)) {
+                    if (j < (RoadMap.mapNodes.size() - 1)) {
                         ids.append(",");
                     }
                 }
@@ -312,10 +357,10 @@ public class GameXML {
             }
             if ("x".equals(node.getNodeName())) {
                 StringBuilder xPositions = new StringBuilder();
-                for (int j = 0; j < roadMap.mapNodes.size(); j++) {
-                    MapNode mapNode = roadMap.mapNodes.get(j);
+                for (int j = 0; j < RoadMap.mapNodes.size(); j++) {
+                    MapNode mapNode = RoadMap.mapNodes.get(j);
                     xPositions.append(mapNode.x);
-                    if (j < (roadMap.mapNodes.size() - 1)) {
+                    if (j < (RoadMap.mapNodes.size() - 1)) {
                         xPositions.append(",");
                     }
                 }
@@ -323,10 +368,10 @@ public class GameXML {
             }
             if ("y".equals(node.getNodeName())) {
                 StringBuilder yPositions = new StringBuilder();
-                for (int j = 0; j < roadMap.mapNodes.size(); j++) {
-                    MapNode mapNode = roadMap.mapNodes.get(j);
+                for (int j = 0; j < RoadMap.mapNodes.size(); j++) {
+                    MapNode mapNode = RoadMap.mapNodes.get(j);
                     yPositions.append(mapNode.y);
-                    if (j < (roadMap.mapNodes.size() - 1)) {
+                    if (j < (RoadMap.mapNodes.size() - 1)) {
                         yPositions.append(",");
                     }
                 }
@@ -334,10 +379,10 @@ public class GameXML {
             }
             if ("z".equals(node.getNodeName())) {
                 StringBuilder zPositions = new StringBuilder();
-                for (int j = 0; j < roadMap.mapNodes.size(); j++) {
-                    MapNode mapNode = roadMap.mapNodes.get(j);
+                for (int j = 0; j < RoadMap.mapNodes.size(); j++) {
+                    MapNode mapNode = RoadMap.mapNodes.get(j);
                     zPositions.append(mapNode.z);
-                    if (j < (roadMap.mapNodes.size() - 1)) {
+                    if (j < (RoadMap.mapNodes.size() - 1)) {
                         zPositions.append(",");
                     }
                 }
@@ -345,8 +390,8 @@ public class GameXML {
             }
             if ("incoming".equals(node.getNodeName())) {
                 StringBuilder incomingString = new StringBuilder();
-                for (int j = 0; j < roadMap.mapNodes.size(); j++) {
-                    MapNode mapNode = roadMap.mapNodes.get(j);
+                for (int j = 0; j < RoadMap.mapNodes.size(); j++) {
+                    MapNode mapNode = RoadMap.mapNodes.get(j);
                     StringBuilder incomingsPerNode = new StringBuilder();
                     for (int incomingIndex = 0; incomingIndex < mapNode.incoming.size(); incomingIndex++) {
                         MapNode incomingNode = mapNode.incoming.get(incomingIndex);
@@ -359,7 +404,7 @@ public class GameXML {
                         incomingsPerNode = new StringBuilder("-1");
                     }
                     incomingString.append(incomingsPerNode);
-                    if (j < (roadMap.mapNodes.size() - 1)) {
+                    if (j < (RoadMap.mapNodes.size() - 1)) {
                         incomingString.append(";");
                     }
                 }
@@ -367,8 +412,8 @@ public class GameXML {
             }
             if ("out".equals(node.getNodeName())) {
                 StringBuilder outgoingString = new StringBuilder();
-                for (int j = 0; j < roadMap.mapNodes.size(); j++) {
-                    MapNode mapNode = roadMap.mapNodes.get(j);
+                for (int j = 0; j < RoadMap.mapNodes.size(); j++) {
+                    MapNode mapNode = RoadMap.mapNodes.get(j);
                     StringBuilder outgoingPerNode = new StringBuilder();
                     for (int outgoingIndex = 0; outgoingIndex < mapNode.outgoing.size(); outgoingIndex++) {
                         MapNode outgoingNode = mapNode.outgoing.get(outgoingIndex);
@@ -381,7 +426,7 @@ public class GameXML {
                         outgoingPerNode = new StringBuilder("-1");
                     }
                     outgoingString.append(outgoingPerNode);
-                    if (j < (roadMap.mapNodes.size() - 1)) {
+                    if (j < (RoadMap.mapNodes.size() - 1)) {
                         outgoingString.append(";");
                     }
                 }
@@ -389,10 +434,10 @@ public class GameXML {
             }
             if ("flags".equals(node.getNodeName())) {
                 StringBuilder flags = new StringBuilder();
-                for (int j = 0; j < roadMap.mapNodes.size(); j++) {
-                    MapNode mapNode = roadMap.mapNodes.get(j);
+                for (int j = 0; j < RoadMap.mapNodes.size(); j++) {
+                    MapNode mapNode = RoadMap.mapNodes.get(j);
                     flags.append(mapNode.flag);
-                    if (j < (roadMap.mapNodes.size() - 1)) {
+                    if (j < (RoadMap.mapNodes.size() - 1)) {
                         flags.append(",");
                     }
                 }
@@ -402,7 +447,7 @@ public class GameXML {
 
 
 
-        for (int markerIndex = 1; markerIndex < roadMap.mapMarkers.size() + 100; markerIndex++) {
+        for (int markerIndex = 1; markerIndex < RoadMap.mapMarkers.size() + 100; markerIndex++) {
             Element element = (Element) doc.getElementsByTagName("mm" + (markerIndex)).item(0);
             if (element != null) {
                 Element parent = (Element) element.getParentNode();
@@ -414,7 +459,7 @@ public class GameXML {
 
         NodeList testwaypoints = doc.getElementsByTagName("mapmarker");
 
-        if (roadMap.mapMarkers.size() > 0 && testwaypoints.getLength() == 0 ) {
+        if (RoadMap.mapMarkers.size() > 0 && testwaypoints.getLength() == 0 ) {
             LOG.info("{}", localeString.getString("console_markers_new"));
             Element test = doc.createElement("mapmarker");
             AutoDrive.appendChild(test);
@@ -423,7 +468,7 @@ public class GameXML {
         NodeList markerList = doc.getElementsByTagName("mapmarker");
         Node markerNode = markerList.item(0);
         int mapMarkerCount = 1;
-        for (MapMarker mapMarker : roadMap.mapMarkers) {
+        for (MapMarker mapMarker : RoadMap.mapMarkers) {
             Element newMapMarker = doc.createElement("mm" + mapMarkerCount);
 
             Element markerID = doc.createElement("id");
@@ -471,8 +516,10 @@ public class GameXML {
             File newFile = new File(newName);
             LOG.info("Saving config as {}",newName);
             result = new StreamResult(newFile);
-            xmlConfigFile = newFile;
-            editor.setTitle(createTitle());
+            if (!isAutoSave) {
+                xmlConfigFile = newFile;
+                editor.setTitle(createTitle());
+            }
         }
         transformer.transform(source, result);
 
