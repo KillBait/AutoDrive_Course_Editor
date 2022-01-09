@@ -25,7 +25,7 @@ import static AutoDriveEditor.XMLConfig.GameXML.*;
 
 public class AutoDriveEditor extends JFrame {
 
-    public static final String AUTODRIVE_INTERNAL_VERSION = "0.70.0";
+    public static final String AUTODRIVE_INTERNAL_VERSION = "0.70.1";
     public static final String AUTODRIVE_COURSE_EDITOR_TITLE = "AutoDrive Course Editor " + AUTODRIVE_INTERNAL_VERSION + " Beta";
 
 

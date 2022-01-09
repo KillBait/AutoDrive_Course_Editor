@@ -79,7 +79,7 @@ public class VersionManager {
         }
     }
 
-    private static JEditorPane createHyperLink(String text, String linkText, String URL) {
+    public static JEditorPane createHyperLink(String text, String linkText, String URL) {
         JLabel label = new JLabel();
         label.setHorizontalAlignment(SwingConstants.CENTER);
         Font font = label.getFont();
@@ -95,17 +95,12 @@ public class VersionManager {
                 + "</body></html>");
 
         // handle link events
-        ep.addHyperlinkListener(new HyperlinkListener()
-        {
-            @Override
-            public void hyperlinkUpdate(HyperlinkEvent e)
-            {
-                if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
-                    try {
-                        Desktop.getDesktop().browse(e.getURL().toURI()); // roll your own link launcher or use Desktop if J6+
-                    } catch (IOException | URISyntaxException ex) {
-                        ex.printStackTrace();
-                    }
+        ep.addHyperlinkListener(e -> {
+            if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
+                try {
+                    Desktop.getDesktop().browse(e.getURL().toURI()); // roll your own link launcher or use Desktop if J6+
+                } catch (IOException | URISyntaxException ex) {
+                    ex.printStackTrace();
                 }
             }
         });
