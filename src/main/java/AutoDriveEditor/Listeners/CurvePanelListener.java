@@ -12,12 +12,14 @@ import AutoDriveEditor.MapPanel.MapPanel;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.RoadNetwork.MapNode.*;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public class CurvePanelListener implements ItemListener, ChangeListener {
 
     @Override
     public void itemStateChanged(ItemEvent e) {
         AbstractButton button = (AbstractButton) e.getItem();
+        LOG.info("CurvePanel ItemStateChange: {}", button.getActionCommand());
         switch (button.getActionCommand()) {
             case RADIOBUTTON_PATHTYPE_REGULAR:
                 if (quadCurve != null && isQuadCurveCreated) {

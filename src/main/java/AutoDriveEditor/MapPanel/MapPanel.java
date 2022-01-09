@@ -1549,7 +1549,7 @@ public class MapPanel extends JPanel{
                     if (y <0) y = 0;
                     //int color = heightMapImage.getRGB((int)x,(int)y);
                     Color color = new Color(heightMapImage.getRGB((int)x, (int)y));
-                    String colourText="Heightmap R = " + color.getRed() + " , G = " + color.getGreen() + " , B = " + color.getBlue() + " , (" + (color.getRed()<<8) + color.getGreen() + ")";
+                    String colourText="Heightmap R = " + color.getRed() + " , G = " + color.getGreen() + " , B = " + color.getBlue() + " , (" + (float)((color.getRed()<<8) + color.getGreen()) / 256 + ")";
                     showInTextArea(colourText, true, false);
                     String pointerText = "Mouse X = " + x + ", Y =" + y;
                     showInTextArea(pointerText, false, false);
@@ -2172,7 +2172,7 @@ public class MapPanel extends JPanel{
         Object[] inputFields = {localeString.getString("dialog_autosave_interval_set"), autoSaveText, autoSaveLabel,
                 localeString.getString("dialog_autosave_max_saves"), maxAutoSavesText, maxAutoSavesLabel};
 
-        int option = JOptionPane.showConfirmDialog(this, inputFields, ""+ localeString.getString("dialog_rotation_set"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+        int option = JOptionPane.showConfirmDialog(this, inputFields, ""+ localeString.getString("dialog_autosave_title"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 
         if (option == JOptionPane.OK_OPTION) {
             autoSaveInterval = Integer.parseInt(autoSaveText.getText());

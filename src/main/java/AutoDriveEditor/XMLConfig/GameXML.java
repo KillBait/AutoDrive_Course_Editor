@@ -69,7 +69,7 @@ public class GameXML {
         }
     }
 
-    public static void saveConfigFile(String newName, boolean isAutoSave) {
+    public static void  saveConfigFile(String newName, boolean isAutoSave) {
         if (isAutoSave) {
             LOG.info("{}", localeString.getString("console_config_autosave_start"));
         } else {
@@ -119,7 +119,7 @@ public class GameXML {
                     throw new IOException("File '" + file + "' cannot be written");
             }
             saveConfigFile(filename, true);
-            LOG.info("{}", filename);
+            //LOG.info("{}", filename);
             saveSlot++;
             if (saveSlot == maxAutoSaveSlots + 1 ) saveSlot = 1;
         }

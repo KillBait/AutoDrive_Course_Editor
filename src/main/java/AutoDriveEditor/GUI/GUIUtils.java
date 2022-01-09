@@ -203,14 +203,14 @@ public class GUIUtils {
         return menuItem;
     }
 
-    public static JCheckBoxMenuItem makeCheckBoxMenuItem (String text, String accString, Boolean isSelected, JMenu menu, MenuListener itemListener, String actionCommand) {
-        return makeCheckBoxMenuItem(text, accString, KeyEvent_NONE, InputEvent_NONE, isSelected, menu, itemListener, actionCommand);
+    public static JCheckBoxMenuItem makeCheckBoxMenuItem (String text, String accString, Boolean isSelected, JMenu menu, MenuListener itemListener, String actionCommand, Boolean enabled) {
+        return makeCheckBoxMenuItem(text, accString, KeyEvent_NONE, InputEvent_NONE, isSelected, menu, itemListener, actionCommand, enabled);
     }
-    public static JCheckBoxMenuItem makeCheckBoxMenuItem (String text, String accString, int keyEvent, Boolean isSelected, JMenu menu, MenuListener itemListener, String actionCommand) {
-        return makeCheckBoxMenuItem(text, accString, keyEvent, InputEvent_NONE, isSelected, menu, itemListener, actionCommand);
+    public static JCheckBoxMenuItem makeCheckBoxMenuItem (String text, String accString, int keyEvent, Boolean isSelected, JMenu menu, MenuListener itemListener, String actionCommand, Boolean enabled) {
+        return makeCheckBoxMenuItem(text, accString, keyEvent, InputEvent_NONE, isSelected, menu, itemListener, actionCommand, enabled);
     }
 
-    public static JCheckBoxMenuItem makeCheckBoxMenuItem (String text, String accString, int keyEvent, int inputEvent, Boolean isSelected, JMenu menu, MenuListener itemListener, String actionCommand) {
+    public static JCheckBoxMenuItem makeCheckBoxMenuItem (String text, String accString, int keyEvent, int inputEvent, Boolean isSelected, JMenu menu, MenuListener itemListener, String actionCommand, Boolean enabled) {
         JCheckBoxMenuItem cbMenuItem = new JCheckBoxMenuItem(localeString.getString(text), isSelected);
         cbMenuItem.setActionCommand(actionCommand);
         if (inputEvent != 0 && keyEvent != 0) {
@@ -222,6 +222,7 @@ public class GUIUtils {
         cbMenuItem.setSelected(isSelected);
         cbMenuItem.getAccessibleContext().setAccessibleDescription(localeString.getString(accString));
         cbMenuItem.addItemListener(itemListener);
+        cbMenuItem.setEnabled(enabled);
         menu.add(cbMenuItem);
 
         return cbMenuItem;

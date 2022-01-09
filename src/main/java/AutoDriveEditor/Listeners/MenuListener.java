@@ -30,7 +30,7 @@ public class MenuListener implements ActionListener, ItemListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        LOG.info("ActionCommand: {}", e.getActionCommand());
+        LOG.info("Menu ActionCommand: {}", e.getActionCommand());
         getMapPanel().isMultiSelectAllowed = false;
 
         JFileChooser fc = new JFileChooser(lastLoadLocation);
@@ -43,17 +43,28 @@ public class MenuListener implements ActionListener, ItemListener {
                         saveConfigFile(null, false);
                     }
                 }
-
                 fc.setDialogTitle(localeString.getString("dialog_load_config_title"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                fc.setAcceptAllFileFilterUsed(false);
-                FileNameExtensionFilter filter = new FileNameExtensionFilter("AutoDrive config", "xml");
-                fc.addChoosableFileFilter(filter);
+                fc.setFileFilter(new FileFilter() {
+                    @Override
+                    public boolean accept(File f) {
+                        // always accept directory's
+                        if (f.isDirectory()) return true;
+                        // but only files with a specific name
+                        return f.getName().contains(".xml");
+                    }
+
+                    @Override
+                    public String getDescription() {
+                        return "AutoDrive Config (.xml)";
+                    }
+                });
 
                 if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
                     lastLoadLocation = fc.getCurrentDirectory().getAbsolutePath();
                     getMapPanel().confirmCurve();
                     File fileName = fc.getSelectedFile();
+                    heightMapImage = null;
                     loadConfigFile(fileName);
                     loadHeightMap(fileName);
                     forceMapImageRedraw();
@@ -71,12 +82,24 @@ public class MenuListener implements ActionListener, ItemListener {
                 if (xmlConfigFile == null) break;
                 fc.setDialogTitle(localeString.getString("dialog_save_destination"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                fc.setAcceptAllFileFilterUsed(false);
-                FileNameExtensionFilter saveFilter = new FileNameExtensionFilter("AutoDrive config", "xml");
+                fc.setFileFilter(new FileFilter() {
+                    @Override
+                    public boolean accept(File f) {
+                        // always accept directory's
+                        if (f.isDirectory()) return true;
+                        // but only files with a specific name
+                        return f.getName().contains(".xml");
+                    }
+
+                    @Override
+                    public String getDescription() {
+                        return "AutoDrive Config (.xml)";
+                    }
+                });
                 fc.setSelectedFile(xmlConfigFile);
-                fc.addChoosableFileFilter(saveFilter);
 
                 if (fc.showSaveDialog(editor) == JFileChooser.APPROVE_OPTION) {
+                    lastLoadLocation = fc.getCurrentDirectory().getAbsolutePath();
                     LOG.info("{} {}", localeString.getString("console_config_saveas"), getSelectedFileWithExtension(fc));
                     saveConfigFile(getSelectedFileWithExtension(fc).toString(), false);
                 }
@@ -91,6 +114,20 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_LOAD_IMAGE:
                 fc.setDialogTitle(localeString.getString("dialog_load_image_title"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                fc.setFileFilter(new FileFilter() {
+                    @Override
+                    public boolean accept(File f) {
+                        // always accept directory's
+                        if (f.isDirectory()) return true;
+                        // but only files with a specific name
+                        return f.getName().contains(".png");
+                    }
+
+                    @Override
+                    public String getDescription() {
+                        return "AutoDrive MapImage (.png)";
+                    }
+                });
 
                 if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
                     File fileName;
@@ -98,7 +135,7 @@ public class MenuListener implements ActionListener, ItemListener {
                         fileName = fc.getSelectedFile();
                         BufferedImage mapImage = ImageIO.read(fileName);
                         if (mapImage != null) {
-                            setImage(mapImage);
+                            setImage(mapImage, false);
                             forceMapImageRedraw();
                             //MapPanel.getMapPanel().moveMapBy(0,1); // hacky way to get map image to refresh
                         }
@@ -138,11 +175,25 @@ public class MenuListener implements ActionListener, ItemListener {
                 LOG.info("path = {}", currentPath);
                 fc.setDialogTitle(localeString.getString("dialog_save_mapimage"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                fc.setAcceptAllFileFilterUsed(false);
-                FileNameExtensionFilter imageFilter = new FileNameExtensionFilter("AutoDrive Map Image", "png");
+                fc.setFileFilter(new FileFilter() {
+                    @Override
+                    public boolean accept(File f) {
+                        // always accept directory's
+                        if (f.isDirectory()) return true;
+                        // but only files with a specific name
+                        return f.getName().contains(".png");
+                    }
+
+                    @Override
+                    public String getDescription() {
+                        return "AutoDrive Map Image (.png)";
+                    }
+                });
+                //fc.setAcceptAllFileFilterUsed(false);
+                //FileNameExtensionFilter imageFilter = new FileNameExtensionFilter("AutoDrive Map Image", "png");
                 fc.setSelectedFile(path);
                 fc.setCurrentDirectory(path);
-                fc.addChoosableFileFilter(imageFilter);
+                //fc.addChoosableFileFilter(imageFilter);
 
                 if (fc.showSaveDialog(editor) == JFileChooser.APPROVE_OPTION) {
                     File saveImageFile = getSelectedFileWithExtension(fc);
@@ -171,7 +222,7 @@ public class MenuListener implements ActionListener, ItemListener {
 
                     @Override
                     public String getDescription() {
-                        return ".dds";
+                        return "FS19 PDA Image (pda_map_H.dds)";
                     }
                 });
                 if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
@@ -204,7 +255,7 @@ public class MenuListener implements ActionListener, ItemListener {
 
                     @Override
                     public String getDescription() {
-                        return ".dds";
+                        return "FS22 PDA image (overview.dds)";
                     }
                 });
                 if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
@@ -221,6 +272,44 @@ public class MenuListener implements ActionListener, ItemListener {
                     }
                 } else {
                     LOG.info("Cancelled FS22 PDA Image Import");
+                }
+                break;
+            case MENU_HEIGHTMAP_LOAD:
+                fc.setDialogTitle(localeString.getString("dialog_heightmap_load_title"));
+                fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                fc.setFileFilter(new FileFilter() {
+                    @Override
+                    public boolean accept(File f) {
+                        // always accept directory's
+                        if (f.isDirectory()) return true;
+                        // but only files with a specific name
+                        return f.getName().equals("terrain.heightmap.png");
+                    }
+
+                    @Override
+                    public String getDescription() {
+                        return "FS HeightMap File (terrain.heightmap.png)";
+                    }
+                });
+                //fc.setAcceptAllFileFilterUsed(false);
+                //FileNameExtensionFilter heightmapFilter = new FileNameExtensionFilter("HeightMap File", "png");
+                //fc.addChoosableFileFilter(heightmapFilter);
+
+                if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
+                    File fileName = fc.getSelectedFile();
+                    heightMapImage = null;
+                    loadHeightMap(fileName);
+                    /*lastLoadLocation = fc.getCurrentDirectory().getAbsolutePath();
+                    getMapPanel().confirmCurve();
+
+                    heightMapImage = null;
+                    loadConfigFile(fileName);
+                    loadHeightMap(fileName);
+                    forceMapImageRedraw();
+                    isUsingConvertedImage = false;
+                    saveImageEnabled(false);
+                    getMapPanel().setStale(false);
+                    scanNetworkForOverlapNodes();*/
                 }
                 break;
             case MENU_ZOOM_1x:
@@ -273,8 +362,6 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_AUTOSAVE_INTERVAL:
                 mapPanel.showAutoSaveIntervalDialog();
                 break;
-            case MENU_HEIGHTMAP_IMPORT:
-                break;
             case BUTTON_COPYPASTE_CUT:
                 cutSelected();
                 break;
@@ -297,12 +384,23 @@ public class MenuListener implements ActionListener, ItemListener {
     @Override
     public void itemStateChanged(ItemEvent e) {
         AbstractButton menuItem = (AbstractButton) e.getItem();
+        LOG.info("Menu ItemStateChange: {}", menuItem.getActionCommand());
         switch (menuItem.getActionCommand()) {
             case MENU_CHECKBOX_CONTINUECONNECT:
                 bContinuousConnections = menuItem.isSelected();
                 break;
             case MENU_CHECKBOX_MIDDLEMOUSEMOVE:
                 bMiddleMouseMove = menuItem.isSelected();
+                break;
+            case MENU_HEIGHTMAP_SHOW:
+                bShowHeightMap = menuItem.isSelected();
+                if (bShowHeightMap) {
+                    setImage(heightMapImage, true);
+                } else {
+                    setImage(mapImage, false);
+                }
+                forceMapImageRedraw();
+                //MapPanel.getMapPanel().repaint();
                 break;
             case MENU_GRID_SHOW:
                 bShowGrid = menuItem.isSelected();

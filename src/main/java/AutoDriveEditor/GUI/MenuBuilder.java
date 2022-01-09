@@ -29,7 +29,8 @@ public class MenuBuilder {
     public static final String MENU_ZOOM_1x = "1x";
     public static final String MENU_ZOOM_4x = "4x";
     public static final String MENU_ZOOM_16x = "16x";
-    public static final String MENU_HEIGHTMAP_IMPORT = "HeightMap Import";
+    public static final String MENU_HEIGHTMAP_LOAD = "Load HeightMap";
+    public static final String MENU_HEIGHTMAP_SHOW = "Show HeightMap";
     public static final String MENU_HEIGHTMAP_FIX = "Fix Node Height";
     public static final String MENU_CHECKBOX_CONTINUECONNECT = "Continuous Connections";
     public static final String MENU_CHECKBOX_MIDDLEMOUSEMOVE = "Middle Mouse Move";
@@ -92,6 +93,7 @@ public class MenuBuilder {
     public static JMenuItem r90AntiClockwiseMenuItem;
 
     public static JMenuItem fixNodesHeightMenuItem;
+    public static JMenuItem showHeightMapMenuItem;
     public static JMenuItem scanNetworkMenuItem;
     public static JMenuItem mergeNodesMenuItem;
 
@@ -154,7 +156,8 @@ public class MenuBuilder {
         // create the HeightMap menu
 
         heightmapMenu = makeMenu("menu_heightmap", KeyEvent.VK_T, "menu_heightmap_accstring", menuBar);
-        importHeightmapMenuItem = makeMenuItem("menu_heightmap_import", "menu_heightmap_import_accstring", heightmapMenu, menuListener, MENU_HEIGHTMAP_IMPORT,false);
+        importHeightmapMenuItem = makeMenuItem("menu_heightmap_import", "menu_heightmap_import_accstring", heightmapMenu, menuListener, MENU_HEIGHTMAP_LOAD,false);
+        showHeightMapMenuItem = makeCheckBoxMenuItem("menu_heightmap_show", "menu_heightmap_show", bShowHeightMap, heightmapMenu, menuListener, MENU_HEIGHTMAP_SHOW, false);
         fixNodesHeightMenuItem = makeMenuItem("menu_heightmap_fix_nodes", "menu_heightmap_fix_nodes_accstring", heightmapMenu, menuListener, MENU_HEIGHTMAP_FIX,false);
 
         // create the Options menu
@@ -162,15 +165,15 @@ public class MenuBuilder {
         optionsMenu = makeMenu("menu_options", KeyEvent.VK_O, "menu_options_accstring", menuBar);
         makeMenuItem("menu_options_set_autosave_interval", "menu_options_set_autosave_interval_accstring", optionsMenu, menuListener, MENU_AUTOSAVE_INTERVAL, true );
         optionsMenu.addSeparator();
-        makeCheckBoxMenuItem("menu_options_conconnect", "menu_options_conconnect_accstring", KeyEvent.VK_4, bContinuousConnections, optionsMenu, menuListener, MENU_CHECKBOX_CONTINUECONNECT);
-        makeCheckBoxMenuItem("menu_options_middlemousemove", "menu_options_middlemousemove_accstring", KeyEvent.VK_5, bMiddleMouseMove, optionsMenu, menuListener, MENU_CHECKBOX_MIDDLEMOUSEMOVE);
+        makeCheckBoxMenuItem("menu_options_conconnect", "menu_options_conconnect_accstring", KeyEvent.VK_4, bContinuousConnections, optionsMenu, menuListener, MENU_CHECKBOX_CONTINUECONNECT, true);
+        makeCheckBoxMenuItem("menu_options_middlemousemove", "menu_options_middlemousemove_accstring", KeyEvent.VK_5, bMiddleMouseMove, optionsMenu, menuListener, MENU_CHECKBOX_MIDDLEMOUSEMOVE, true);
 
         // create the grid snap menu
 
         gridMenu = makeMenu("menu_grid", KeyEvent.VK_G, "menu_grid_accstring", menuBar);
-        makeCheckBoxMenuItem("menu_grid_show", "menu_grid_show_accstring", KeyEvent.VK_G, bShowGrid, gridMenu, menuListener, MENU_GRID_SHOW);
-        gridSnapMenuItem = makeCheckBoxMenuItem("menu_grid_snap", "menu_grid_snap_accstring", KeyEvent.VK_S, bGridSnap, gridMenu, menuListener, MENU_GRID_SNAP);
-        gridSnapSubDivisionMenuItem = makeCheckBoxMenuItem("menu_grid_snap_subdivide", "menu_grid_snap_subdivide_accstring", KeyEvent.VK_D, bGridSnapSubs, gridMenu, menuListener, MENU_GRID_SNAP_SUBS);
+        makeCheckBoxMenuItem("menu_grid_show", "menu_grid_show_accstring", KeyEvent.VK_G, bShowGrid, gridMenu, menuListener, MENU_GRID_SHOW, true);
+        gridSnapMenuItem = makeCheckBoxMenuItem("menu_grid_snap", "menu_grid_snap_accstring", KeyEvent.VK_S, bGridSnap, gridMenu, menuListener, MENU_GRID_SNAP, true);
+        gridSnapSubDivisionMenuItem = makeCheckBoxMenuItem("menu_grid_snap_subdivide", "menu_grid_snap_subdivide_accstring", KeyEvent.VK_D, bGridSnapSubs, gridMenu, menuListener, MENU_GRID_SNAP_SUBS, true);
         gridMenu.addSeparator();
         makeMenuItem("menu_grid_set_size", "menu_grid_set_size_accstring", KeyEvent.VK_F, InputEvent.ALT_DOWN_MASK, gridMenu, menuListener, MENU_GRID_SET, true );
 
@@ -194,24 +197,24 @@ public class MenuBuilder {
 
         helpMenu = makeMenu("menu_help", KeyEvent.VK_H, "menu_help_accstring", menuBar);
         makeMenuItem("menu_help_about", "menu_help_about_accstring", KeyEvent.VK_H, InputEvent.ALT_DOWN_MASK, helpMenu, menuListener, MENU_ABOUT, true);
-        makeCheckBoxMenuItem("menu_help_debug", "menu_help_debug_accstring", bDebugEnable, helpMenu, menuListener, MENU_DEBUG_ENABLE);
+        makeCheckBoxMenuItem("menu_help_debug", "menu_help_debug_accstring", bDebugEnable, helpMenu, menuListener, MENU_DEBUG_ENABLE, true);
 
         debugMenu = makeMenu("menu_debug", KeyEvent.VK_D, "menu_debug_accstring", menuBar);
         debugMenu.setVisible(false);
         makeMenuItem("menu_debug_movetonode", "menu_debug_movetonode_accstring", debugMenu, menuListener, MENU_DEBUG_MOVETO_NODE, true);
         debugMenu.addSeparator();
-        makeCheckBoxMenuItem("menu_debug_showID", "menu_debug_showID_accstring", KeyEvent.VK_6, InputEvent.ALT_DOWN_MASK, bDebugShowID, debugMenu, menuListener, MENU_DEBUG_SHOWID);
-        makeCheckBoxMenuItem("menu_debug_showselectedlocation", "menu_debug_showselectedlocation_accstring", KeyEvent.VK_7, InputEvent.ALT_DOWN_MASK, bDebugShowSelectedLocation, debugMenu, menuListener, MENU_DEBUG_SELECTED_LOCATION);
-        makeCheckBoxMenuItem("menu_debug_profile", "menu_debug_profile_accstring", bDebugProfile, debugMenu, menuListener, MENU_DEBUG_PROFILE);
-        makeCheckBoxMenuItem("menu_debug_heightmap", "menu_debug_heightmap_accstring", bDebugHeightMap, debugMenu, menuListener, MENU_DEBUG_HEIGHTMAP);
+        makeCheckBoxMenuItem("menu_debug_showID", "menu_debug_showID_accstring", KeyEvent.VK_6, InputEvent.ALT_DOWN_MASK, bDebugShowID, debugMenu, menuListener, MENU_DEBUG_SHOWID, true);
+        makeCheckBoxMenuItem("menu_debug_showselectedlocation", "menu_debug_showselectedlocation_accstring", KeyEvent.VK_7, InputEvent.ALT_DOWN_MASK, bDebugShowSelectedLocation, debugMenu, menuListener, MENU_DEBUG_SELECTED_LOCATION, true);
+        makeCheckBoxMenuItem("menu_debug_profile", "menu_debug_profile_accstring", bDebugProfile, debugMenu, menuListener, MENU_DEBUG_PROFILE, true);
+        makeCheckBoxMenuItem("menu_debug_heightmap", "menu_debug_heightmap_accstring", bDebugHeightMap, debugMenu, menuListener, MENU_DEBUG_HEIGHTMAP, true);
         if (EXPERIMENTAL) {
-            makeCheckBoxMenuItem("menu_debug_test", "menu_debug_test_accstring", bDebugTest, debugMenu, menuListener, MENU_DEBUG_TEST);
+            makeCheckBoxMenuItem("menu_debug_test", "menu_debug_test_accstring", bDebugTest, debugMenu, menuListener, MENU_DEBUG_TEST, true);
         }
         debugMenu.addSeparator();
-        makeCheckBoxMenuItem("menu_debug_zoom", "menu_debug_zoom_accstring", bDebugZoomScale, debugMenu, menuListener, MENU_DEBUG_ZOOMSCALE);
-        makeCheckBoxMenuItem("menu_debug_fileio", "menu_debug_fileio_accstring", bDebugFileIO, debugMenu, menuListener, MENU_DEBUG_FILEIO);
-        makeCheckBoxMenuItem("menu_debug_undo", "menu_debug_undo_accstring", bDebugUndoRedo, debugMenu, menuListener, MENU_DEBUG_UNDO);
-        makeCheckBoxMenuItem("menu_debug_merge", "menu_debug_merge_accstring", bDebugMerge, debugMenu, menuListener, MENU_DEBUG_MERGE);
+        makeCheckBoxMenuItem("menu_debug_zoom", "menu_debug_zoom_accstring", bDebugZoomScale, debugMenu, menuListener, MENU_DEBUG_ZOOMSCALE, true);
+        makeCheckBoxMenuItem("menu_debug_fileio", "menu_debug_fileio_accstring", bDebugFileIO, debugMenu, menuListener, MENU_DEBUG_FILEIO, true);
+        makeCheckBoxMenuItem("menu_debug_undo", "menu_debug_undo_accstring", bDebugUndoRedo, debugMenu, menuListener, MENU_DEBUG_UNDO, true);
+        makeCheckBoxMenuItem("menu_debug_merge", "menu_debug_merge_accstring", bDebugMerge, debugMenu, menuListener, MENU_DEBUG_MERGE, true);
 
     }
 
@@ -225,14 +228,14 @@ public class MenuBuilder {
         saveImageMenuItem.setEnabled(enabled);
     }
 
+    public static void heightmapMenuEnabled(boolean enabled) {
+        showHeightMapMenuItem.setEnabled(enabled);
+        fixNodesHeightMenuItem.setEnabled(enabled);
+    }
+
     public static void fixNodesEnabled(boolean enabled) {
         scanNetworkMenuItem.setEnabled(enabled);
-        if (EXPERIMENTAL) {
-            mergeNodesMenuItem.setEnabled(enabled);
-        } else {
-            mergeNodesMenuItem.setEnabled(false);
-        }
-
+        mergeNodesMenuItem.setEnabled(enabled);
     }
 
 

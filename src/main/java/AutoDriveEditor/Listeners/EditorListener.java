@@ -26,7 +26,7 @@ public class EditorListener implements ActionListener, MouseListener {
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        LOG.info("ActionCommand: {}", e.getActionCommand());
+        LOG.info("Editor ActionCommand: {}", e.getActionCommand());
 
         JFileChooser fc = new JFileChooser();
         //MapPanel.getMapPanel().isMultiSelectAllowed = false;

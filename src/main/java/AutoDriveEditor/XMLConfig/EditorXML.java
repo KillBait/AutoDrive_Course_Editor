@@ -32,6 +32,7 @@ public class EditorXML {
     public static boolean bShowGrid = false;
     public static boolean bGridSnap = false;
     public static boolean bGridSnapSubs = false;
+    public static boolean bShowHeightMap;
     public static int quadSliderMax = 50;
     public static int quadSliderDefault = 10;
 

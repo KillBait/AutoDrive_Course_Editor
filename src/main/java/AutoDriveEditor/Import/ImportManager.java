@@ -97,7 +97,7 @@ public class ImportManager {
         // set the converted and resized image as the map image
 
 
-        setImage(scaledImage);
+        setImage(scaledImage, false);
         MapPanel.forceMapImageRedraw();
         MapPanel.isUsingConvertedImage = true;
     }

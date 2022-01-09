@@ -136,7 +136,7 @@ public class MapImage {
         }
 
         if (bImageFound) {
-            setImage(mapImage);
+            setImage(mapImage, false);
         } else {
             LOG.info("Using Default Image");
             JOptionPane.showMessageDialog(editor, localeString.getString("dialog_mapimage_not_found_message"), localeString.getString("dialog_mapimage_not_found_title"), JOptionPane.ERROR_MESSAGE);
@@ -163,14 +163,17 @@ public class MapImage {
             heightImage = ImageIO.read(new File(launchPath));
             //heightMapImage = new BufferedImage(heightImage.getWidth(), heightImage.getHeight(), BufferedImage.TYPE_USHORT_565_RGB);
             heightMapImage = getNewBufferImage(heightImage.getWidth(), heightImage.getHeight());
-            LOG.info("type = {}", heightMapImage.toString());
+            //LOG.info("type = {}", heightMapImage.toString());
             Graphics2D g = (Graphics2D) heightMapImage.getGraphics();
             g.drawImage( heightImage, 0, 0, heightImage.getWidth(), heightImage.getHeight(), null);
             g.dispose();
+            heightmapMenuEnabled(true);
         } catch (IOException e) {
             JOptionPane.showMessageDialog(editor, localeString.getString("dialog_heightmap_not_found"), localeString.getString("dialog_heightmap_not_found_title"), JOptionPane.ERROR_MESSAGE);
             LOG.info("Failed to load HeightMap");
+            importHeightmapMenuItem.setEnabled(true);
             fixNodesHeightMenuItem.setEnabled(false);
+            showHeightMapMenuItem.setEnabled(false);
             e.printStackTrace();
         }
     }
@@ -181,7 +184,7 @@ public class MapImage {
         if (url != null) {
             try {
                 mapImage = ImageIO.read(url);
-                setImage(mapImage);
+                setImage(mapImage, false);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -225,23 +228,32 @@ public class MapImage {
         return image;
     }
 
-    public static void setImage(BufferedImage loadedImage) {
+    public static void  setImage(BufferedImage loadedImage, Boolean ignoreSize) {
         if (loadedImage != null) {
             LOG.info("Selected Image size is {} x {}",loadedImage.getWidth(), loadedImage.getHeight());
             if (loadedImage.getWidth() != 2048 || loadedImage.getHeight() != 2048 ) {
-                String message;
-                if (configVersion == FS19_CONFIG) {
-                    message = localeString.getString("dialog_mapimage_incorrect_size") + "\n\n" + localeString.getString("dialog_mapimage_incorrect_size_fs19");
-                } else if (configVersion == FS22_CONFIG) {
-                    message = localeString.getString("dialog_mapimage_incorrect_size") + "\n\n" + localeString.getString("dialog_mapimage_incorrect_size_fs22");
-                } else {
-                    message = localeString.getString("dialog_mapimage_incorrect_size");
+                if (!ignoreSize) {
+                    String message;
+                    if (configVersion == FS19_CONFIG) {
+                        message = localeString.getString("dialog_mapimage_incorrect_size") + "\n\n" + localeString.getString("dialog_mapimage_incorrect_size_fs19");
+                    } else if (configVersion == FS22_CONFIG) {
+                        message = localeString.getString("dialog_mapimage_incorrect_size") + "\n\n" + localeString.getString("dialog_mapimage_incorrect_size_fs22");
+                    } else {
+                        message = localeString.getString("dialog_mapimage_incorrect_size");
+                    }
+                    LOG.info(message);
+                    JOptionPane.showConfirmDialog(AutoDriveEditor.editor, message, "AutoDriveEditor", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
+                    return;
                 }
-                LOG.info(message);
-                JOptionPane.showConfirmDialog(AutoDriveEditor.editor, message, "AutoDriveEditor", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
-                return;
             }
 
+            if (ignoreSize) {
+                Image heightImage = loadedImage.getScaledInstance(2048,2048, Image.SCALE_DEFAULT);
+                loadedImage = getNewBufferedImage(2048,2048, Transparency.OPAQUE);
+                Graphics2D g = (Graphics2D) loadedImage.getGraphics();
+                g.drawImage(heightImage, 0 , 0 , null);
+                g.dispose();
+            }
             // actually draw the image and dispose of the graphics context that is no longer needed
             image = getNewBufferedImage(loadedImage.getWidth(), loadedImage.getHeight(), Transparency.OPAQUE);
             Graphics2D g2d = (Graphics2D) image.getGraphics();
