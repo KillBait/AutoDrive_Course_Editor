@@ -1,20 +1,20 @@
 package AutoDriveEditor.Listeners;
 
+import AutoDriveEditor.AutoDriveEditor;
+import AutoDriveEditor.GUI.GUIBuilder;
+import AutoDriveEditor.MapPanel.MapPanel;
+
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
-import AutoDriveEditor.AutoDriveEditor;
-import AutoDriveEditor.GUI.GUIBuilder;
-import AutoDriveEditor.MapPanel.MapPanel;
-
 import static AutoDriveEditor.GUI.GUIBuilder.*;
 import static AutoDriveEditor.GUI.GUIImages.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.RoadNetwork.MapNode.*;
-import static AutoDriveEditor.Utils.LoggerUtils.*;
+import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_STANDARD;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 
 public class EditorListener implements ActionListener, MouseListener {
@@ -27,9 +27,6 @@ public class EditorListener implements ActionListener, MouseListener {
     public void actionPerformed(ActionEvent e) {
 
         LOG.info("Editor ActionCommand: {}", e.getActionCommand());
-
-        JFileChooser fc = new JFileChooser();
-        //MapPanel.getMapPanel().isMultiSelectAllowed = false;
 
         switch (e.getActionCommand()) {
             case BUTTON_MOVE_NODES:

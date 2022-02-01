@@ -3,7 +3,7 @@ package AutoDriveEditor.Managers;
 import javax.swing.*;
 
 import AutoDriveEditor.AutoDriveEditor;
-import AutoDriveEditor.GUI.GUIUtils;
+import AutoDriveEditor.Utils.GUIUtils;
 import AutoDriveEditor.GUI.MenuBuilder;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
@@ -12,13 +12,12 @@ import java.util.LinkedList;
 import java.util.concurrent.ExecutionException;
 
 import static AutoDriveEditor.GUI.MenuBuilder.*;
-import static AutoDriveEditor.Locale.LocaleManager.localeString;
+import static AutoDriveEditor.Locale.LocaleManager.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.RoadNetwork.MapNode.*;
 import static AutoDriveEditor.RoadNetwork.RoadMap.*;
 import static AutoDriveEditor.Utils.LoggerUtils.*;
-import static AutoDriveEditor.XMLConfig.GameXML.autoSaveConfigFile;
-import static AutoDriveEditor.XMLConfig.GameXML.saveMergeBackupConfigFile;
+import static AutoDriveEditor.XMLConfig.GameXML.*;
 
 
 public class ScanManager {
@@ -26,7 +25,7 @@ public class ScanManager {
     public static boolean networkScanned;
     public static double searchDistance = 0.05;
 
-    public static void scanNetworkForOverlapNodes() {
+    public static void  scanNetworkForOverlapNodes() {
         scanNetworkForOverlapNodes(searchDistance, false);
     }
 

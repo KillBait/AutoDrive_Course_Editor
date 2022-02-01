@@ -18,7 +18,6 @@ public class LocaleManager {
     private static ResourceBundle getLocale(){
 
         String localePath;
-        String localeName = null;
         String classPath = null;
         File newFile;
         URL url;
@@ -30,24 +29,53 @@ public class LocaleManager {
             return bundle;
         } catch (Exception e) {
             LOG.info("'AutoDriveEditor_{}.properties' not found. looking in folders", Locale.getDefault());
-            localePath = "./locale/AutoDriveEditor_" + Locale.getDefault() + ".properties";
-            if (Paths.get(localePath).toFile().exists()) {
-                classPath = "./locale/";
-            }
 
-            localePath = "./src/locale/AutoDriveEditor_" + Locale.getDefault() + ".properties";
-            if (Paths.get(localePath).toFile().exists()) {
-                classPath = "./src/locale/";
-            }
+            // NOTE: the base folder for all locale checks is the same location as the editor JAR
+
+            // check for locale in same folder as JAR
 
             localePath = "./AutoDriveEditor_" + Locale.getDefault() + ".properties";
             if (Paths.get(localePath).toFile().exists()) {
                 classPath = "./";
+                LOG.info("Found External locale file : {}", localePath);
+            } else {
+                LOG.info("No locale found at : {}", localePath);
             }
 
-            localePath = "./src/main/resources/locale/AutoDriveEditor_" + Locale.getDefault() + ".properties";
-            if (Paths.get(localePath).toFile().exists()) {
-                classPath = "./src/main/resources/locale/";
+            // check for locale in /locale/
+
+            if (classPath == null) {
+                localePath = "./locale/AutoDriveEditor_" + Locale.getDefault() + ".properties";
+                if (Paths.get(localePath).toFile().exists()) {
+                    classPath = "./locale/";
+                    LOG.info("Found External locale file : {}", localePath);
+                } else {
+                    LOG.info("No locale found at : {}", localePath);
+                }
+            }
+
+            // check for locale in src/locale/
+
+            if (classPath == null) {
+                localePath = "./src/locale/AutoDriveEditor_" + Locale.getDefault() + ".properties";
+                if (Paths.get(localePath).toFile().exists()) {
+                    classPath = "./src/locale/";
+                    LOG.info("Found External locale file : {}", localePath);
+                } else {
+                    LOG.info("No locale found at : {}", localePath);
+                }
+            }
+
+            // check for locale in src/main/resources/locale/
+
+            if (classPath == null) {
+                localePath = "./src/main/resources/locale/AutoDriveEditor_" + Locale.getDefault() + ".properties";
+                if (Paths.get(localePath).toFile().exists()) {
+                    classPath = "./src/main/resources/locale/";
+                    LOG.info("Found External locale file : {}", localePath);
+                } else {
+                    LOG.info("No locale found at : {}", localePath);
+                }
             }
 
             if (classPath != null) {
@@ -63,7 +91,7 @@ public class LocaleManager {
                 LOG.info("loading external locale File for {}", Locale.getDefault());
                 return bundle;
             } else {
-                LOG.info("Locale file not found..loading default locale for {}", new Locale("en", "US"));
+                LOG.info("Locale file not found..Using default locale {}", new Locale("en", "US"));
                 return ResourceBundle.getBundle("locale.AutoDriveEditor", new Locale("en", "US"));
             }
         }

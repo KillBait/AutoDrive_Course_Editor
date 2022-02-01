@@ -9,7 +9,7 @@ import java.awt.geom.Point2D;
 
 import AutoDriveEditor.MapPanel.MapPanel;
 
-import static AutoDriveEditor.GUI.GUIUtils.*;
+import static AutoDriveEditor.Utils.GUIUtils.*;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.MapPanel.MapImage.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;

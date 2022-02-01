@@ -8,7 +8,7 @@ import AutoDriveEditor.Listeners.MenuListener;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
-import static AutoDriveEditor.GUI.GUIUtils.*;
+import static AutoDriveEditor.Utils.GUIUtils.*;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
 public class MenuBuilder {
@@ -16,6 +16,9 @@ public class MenuBuilder {
     public static final String MENU_LOAD_CONFIG = "Load Config";
     public static final String MENU_SAVE_CONFIG = "Save Config";
     public static final String MENU_SAVE_SAVEAS = "Save As";
+    public static final String MENU_LOAD_ROUTES_MANAGER_CONFIG = "Load RoutesManager Config";
+    public static final String MENU_LOAD_ROUTES_MANAGER_XML = "Load RoutesXML Config";
+    public static final String MENU_SAVE_ROUTES_MANAGER_XML = "Save RoutesXML Config";
     public static final String MENU_EXIT = "Exit";
     public static final String MENU_LOAD_IMAGE = "Load Map Image";
     public static final String MENU_SAVE_IMAGE = "Save Map Image";
@@ -58,6 +61,8 @@ public class MenuBuilder {
     public static final String MENU_DEBUG_ZOOMSCALE = "ZOOMSCALE";
     public static final String MENU_DEBUG_HEIGHTMAP = "DEBUG HEIGHTMAP";
     public static final String MENU_DEBUG_MERGE = "DEBUG MERGE";
+    public static final String MENU_DEBUG_ROUTE_MANAGER = "ROUTE MANAGER";
+
     public static final String MENU_DEBUG_TEST = "TEST";
 
     public static int InputEvent_NONE = 0;
@@ -65,7 +70,7 @@ public class MenuBuilder {
 
     public static MenuListener menuListener;
 
-    public static JMenu fileMenu, editMenu, mapMenu, heightmapMenu, optionsMenu, helpMenu, subMenu, gridMenu, rotationMenu, fixItMenu, debugMenu;
+    public static JMenu fileMenu, editMenu, mapMenu, routesMenu, heightmapMenu, optionsMenu, helpMenu, subMenu, gridMenu, rotationMenu, fixItMenu, debugMenu;
 
     public static JMenuBar menuBar;
     public static JMenuItem loadImageMenuItem;
@@ -87,6 +92,10 @@ public class MenuBuilder {
     public static JMenuItem gridSnapMenuItem;
     public static JMenuItem gridSnapSubDivisionMenuItem;
 
+    public static JMenuItem loadRoutesConfig;
+    public static JMenuItem loadRoutesXML;
+    public static JMenuItem saveRoutesXML;
+
     public static JMenuItem rClockwiseMenuItem;
     public static JMenuItem r90ClockwiseMenuItem;
     public static JMenuItem rAntiClockwiseMenuItem;
@@ -106,6 +115,7 @@ public class MenuBuilder {
     public static boolean bDebugZoomScale;
     public static boolean bDebugHeightMap;
     public static boolean bDebugMerge;
+    public static boolean bDebugRouteManager;
     public static boolean bDebugTest;
 
     public static void createMenu() {
@@ -121,6 +131,13 @@ public class MenuBuilder {
         saveConfigMenuItem = makeMenuItem("menu_file_saveconfig",  "menu_file_saveconfig_accstring", KeyEvent.VK_S, InputEvent.ALT_DOWN_MASK, fileMenu, menuListener, MENU_SAVE_CONFIG, false );
         saveConfigAsMenuItem = makeMenuItem("menu_file_saveasconfig", "menu_file_saveasconfig_accstring",  KeyEvent.VK_A, InputEvent.ALT_DOWN_MASK,fileMenu, menuListener,MENU_SAVE_SAVEAS, false );
         makeMenuItem("menu_file_exit",  "menu_file_exit_accstring", KeyEvent.VK_Q, InputEvent.ALT_DOWN_MASK, fileMenu, menuListener, MENU_EXIT, true );
+
+        // Create the edit menu
+
+        routesMenu = makeMenu("menu_routes", KeyEvent.VK_M, "menu_routes_accstring", menuBar);
+        loadRoutesConfig = makeMenuItem("menu_routes_load_config", "menu_routes_load_config_accstring", routesMenu, menuListener, MENU_LOAD_ROUTES_MANAGER_CONFIG, true);
+        loadRoutesXML = makeMenuItem("menu_routes_load_xml", "menu_routes_load_xml_accstring", routesMenu, menuListener, MENU_LOAD_ROUTES_MANAGER_XML, true );
+        saveRoutesXML = makeMenuItem("menu_routes_save_xml", "menu_routes_save_xml_accstring", routesMenu, menuListener, MENU_SAVE_ROUTES_MANAGER_XML, false );
 
         // Create the edit menu
 
@@ -215,6 +232,7 @@ public class MenuBuilder {
         makeCheckBoxMenuItem("menu_debug_fileio", "menu_debug_fileio_accstring", bDebugFileIO, debugMenu, menuListener, MENU_DEBUG_FILEIO, true);
         makeCheckBoxMenuItem("menu_debug_undo", "menu_debug_undo_accstring", bDebugUndoRedo, debugMenu, menuListener, MENU_DEBUG_UNDO, true);
         makeCheckBoxMenuItem("menu_debug_merge", "menu_debug_merge_accstring", bDebugMerge, debugMenu, menuListener, MENU_DEBUG_MERGE, true);
+        makeCheckBoxMenuItem("menu_debug_routemanager", "menu_debug_routemanager_accstring", bDebugRouteManager, debugMenu, menuListener, MENU_DEBUG_ROUTE_MANAGER, true);
 
     }
 

@@ -1,4 +1,4 @@
-package AutoDriveEditor.Import;
+package AutoDriveEditor.Managers;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import AutoDriveEditor.GUI.MenuBuilder;
+import AutoDriveEditor.Import.DDSReader;
 import AutoDriveEditor.MapPanel.MapPanel;
 
 import static AutoDriveEditor.Locale.LocaleManager.*;

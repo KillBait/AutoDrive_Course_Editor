@@ -1,38 +1,42 @@
 package AutoDriveEditor.Listeners;
 
+import AutoDriveEditor.Managers.CopyPasteManager;
+import AutoDriveEditor.MapPanel.MapPanel;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-import AutoDriveEditor.Managers.CopyPasteManager;
-import AutoDriveEditor.MapPanel.MapPanel;
-
 import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
-import static AutoDriveEditor.GUI.GUIUtils.*;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
-import static AutoDriveEditor.Import.ImportManager.*;
-import static AutoDriveEditor.Locale.LocaleManager.*;
-import static AutoDriveEditor.Managers.ScanManager.*;
+import static AutoDriveEditor.GUI.RoutesGUI.createRoutesGui;
+import static AutoDriveEditor.Managers.ImportManager.*;
+import static AutoDriveEditor.Locale.LocaleManager.localeString;
+import static AutoDriveEditor.Managers.ScanManager.mergeOverlappingNodes;
+import static AutoDriveEditor.Managers.ScanManager.scanNetworkForOverlapNodes;
 import static AutoDriveEditor.Managers.VersionManager.createHyperLink;
 import static AutoDriveEditor.MapPanel.MapImage.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.Utils.FileUtils.*;
-import static AutoDriveEditor.Utils.LoggerUtils.*;
+import static AutoDriveEditor.Utils.FileUtils.getCurrentLocation;
+import static AutoDriveEditor.Utils.FileUtils.getSelectedFileWithExtension;
+import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 import static AutoDriveEditor.XMLConfig.GameXML.*;
+import static AutoDriveEditor.XMLConfig.RouteManagerXML.loadRouteManagerXML;
+import static AutoDriveEditor.XMLConfig.RouteManagerXML.saveRouteManagerXML;
 
 public class MenuListener implements ActionListener, ItemListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
         LOG.info("Menu ActionCommand: {}", e.getActionCommand());
-        getMapPanel().isMultiSelectAllowed = false;
+        //getMapPanel().isMultiSelectAllowed = false;
 
         JFileChooser fc = new JFileChooser(lastLoadLocation);
 
@@ -62,19 +66,20 @@ public class MenuListener implements ActionListener, ItemListener {
                 });
 
                 if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
+                    canAutoSave = false;
                     lastLoadLocation = fc.getCurrentDirectory().getAbsolutePath();
                     getMapPanel().confirmCurve();
                     File fileName = fc.getSelectedFile();
-                    heightMapImage = null;
-                    loadConfigFile(fileName);
-                    loadHeightMap(fileName);
-                    forceMapImageRedraw();
-                    isUsingConvertedImage = false;
-                    saveImageEnabled(false);
-                    getMapPanel().setStale(false);
-                    scanNetworkForOverlapNodes();
+                    if (loadConfigFile(fileName)) {
+                        forceMapImageRedraw();
+                        isUsingConvertedImage = false;
+                        saveImageEnabled(false);
+                        getMapPanel().setStale(false);
+                        scanNetworkForOverlapNodes();
+                        configType = CONFIG_SAVEGAME;
+                        canAutoSave=true;
+                    };
                 }
-
                 break;
             case MENU_SAVE_CONFIG:
                 saveConfigFile(null, false);
@@ -104,6 +109,82 @@ public class MenuListener implements ActionListener, ItemListener {
                     LOG.info("{} {}", localeString.getString("console_config_saveas"), getSelectedFileWithExtension(fc));
                     saveConfigFile(getSelectedFileWithExtension(fc).toString(), false);
                 }
+                break;
+            case MENU_LOAD_ROUTES_MANAGER_CONFIG:
+                fc.setDialogTitle(localeString.getString("dialog_load_config_title"));
+                fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                fc.setFileFilter(new FileFilter() {
+                    @Override
+                    public boolean accept(File f) {
+                        // always accept directory's
+                        if (f.isDirectory()) return true;
+                        // but only files with a specific name
+                        return f.getName().equals("routes.xml");
+                    }
+
+                    @Override
+                    public String getDescription() {
+                        return "AutoDrive RouteManager Config (.xml)";
+                    }
+                });
+
+                if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
+                    canAutoSave = false;
+                    lastLoadLocation = fc.getCurrentDirectory().getAbsolutePath();
+                    //getMapPanel().confirmCurve();
+                    File fileName = fc.getSelectedFile();
+
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            createRoutesGui(fileName, editor);
+                        }
+                    });
+                    configType = CONFIG_ROUTEMANAGER;
+                    canAutoSave = true;
+                }
+                break;
+            case MENU_LOAD_ROUTES_MANAGER_XML:
+                if (getMapPanel().isStale()) {
+                    int response = JOptionPane.showConfirmDialog(editor, localeString.getString("dialog_exit_unsaved"), "AutoDrive", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                    if (response == JOptionPane.YES_OPTION) {
+                        saveConfigFile(null, false);
+                    }
+                }
+                fc.setDialogTitle(localeString.getString("dialog_load_config_title"));
+                fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                fc.setFileFilter(new FileFilter() {
+                    @Override
+                    public boolean accept(File f) {
+                        // always accept directory's
+                        if (f.isDirectory()) return true;
+                        // but only files with a specific name
+                        return f.getName().contains(".xml") && !f.getName().equals("routes.xml");
+                    }
+
+                    @Override
+                    public String getDescription() {
+                        return "AutoDrive Route XML (.xml)";
+                    }
+                });
+
+                if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
+                    canAutoSave = false;
+                    lastLoadLocation = fc.getCurrentDirectory().getAbsolutePath();
+                    getMapPanel().confirmCurve();
+                    File fileName = fc.getSelectedFile();
+                    if (loadRouteManagerXML(fileName, false, null)) {
+                        //forceMapImageRedraw();
+                        isUsingConvertedImage = false;
+                        saveImageEnabled(false);
+                        getMapPanel().setStale(false);
+                        //scanNetworkForOverlapNodes();
+                        configType = CONFIG_ROUTEMANAGER;
+                        canAutoSave = true;
+                    }
+                }
+                break;
+            case MENU_SAVE_ROUTES_MANAGER_XML:
+                saveRouteManagerXML(null, false);
                 break;
             case MENU_EXIT:
                 editor.dispatchEvent(new WindowEvent(editor, WindowEvent.WINDOW_CLOSING));
@@ -190,12 +271,8 @@ public class MenuListener implements ActionListener, ItemListener {
                         return "AutoDrive Map Image (.png)";
                     }
                 });
-                //fc.setAcceptAllFileFilterUsed(false);
-                //FileNameExtensionFilter imageFilter = new FileNameExtensionFilter("AutoDrive Map Image", "png");
                 fc.setSelectedFile(path);
                 fc.setCurrentDirectory(path);
-                //fc.addChoosableFileFilter(imageFilter);
-
                 if (fc.showSaveDialog(editor) == JFileChooser.APPROVE_OPTION) {
                     File saveImageFile = getSelectedFileWithExtension(fc);
                     if (saveImageFile.exists()) {
@@ -265,7 +342,7 @@ public class MenuListener implements ActionListener, ItemListener {
                         break;
                     }
 
-                    LOG.info("Valid Filename {}", fc.getSelectedFile().getAbsoluteFile());
+                    //LOG.info("Valid Filename {}", fc.getSelectedFile().getAbsoluteFile());
                     boolean result = importFromFS22(fc.getSelectedFile().getAbsoluteFile().toString());
                     if (result) {
                         isUsingConvertedImage = true;
@@ -292,25 +369,9 @@ public class MenuListener implements ActionListener, ItemListener {
                         return "FS HeightMap File (terrain.heightmap.png)";
                     }
                 });
-                //fc.setAcceptAllFileFilterUsed(false);
-                //FileNameExtensionFilter heightmapFilter = new FileNameExtensionFilter("HeightMap File", "png");
-                //fc.addChoosableFileFilter(heightmapFilter);
-
                 if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
                     File fileName = fc.getSelectedFile();
-                    heightMapImage = null;
                     loadHeightMap(fileName);
-                    /*lastLoadLocation = fc.getCurrentDirectory().getAbsolutePath();
-                    getMapPanel().confirmCurve();
-
-                    heightMapImage = null;
-                    loadConfigFile(fileName);
-                    loadHeightMap(fileName);
-                    forceMapImageRedraw();
-                    isUsingConvertedImage = false;
-                    saveImageEnabled(false);
-                    getMapPanel().setStale(false);
-                    scanNetworkForOverlapNodes();*/
                 }
                 break;
             case MENU_ZOOM_1x:
@@ -440,6 +501,9 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_DEBUG_MERGE:
                 bDebugMerge = menuItem.isSelected() ;
                 break;
+            case MENU_DEBUG_ROUTE_MANAGER:
+                bDebugRouteManager = menuItem.isSelected() ;
+                break;
             case MENU_DEBUG_TEST:
                 bDebugTest = menuItem.isSelected();
                 //canAutoSave = menuItem.isSelected();
@@ -454,7 +518,7 @@ public class MenuListener implements ActionListener, ItemListener {
     }
 
     private void showAbout() {
-        String mainText = "<html><center>Editor version : " + AUTODRIVE_INTERNAL_VERSION + "<br><br>Build info : Java 13 SDK + IntelliJ IDEA 2021.3 Community Edition<br><br><u>AutoDrive Development Team</u><br><br><b>Stephan (Founder & Modder)</b><br><br>TyKonKet (Modder)<br>Oliver (Modder)<br>Axel (Co-Modder)<br>Aletheist (Co-Modder)<br>Willi (Supporter & Tester)<br>Iwan1803 (Community Manager & Supporter)";
+        String mainText = "<html><center>Editor version : " + AUTODRIVE_INTERNAL_VERSION + "<br><br>Build info : Java 13 SDK + IntelliJ IDEA 2021.3.2 Community Edition<br><br><u>AutoDrive Development Team</u><br><br><b>Stephan (Founder & Modder)</b><br><br>TyKonKet (Modder)<br>Oliver (Modder)<br>Axel (Co-Modder)<br>Aletheist (Co-Modder)<br>Willi (Supporter & Tester)<br>Iwan1803 (Community Manager & Supporter)";
         String linkText = "<br><br>Visit AutoDrive Editor HomePage</b>";
         JEditorPane link = createHyperLink(mainText,linkText, "https://github.com/KillBait/AutoDrive_Course_Editor");
         JOptionPane.showMessageDialog(editor, link, "About AutoDrive Editor", JOptionPane.PLAIN_MESSAGE);

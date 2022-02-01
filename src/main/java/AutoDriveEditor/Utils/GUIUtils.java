@@ -1,4 +1,4 @@
-package AutoDriveEditor.GUI;
+package AutoDriveEditor.Utils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -60,7 +60,17 @@ public class GUIUtils {
     // Button Creation functions
     //
 
-    public static JButton makeButton(String actionCommand,String toolTipText,String altText, JPanel panel, ButtonGroup group, boolean isGroupDefault, EditorListener editorListener) {
+    public static JButton makeButton(String actionCommand,String toolTipText,String altText, JPanel panel, boolean enabled) {
+        JButton button = new JButton();
+        button.setActionCommand(actionCommand);
+        button.setToolTipText(localeString.getString(toolTipText));
+        button.setText(localeString.getString(altText));
+        panel.add(button);
+        button.setEnabled(enabled);
+
+        return button;
+    }
+    public static JButton makeButton(String actionCommand,String toolTipText,String altText, JPanel panel, ButtonGroup group, boolean isGroupDefault, EditorListener editorListener, boolean enabled) {
         JButton button = new JButton();
         button.setActionCommand(actionCommand);
         button.setToolTipText(localeString.getString(toolTipText));
@@ -74,6 +84,7 @@ public class GUIUtils {
                 group.setSelected(button.getModel(), true);
             }
         }
+        button.setEnabled(enabled);
 
         return button;
     }

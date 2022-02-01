@@ -9,7 +9,7 @@ import AutoDriveEditor.Listeners.CurvePanelListener;
 import AutoDriveEditor.Listeners.EditorListener;
 import AutoDriveEditor.MapPanel.MapPanel;
 
-import static AutoDriveEditor.GUI.GUIUtils.*;
+import static AutoDriveEditor.Utils.GUIUtils.*;
 import static AutoDriveEditor.Locale.LocaleManager.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
@@ -107,6 +107,7 @@ public class GUIBuilder {
     public static JRadioButton curvePathSubPrio;
     public static JRadioButton curvePathReverse;
     public static JRadioButton curvePathDual;
+
 
     public static MapPanel createMapPanel(AutoDriveEditor editor, EditorListener listener) {
 

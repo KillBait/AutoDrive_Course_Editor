@@ -14,6 +14,7 @@ import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -24,12 +25,13 @@ import AutoDriveEditor.Listeners.MouseListener;
 import AutoDriveEditor.Managers.CopyPasteManager;
 import AutoDriveEditor.RoadNetwork.MapMarker;
 import AutoDriveEditor.RoadNetwork.MapNode;
+import AutoDriveEditor.RoadNetwork.MarkerGroup;
 import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
 import static AutoDriveEditor.GUI.GUIImages.*;
-import static AutoDriveEditor.GUI.GUIUtils.*;
+import static AutoDriveEditor.Utils.GUIUtils.*;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.Listeners.MouseListener.*;
 import static AutoDriveEditor.Locale.LocaleManager.*;
@@ -40,7 +42,8 @@ import static AutoDriveEditor.RoadNetwork.MapNode.*;
 import static AutoDriveEditor.Utils.LoggerUtils.*;
 import static AutoDriveEditor.Utils.MathUtils.*;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
-import static AutoDriveEditor.XMLConfig.GameXML.autoSaveConfigFile;
+import static AutoDriveEditor.XMLConfig.GameXML.*;
+import static AutoDriveEditor.XMLConfig.RouteManagerXML.*;
 
 public class MapPanel extends JPanel{
 
@@ -48,6 +51,11 @@ public class MapPanel extends JPanel{
     public static final int CONNECTION_SUBPRIO = 1; // never used as subprio routes are based on a nodes .flag value
     public static final int CONNECTION_DUAL = 2;
     public static final int CONNECTION_REVERSE = 3;
+
+    public static final int CONFIG_SAVEGAME = 1;
+    public static final int CONFIG_ROUTEMANAGER = 2;
+
+    public static int configType;
 
     public Thread nodeDrawThread;
     public Thread connectionDrawThread;
@@ -157,7 +165,11 @@ public class MapPanel extends JPanel{
         scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(() -> {
             //LOG.info("Executed!");
             if (roadMap != null && image != null) {
-                autoSaveConfigFile();
+                if (configType == CONFIG_SAVEGAME) {
+                    autoSaveGameConfigFile();
+                } else if (configType == CONFIG_ROUTEMANAGER) {
+                    autoSaveRouteManagerXML();
+                }
             }
         }, autoSaveInterval, autoSaveInterval,TimeUnit.MINUTES);
     }
@@ -1228,6 +1240,16 @@ public class MapPanel extends JPanel{
             if (groupName == null) groupName = "All";
             MapMarker mapMarker = new MapMarker(mapNode, destinationName, groupName);
             changeManager.addChangeable( new MarkerAddChanger(mapMarker));
+            if (configType == CONFIG_ROUTEMANAGER) {
+                boolean found = false;
+                for (MarkerGroup marker : markerGroup) {
+                    if (Objects.equals(marker.groupName, groupName)) found = true;
+                }
+                if (!found && !groupName.equals("All")) {
+                    LOG.info("Adding new group {} to markerGroup", groupName);
+                    markerGroup.add(new MarkerGroup(markerGroup.size() + 1, groupName));
+                }
+            }
             roadMap.addMapMarker(mapMarker);
             setStale(true);
         }
@@ -1403,6 +1425,8 @@ public class MapPanel extends JPanel{
             multiSelectList.clear();
         }
         isMultipleSelected = false;
+        rectangleStart = null;
+        rectangleEnd = null;
         MapPanel.getMapPanel().repaint();
     }
 
@@ -1690,6 +1714,19 @@ public class MapPanel extends JPanel{
                         if (info != null && info.getName() != null) {
                             LOG.info("{} {} - old name = {} , old group = {}", localeString.getString("console_marker_modify"), movingNode.id, info.getName(), info.getGroup());
                             changeManager.addChangeable( new MarkerEditChanger(mapMarker.mapNode, movingNode.id, mapMarker.name, info.getName(), mapMarker.group, info.getGroup()));
+                            if (configType == CONFIG_ROUTEMANAGER) {
+                                boolean found = false;
+                                for (MarkerGroup marker : markerGroup) {
+                                    if (Objects.equals(marker.groupName, info.getGroup())) {
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                                if (!found && !info.getGroup().equals("All")) {
+                                    LOG.info("Adding new group {} to markerGroup", info.getGroup());
+                                    markerGroup.add(new MarkerGroup(markerGroup.size() + 1, info.getGroup()));
+                                }
+                            }
                             mapMarker.name = info.getName();
                             mapMarker.group = info.getGroup();
                             setStale(true);
@@ -2407,11 +2444,21 @@ public class MapPanel extends JPanel{
         String[] group = new String[1];
 
         ArrayList<String> groupArray = new ArrayList<>();
-        LinkedList<MapMarker> mapMarkers = RoadMap.mapMarkers;
-        for (MapMarker mapMarker : mapMarkers) {
-            if (!mapMarker.group.equals("All")) {
-                if (!groupArray.contains(mapMarker.group)) {
-                    groupArray.add(mapMarker.group);
+        if (configType == CONFIG_SAVEGAME) {
+            LinkedList<MapMarker> mapMarkers = RoadMap.mapMarkers;
+            for (MapMarker mapMarker : mapMarkers) {
+                if (!mapMarker.group.equals("All")) {
+                    if (!groupArray.contains(mapMarker.group)) {
+                        groupArray.add(mapMarker.group);
+                    }
+                }
+            }
+        } else if (configType == CONFIG_ROUTEMANAGER) {
+            for (MarkerGroup marker : markerGroup) {
+                if (!marker.groupName.equals("All")) {
+                    if (!groupArray.contains(marker.groupName)) {
+                        groupArray.add(marker.groupName);
+                    }
                 }
             }
         }
@@ -2455,22 +2502,31 @@ public class MapPanel extends JPanel{
         return null;
     }
 
-    private destInfo showEditMarkerDialog(int id, String markerName, String markerGroup) {
+    private destInfo showEditMarkerDialog(int id, String markerName, String markerGroupName) {
 
         String[] group = new String[1];
         int groupIndex = 0;
 
 
         JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
-        //JLabel label1 = new JLabel("Destination Name");
         JTextField destName = new JTextField(markerName);
 
         ArrayList<String> groupArray = new ArrayList<>();
-        LinkedList<MapMarker> mapMarkers = RoadMap.mapMarkers;
-        for (MapMarker mapMarker : mapMarkers) {
-            if (!mapMarker.group.equals("All")) {
-                if (!groupArray.contains(mapMarker.group)) {
-                    groupArray.add(mapMarker.group);
+        if (configType == CONFIG_SAVEGAME) {
+            LinkedList<MapMarker> mapMarkers = RoadMap.mapMarkers;
+            for (MapMarker mapMarker : mapMarkers) {
+                if (!mapMarker.group.equals("All")) {
+                    if (!groupArray.contains(mapMarker.group)) {
+                        groupArray.add(mapMarker.group);
+                    }
+                }
+            }
+        } else if (configType == CONFIG_ROUTEMANAGER) {
+            for (MarkerGroup marker : markerGroup) {
+                if (!marker.groupName.equals("All")) {
+                    if (!groupArray.contains(marker.groupName)) {
+                        groupArray.add(marker.groupName);
+                    }
                 }
             }
         }
@@ -2485,7 +2541,7 @@ public class MapPanel extends JPanel{
 
         for (int i = 0; i < groupArray.size(); i++) {
             groupString[i+1] = groupArray.get(i);
-            if (groupString[i+1].equals(markerGroup)) {
+            if (groupString[i+1].equals(markerGroupName)) {
                 groupIndex = i + 1;
             }
 
@@ -2502,20 +2558,28 @@ public class MapPanel extends JPanel{
             JComboBox cb = (JComboBox)e.getSource();
             group[0] = (String)cb.getSelectedItem();
         });
+        
+        int option = 0;
 
-        Object[] inputFields = {localeString.getString("dialog_marker_select_name"), destName," ",
-                localeString.getString("dialog_marker_group_change"), comboBox," ",
-                separator, "<html><center><b><u>NOTE</b></u>:</center>" + localeString.getString("dialog_marker_group_empty_warning") + " ",
-                " "
-        };
-
-        int option = JOptionPane.showConfirmDialog(this, inputFields, "" + localeString.getString("dialog_marker_edit_title") + " ( Node ID " + id +" )", JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, getMarkerIcon());
+        if (configType == CONFIG_SAVEGAME) {
+            Object[] inputFields = {localeString.getString("dialog_marker_select_name"), destName," ",
+                    localeString.getString("dialog_marker_group_change"), comboBox," ",
+                    separator, "<html><center><b><u>NOTE</b></u>:</center>" + localeString.getString("dialog_marker_group_empty_warning") + " ",
+                    " "};
+            option = JOptionPane.showConfirmDialog(this, inputFields, "" + localeString.getString("dialog_marker_edit_title") + " ( Node ID " + id +" )", JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, getMarkerIcon());
+        } else if (configType == CONFIG_ROUTEMANAGER) {
+            Object[] inputFields = {localeString.getString("dialog_marker_select_name"), destName," ",
+                    localeString.getString("dialog_marker_group_change"), comboBox};
+            option = JOptionPane.showConfirmDialog(this, inputFields, "" + localeString.getString("dialog_marker_edit_title") + " ( Node ID " + id +" )", JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, getMarkerIcon());
+        }
+        
+        //int option = JOptionPane.showConfirmDialog(this, inputFields, "" + localeString.getString("dialog_marker_edit_title") + " ( Node ID " + id +" )", JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, getMarkerIcon());
 
         if (option == JOptionPane.OK_OPTION) {
 
             if (group[0] == null || group[0].equals("None")) group[0] = "All";
             if (destName.getText() != null && destName.getText().length() > 0) {
-                if (markerName.equals(destName.getText()) && markerGroup.equals(group[0])) {
+                if (markerName.equals(destName.getText()) && markerGroupName.equals(group[0])) {
                     LOG.info("{}", localeString.getString("console_marker_edit_cancel_nochange"));
                     return null;
                 } else {

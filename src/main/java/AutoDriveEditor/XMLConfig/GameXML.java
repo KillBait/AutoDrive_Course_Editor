@@ -30,13 +30,14 @@ import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
+import static AutoDriveEditor.GUI.MenuBuilder.saveRoutesXML;
 import static AutoDriveEditor.Locale.LocaleManager.*;
 import static AutoDriveEditor.MapPanel.MapImage.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.FileUtils.*;
 import static AutoDriveEditor.Utils.LoggerUtils.*;
 import static AutoDriveEditor.Utils.XMLUtils.*;
-import static AutoDriveEditor.XMLConfig.EditorXML.maxAutoSaveSlots;
+import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
 public class GameXML {
 
@@ -48,9 +49,9 @@ public class GameXML {
     private static boolean hasFlagTag = false; // indicates if the loaded XML file has the <flags> tag in the <waypoints> element
     public static boolean oldConfigFormat = false;
     public static int configVersion = 0;
-    private static int saveSlot = 1;
+    public static int saveSlot = 1;
 
-    public static void loadConfigFile(File fXmlFile) {
+    public static boolean loadConfigFile(File fXmlFile) {
         LOG.info("config loadFile: {}", fXmlFile.getAbsolutePath());
 
         try {
@@ -60,16 +61,22 @@ public class GameXML {
                 editor.setTitle(AUTODRIVE_COURSE_EDITOR_TITLE + " - " + fXmlFile.getAbsolutePath());
                 xmlConfigFile = fXmlFile;
                 loadMapImage(roadMap.roadMapName);
+                forceMapImageRedraw();
+                loadHeightMap(fXmlFile);
+                saveRoutesXML.setEnabled(false);
+                return true;
             } else {
                 JOptionPane.showMessageDialog(editor, localeString.getString("dialog_config_unknown"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
+                return false;
             }
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
             JOptionPane.showMessageDialog(editor, localeString.getString("dialog_config_load_failed"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
     }
 
-    public static void  saveConfigFile(String newName, boolean isAutoSave) {
+    public static boolean saveConfigFile(String newName, boolean isAutoSave) {
         if (isAutoSave) {
             LOG.info("{}", localeString.getString("console_config_autosave_start"));
         } else {
@@ -78,27 +85,28 @@ public class GameXML {
 
         try
         {
-            if (xmlConfigFile == null) return;
+            if (xmlConfigFile == null) return false;
             saveXmlConfig(xmlConfigFile, newName, isAutoSave);
             getMapPanel().setStale(false);
             if (!isAutoSave) {
                 JOptionPane.showMessageDialog(editor, xmlConfigFile.getName() + " " + localeString.getString("dialog_save_success"), "AutoDrive", JOptionPane.INFORMATION_MESSAGE);
             }
+            return true;
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
             JOptionPane.showMessageDialog(editor, localeString.getString("dialog_save_fail"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
     }
 
     public static void saveMergeBackupConfigFile() {
         LOG.info("{}", localeString.getString("console_config_merge_backup"));
-        //LOG.info("{}", removeExtension(xmlConfigFile.getAbsolutePath()));
         String filename = removeExtension(xmlConfigFile.getAbsolutePath()) + "_mergeBackup.xml";
         saveConfigFile(filename, true);
 
     }
 
-    public static void autoSaveConfigFile() {
+    public static void autoSaveGameConfigFile() {
         while (!canAutoSave) {
             try {
                 LOG.info("canAutoSave = false --- Waiting");
@@ -523,6 +531,12 @@ public class GameXML {
         }
         transformer.transform(source, result);
 
-        LOG.info("{}", localeString.getString("console_config_save_end"));
+        if (isAutoSave) {
+            LOG.info("{}", localeString.getString("console_config_autosave_end"));
+        } else {
+            LOG.info("{}", localeString.getString("console_config_save_end"));
+        }
+
+
     }
 }

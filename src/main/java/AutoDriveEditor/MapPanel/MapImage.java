@@ -14,7 +14,7 @@ import AutoDriveEditor.GUI.GUIBuilder;
 import AutoDriveEditor.GUI.MenuBuilder;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
-import static AutoDriveEditor.GUI.GUIUtils.*;
+import static AutoDriveEditor.Utils.GUIUtils.*;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.Locale.LocaleManager.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
@@ -159,6 +159,7 @@ public class MapImage {
         //pathStr.replaceAll("/", "V\");
         String launchPath = pathStr.substring(0, pathStr.lastIndexOf("\\") + 1) + "terrain.heightmap.png";
         LOG.info("HeightMap path = {}", launchPath);
+        heightMapImage = null;
         try {
             heightImage = ImageIO.read(new File(launchPath));
             //heightMapImage = new BufferedImage(heightImage.getWidth(), heightImage.getHeight(), BufferedImage.TYPE_USHORT_565_RGB);

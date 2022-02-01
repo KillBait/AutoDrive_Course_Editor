@@ -8,7 +8,6 @@ import AutoDriveEditor.RoadNetwork.MapMarker;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
 
-import static AutoDriveEditor.AutoDriveEditor.EXPERIMENTAL;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.Managers.ScanManager.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
@@ -90,6 +89,7 @@ public class ChangeManager {
         canAutoSave = false;
         if ( !canUndo() ){
             LOG.info("Reached Beginning of Undo History.");
+            canAutoSave = true;
             return;
             //throw new IllegalStateException("Cannot undo. Index is out of range.");
         }
@@ -138,6 +138,7 @@ public class ChangeManager {
         canAutoSave = false;
         if ( !canRedo() ){
             LOG.info("Reached End of Undo History.");
+            canAutoSave = true;
             return;
         }
         //reset index

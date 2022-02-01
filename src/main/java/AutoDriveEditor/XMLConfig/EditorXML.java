@@ -17,6 +17,8 @@ import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.Locale.LocaleManager.*;
 import static AutoDriveEditor.Utils.LoggerUtils.*;
 import static AutoDriveEditor.Utils.XMLUtils.*;
+import static AutoDriveEditor.XMLConfig.GameXML.lastLoadLocation;
+import static AutoDriveEditor.XMLConfig.GameXML.saveSlot;
 
 public class EditorXML {
 
@@ -70,6 +72,9 @@ public class EditorXML {
             bShowUpdateMessage = getBooleanValue(bShowUpdateMessage, e, "ShowUpdateMessage");
             autoSaveInterval = getIntegerValue(autoSaveInterval, e, "AutoSave_Interval");
             maxAutoSaveSlots = getIntegerValue(maxAutoSaveSlots, e, "AutoSave_Slots");
+            saveSlot = getIntegerValue(saveSlot, e, "AutoSave_Last_Used_Slot");
+            lastLoadLocation = getTextValue(lastLoadLocation, e, "LastUsedLocation");
+            if (saveSlot > maxAutoSaveSlots)  saveSlot = maxAutoSaveSlots;
 
             x = getIntegerValue(x, e, "WindowX");
             y = getIntegerValue(y, e, "WindowY");
@@ -138,6 +143,8 @@ public class EditorXML {
             setBooleanValue("ShowUpdateMessage", doc, bShowUpdateMessage, root);
             setIntegerValue("AutoSave_Interval", doc, autoSaveInterval, root);
             setIntegerValue("AutoSave_Slots", doc, maxAutoSaveSlots, root);
+            setIntegerValue("AutoSave_Last_Used_Slot", doc, saveSlot, root);
+            setTextValue("LastUsedLocation", doc, lastLoadLocation, root);
             setIntegerValue("WindowX", doc, editor.getBounds().x, root);
             setIntegerValue("WindowY", doc, editor.getBounds().y, root);
             setIntegerValue("WindowWidth", doc, editor.getBounds().width, root);
