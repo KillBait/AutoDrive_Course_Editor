@@ -34,9 +34,9 @@ public class FileUtils {
                     .getLocation()
                     .toURI()
                     .getPath();
-            if (bDebugFileIO) LOG.info("JAR Path : {}", jarPath);
+            if (bDebugLogFileIO) LOG.info("JAR Path : {}", jarPath);
             launchPath = jarPath.substring(0, jarPath.lastIndexOf("/") + 1);
-            if (bDebugFileIO) LOG.info("Path : " + launchPath);
+            if (bDebugLogFileIO) LOG.info("Path : " + launchPath);
             return launchPath;
         } catch (URISyntaxException uriSyntaxException) {
             uriSyntaxException.printStackTrace();
@@ -98,6 +98,21 @@ public class FileUtils {
         }
     }
 
+    public static String removeFilenameFromString(String path) {
+        return path.substring(0, path.lastIndexOf("\\") + 1);
+    }
+
+    public static String removeFilenameFromPath(File file) {
+        return file.getAbsolutePath().substring(0, file.getAbsolutePath().lastIndexOf("\\") + 1);
+    }
+
+    public static String getParent(File file) {
+        if (file.exists()) {
+            return file.getParentFile().getAbsolutePath();
+        } else {
+            return null;
+        }
+    }
 
     public static String removeExtension(String filename) {
         if (filename == null) {
@@ -117,7 +132,8 @@ public class FileUtils {
         }
         int extensionPos = filename.lastIndexOf(EXTENSION_SEPARATOR);
         int lastSeparator = indexOfLastSeparator(filename);
-        return lastSeparator > extensionPos ? -1 : extensionPos;
+        if (lastSeparator > extensionPos) return -1;
+        return extensionPos;
     }
 
     public static int indexOfLastSeparator(String filename) {

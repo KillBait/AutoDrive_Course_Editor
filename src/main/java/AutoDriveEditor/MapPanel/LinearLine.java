@@ -42,7 +42,7 @@ public class LinearLine {
 
         double lineLength = Math.sqrt( powX + powY);
 
-        int multiplier = (int)lineLength/(this.interpolationPointDistance / mapZoomFactor);
+        int multiplier = (int)lineLength/(this.interpolationPointDistance);
         int id = 1;
 
         for(int i=0;i<=multiplier;i++) {

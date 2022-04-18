@@ -239,11 +239,16 @@ public class GUIUtils {
         return cbMenuItem;
     }
 
+    public static JRadioButtonMenuItem makeRadioButtonMenuItem(String menuName, String accString, JMenu menu, MenuListener itemListener, String actionCommand, Boolean enabled, ButtonGroup buttonGroup, boolean isGroupDefault) {
+        return makeRadioButtonMenuItem(menuName, accString, 0, 0, menu, itemListener, actionCommand, enabled, buttonGroup, isGroupDefault);
+    }
 
     // if no button group is required, set buttonGroup to null and isGroupDefault will be ignored
     public static JRadioButtonMenuItem makeRadioButtonMenuItem(String menuName, String accString, int keyEvent, int inputEvent, JMenu menu, MenuListener itemListener, String actionCommand, Boolean enabled, ButtonGroup buttonGroup, boolean isGroupDefault) {
         JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(localeString.getString(menuName));
-        menuItem.setAccelerator(KeyStroke.getKeyStroke(keyEvent, inputEvent));
+        if (keyEvent != 0 && inputEvent != 0) {
+            menuItem.setAccelerator(KeyStroke.getKeyStroke(keyEvent, inputEvent));
+        }
         menuItem.getAccessibleContext().setAccessibleDescription(localeString.getString(accString));
         menuItem.setEnabled(enabled);
         if (actionCommand != null) menuItem.setActionCommand(actionCommand);

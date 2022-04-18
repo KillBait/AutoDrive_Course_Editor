@@ -100,6 +100,10 @@ public class GUIBuilder {
     public static JToggleButton copy;
     public static JToggleButton paste;
 
+    public static JLabel zoomLevelLabel;
+    public static JLabel imageLoadedLabel;
+    public static JLabel heightMapLoadedLabel;
+
     public static JSlider numIterationsSlider;
     public static JPanel curvePanel;
     public static JTextArea textArea;
@@ -276,6 +280,32 @@ public class GUIBuilder {
         JScrollPane scrollPane = new JScrollPane(textArea);
         textArea.setEditable(false);
         textPanel.add(scrollPane, BorderLayout.CENTER);
+        JPanel infoPanel = new JPanel(new GridLayout(3,2));
+        infoPanel.setPreferredSize(new Dimension(150,50));
+        infoPanel.setBorder(BorderFactory.createEtchedBorder());
+
+        JLabel imageLabel = new JLabel(" " + "Map Image : ");
+        //infoPanel.add(Box.createRigidArea(new Dimension(1, 1)));
+        infoPanel.add(imageLabel);
+        imageLoadedLabel = new JLabel("");
+        infoPanel.add(imageLoadedLabel);
+        //makeImageToggleButton("curvepanel/confirm","curvepanel/confirm_select", BUTTON_COMMIT_CURVE,"panel_slider_confirm_curve","panel_slider_confirm_curve_alt", infoPanel, null, false, null);
+
+        JLabel heightMapLabel = new JLabel(" " + "HeightMap : ");
+        //infoPanel.add(Box.createRigidArea(new Dimension(1, 1)));
+        infoPanel.add(heightMapLabel);
+        heightMapLoadedLabel = new JLabel("");
+        infoPanel.add(heightMapLoadedLabel);
+        //makeImageToggleButton("curvepanel/confirm","curvepanel/confirm_select", BUTTON_COMMIT_CURVE,"panel_slider_confirm_curve","panel_slider_confirm_curve_alt", infoPanel, null, false, null);
+
+
+        JLabel zoomLabel = new JLabel(" " + "Zoomlevel = ");
+        infoPanel.add(zoomLabel);
+
+        zoomLevelLabel = new JLabel("");
+
+        infoPanel.add(zoomLevelLabel);
+        textPanel.add(infoPanel, BorderLayout.LINE_END);
         return textPanel;
     }
 

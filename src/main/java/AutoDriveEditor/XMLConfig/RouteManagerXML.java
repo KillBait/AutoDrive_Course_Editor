@@ -54,7 +54,7 @@ public class RouteManagerXML {
                 getMapPanel().setRoadMap(roadMap);
                 editor.setTitle(AUTODRIVE_COURSE_EDITOR_TITLE + " - " + fXmlFile.getAbsolutePath());
                 xmlConfigFile = fXmlFile;
-                if (bDebugRouteManager) LOG.info("name = {}", fXmlFile.getName());
+                if (bDebugLogRouteManager) LOG.info("name = {}", fXmlFile.getName());
                 if (!skipRoutesCheck) {
                     if (routeList !=null) {
                         for (Route route : routeList) {
@@ -67,10 +67,10 @@ public class RouteManagerXML {
                 } else {
                     roadMap.roadMapName = mapName;
                 }
-                if (bDebugRouteManager) LOG.info("map = {}", roadMap.roadMapName);
+                if (bDebugLogRouteManager) LOG.info("map = {}", roadMap.roadMapName);
                 loadMapImage(roadMap.roadMapName);
                 forceMapImageRedraw();
-                loadHeightMap(fXmlFile);
+                loadHeightMap(fXmlFile, false);
                 saveRoutesXML.setEnabled(true);
                 saveConfigMenuItem.setEnabled(false);
                 saveConfigAsMenuItem.setEnabled(false);
@@ -240,7 +240,7 @@ public class RouteManagerXML {
 
         NodeList groupList = doc.getElementsByTagName("g");
         markerGroup.clear();
-        if (bDebugRouteManager) {
+        if (bDebugLogRouteManager) {
             LOG.info("----------------------------");
             LOG.info("Group Index length = {}", groupList.getLength());
             LOG.info("----------------------------");
@@ -251,16 +251,16 @@ public class RouteManagerXML {
                 Element eElement = (Element) markerNode;
                 String groupId = eElement.getAttribute("i");
                 String groupName = eElement.getAttribute("n");
-                if (bDebugRouteManager) LOG.info("Group {} : index {} , name {}", temp+1, groupId, groupName);
+                if (bDebugLogRouteManager) LOG.info("Group {} : index {} , name {}", temp+1, groupId, groupName);
                 MarkerGroup group = new MarkerGroup(Integer.parseInt(groupId), groupName);
                 markerGroup.add(group);
             }
         }
-        if (bDebugRouteManager) LOG.info("markerGroup size {}", markerGroup.size());
+        if (bDebugLogRouteManager) LOG.info("markerGroup size {}", markerGroup.size());
 
         LinkedList<MapMarker> mapMarkers = new LinkedList<>();
         NodeList markerList = doc.getElementsByTagName("m");
-        if (bDebugRouteManager) {
+        if (bDebugLogRouteManager) {
             LOG.info("----------------------------");
             LOG.info("Marker length = {}", markerList.getLength());
             LOG.info("----------------------------");
@@ -272,7 +272,7 @@ public class RouteManagerXML {
                 String markerNodeId = eElement.getAttribute("i");
                 String markerName = eElement.getAttribute("n");
                 String markerGroup = eElement.getAttribute("g");
-                if (bDebugRouteManager) LOG.info("Marker {} : ID {} , name {}, group {}", temp+1, markerNodeId, markerName, markerGroup);
+                if (bDebugLogRouteManager) LOG.info("Marker {} : ID {} , name {}, group {}", temp+1, markerNodeId, markerName, markerGroup);
                 mapMarkers.add(new MapMarker(nodes.get(Integer.parseInt(markerNodeId) -1), markerName, markerGroup));
             }
         }
@@ -685,7 +685,7 @@ public class RouteManagerXML {
 
     public static LinkedList<Route> getRoutesConfigContents(File routesFile) {
         try {
-            if (bDebugRouteManager) {
+            if (bDebugLogRouteManager) {
                 LOG.info("----------------------------");
                 LOG.info("Parsing {}", routesFile.getAbsolutePath());
                 LOG.info("----------------------------");
@@ -712,7 +712,7 @@ public class RouteManagerXML {
 
                 if (nNode.getNodeType() == Node.ELEMENT_NODE) {
                     Element eElement = (Element) nNode;
-                    if (bDebugRouteManager) {
+                    if (bDebugLogRouteManager) {
                         LOG.info("----------------------------");
                         LOG.info("name : {}", eElement.getAttribute("name"));
                         LOG.info("filename : {}", eElement.getAttribute("fileName"));

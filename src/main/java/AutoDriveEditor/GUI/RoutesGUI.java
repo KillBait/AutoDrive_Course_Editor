@@ -150,7 +150,7 @@ public class RoutesGUI extends JFrame {
         if (routesGUI != null) routesGUI.dispatchEvent(new WindowEvent(routesGUI, WindowEvent.WINDOW_CLOSING));
         routesGUI = new RoutesGUI(routesFile);
         routesGUI.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        routesGUI.setTitle(localeString.getString("panel_routes_gui_Title"));
+        routesGUI.setTitle(localeString.getString("panel_routes_gui_title"));
         routesGUI.setIconImage(tractorImage);
         routesGUI.pack();
         routesGUI.setLocationRelativeTo(comp);

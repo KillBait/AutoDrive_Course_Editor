@@ -62,7 +62,7 @@ public class GameXML {
                 xmlConfigFile = fXmlFile;
                 loadMapImage(roadMap.roadMapName);
                 forceMapImageRedraw();
-                loadHeightMap(fXmlFile);
+                loadHeightMap(fXmlFile, false);
                 saveRoutesXML.setEnabled(false);
                 return true;
             } else {

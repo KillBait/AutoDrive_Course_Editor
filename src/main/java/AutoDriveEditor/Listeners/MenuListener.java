@@ -6,6 +6,7 @@ import AutoDriveEditor.MapPanel.MapPanel;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
+import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -77,6 +78,8 @@ public class MenuListener implements ActionListener, ItemListener {
                         getMapPanel().setStale(false);
                         scanNetworkForOverlapNodes();
                         configType = CONFIG_SAVEGAME;
+                        bShowHeightMap = false;
+                        showHeightMapMenuItem.setSelected(false);
                         canAutoSave=true;
                     };
                 }
@@ -227,34 +230,33 @@ public class MenuListener implements ActionListener, ItemListener {
                 }
                 break;
             case MENU_SAVE_IMAGE:
-                String currentPath;
+                String currentSavePath;
                 if (!oldConfigFormat) {
-                    currentPath = getCurrentLocation() + "mapImages/" + roadMap.roadMapName + ".png";
+                    currentSavePath = getCurrentLocation() + "mapImages/" + roadMap.roadMapName + "/" + roadMap.roadMapName + ".png";
                 } else {
-                    currentPath = getCurrentLocation() + "mapImages/unknown.png";
+                    currentSavePath = getCurrentLocation() + "mapImages/unknown.png";
                 }
 
-                LOG.info("currentpath = {}", currentPath);
-                File path = new File(currentPath);
+                LOG.info("Save Image path = {}", currentSavePath);
+                File savePath = new File(currentSavePath);
                 try {
-                    if (path.exists()) {
-                        if (path.isDirectory())
-                            throw new IOException("File '" + path + "' is a directory");
+                    if (savePath.exists()) {
+                        if (savePath.isDirectory())
+                            throw new IOException("File '" + savePath + "' is a directory");
 
-                        if (!path.canWrite())
-                            throw new IOException("File '" + path + "' cannot be written");
+                        if (!savePath.canWrite())
+                            throw new IOException("File '" + savePath + "' cannot be written");
                     } else {
-                        File parent = path.getParentFile();
-                        LOG.info("parent = {}", parent.getName());
-                        if (!parent.exists() && (!parent.mkdirs())) {
-                            throw new IOException("'" + path + "' could not be created");
+                        File saveParent = savePath.getParentFile();
+                        LOG.info("parent = {}", saveParent.getName());
+                        if (!saveParent.exists() && (!saveParent.mkdirs())) {
+                            throw new IOException("'" + savePath + "' could not be created");
                         }
                     }
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
                 }
 
-                LOG.info("path = {}", currentPath);
                 fc.setDialogTitle(localeString.getString("dialog_save_mapimage"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fc.setFileFilter(new FileFilter() {
@@ -271,19 +273,19 @@ public class MenuListener implements ActionListener, ItemListener {
                         return "AutoDrive Map Image (.png)";
                     }
                 });
-                fc.setSelectedFile(path);
-                fc.setCurrentDirectory(path);
+                fc.setSelectedFile(savePath);
+                fc.setCurrentDirectory(savePath);
                 if (fc.showSaveDialog(editor) == JFileChooser.APPROVE_OPTION) {
                     File saveImageFile = getSelectedFileWithExtension(fc);
                     if (saveImageFile.exists()) {
-                        int response = JOptionPane.showConfirmDialog(editor, localeString.getString("dialog_mapimage_overwrite"), "File already exists " + roadMap.roadMapName + ".png", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                        int response = JOptionPane.showConfirmDialog(editor, localeString.getString("dialog_overwrite"), "File already exists " + roadMap.roadMapName + ".png", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                         if (response == JOptionPane.NO_OPTION) {
                             LOG.info("Cancelled saving of converted image");
                             break;
                         }
                     }
                     LOG.info("{} {}", localeString.getString("console_map_saveimage"), saveImageFile);
-                    exportMapImage(getSelectedFileWithExtension(fc).toString());
+                    exportImageToDisk(getImage(), getSelectedFileWithExtension(fc).toString());
                 }
                 break;
             case MENU_IMPORT_FS19_DDS:
@@ -371,17 +373,140 @@ public class MenuListener implements ActionListener, ItemListener {
                 });
                 if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
                     File fileName = fc.getSelectedFile();
-                    loadHeightMap(fileName);
+                    loadHeightMap(fileName, true);
                 }
                 break;
-            case MENU_ZOOM_1x:
+            case MENU_HEIGHTMAP_SAVE:
+                String currentExportPath;
+                if (!oldConfigFormat) {
+                    currentExportPath = getCurrentLocation() + "mapImages/" + roadMap.roadMapName + "/" + roadMap.roadMapName + "_HeightMap.png";
+                } else {
+                    currentExportPath = getCurrentLocation() + "mapImages/unknown_HeightMap.png";
+                }
+
+                LOG.info("Export HeightMap path = {}", currentExportPath);
+                File exportPath = new File(currentExportPath);
+                try {
+                    if (exportPath.exists()) {
+                        if (exportPath.isDirectory())
+                            throw new IOException("File '" + exportPath + "' is a directory");
+
+                        if (!exportPath.canWrite())
+                            throw new IOException("File '" + exportPath + "' cannot be written");
+                    } else {
+                        File exportParent = exportPath.getParentFile();
+                        LOG.info("parent = {}", exportParent.getName());
+                        if (!exportParent.exists() && (!exportParent.mkdirs())) {
+                            throw new IOException("'" + exportPath + "' could not be created");
+                        }
+                    }
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+
+                fc.setDialogTitle(localeString.getString("dialog_heightmap_export_title"));
+                fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                fc.setFileFilter(new FileFilter() {
+                    @Override
+                    public boolean accept(File f) {
+                        // always accept directory's
+                        if (f.isDirectory()) return true;
+                        // but only files with a specific name
+                        return f.getName().contains("_HeightMap.png");
+                    }
+
+                    @Override
+                    public String getDescription() {
+                        return "AutoDrive Heightmap Image (_HeightMap.png)";
+                    }
+                });
+                fc.setSelectedFile(exportPath);
+                fc.setCurrentDirectory(exportPath);
+                if (fc.showSaveDialog(editor) == JFileChooser.APPROVE_OPTION) {
+                    File saveImageFile = getSelectedFileWithExtension(fc);
+                    if (saveImageFile.exists()) {
+                        int response = JOptionPane.showConfirmDialog(editor, localeString.getString("dialog_overwrite"), "File already exists " + roadMap.roadMapName + ".png", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                        if (response == JOptionPane.NO_OPTION) {
+                            LOG.info("Cancelled export to default heightmap");
+                            break;
+                        }
+                    }
+                    LOG.info("{} {}", localeString.getString("console_heightmap_exportdefault"), saveImageFile);
+                    if (exportImageToDisk(heightMapImage, getSelectedFileWithExtension(fc).toString())) {
+                        heightMapLoadedLabel.setForeground(new Color(0,100,0));
+                        heightMapLoadedLabel.setText("Loaded");
+                        showInTextArea("Export to " + exportPath + " Successful", true, true);
+                    };
+                }
+                break;
+            case MENU_ZOOM_2km:  // 2km
                 updateMapZoomFactor(1);
                 break;
-            case MENU_ZOOM_4x:
+            case MENU_ZOOM_4km:  // 4km
                 updateMapZoomFactor(2);
                 break;
-            case MENU_ZOOM_16x:
+            case MENU_ZOOM_6km:  // 6km
+                updateMapZoomFactor(3);
+                break;
+            case MENU_ZOOM_8km: // 8km
                 updateMapZoomFactor(4);
+                break;
+            case MENU_ZOOM_10km: // 10km
+                updateMapZoomFactor(5);
+                break;
+            case MENU_ZOOM_12km: // 12km
+                updateMapZoomFactor(6);
+                break;
+            case MENU_ZOOM_14km: // 14km
+                updateMapZoomFactor(7);
+                break;
+            case MENU_ZOOM_16km: // 16km
+                updateMapZoomFactor(8);
+                break;
+            case MENU_ZOOM_18km: // 18km
+                updateMapZoomFactor(9);
+                break;
+            case MENU_ZOOM_20km: // 20km
+                updateMapZoomFactor(10);
+                break;
+            case MENU_ZOOM_22km: // 22km
+                updateMapZoomFactor(11);
+                break;
+            case MENU_ZOOM_24km: // 24km
+                updateMapZoomFactor(12);
+                break;
+            case MENU_ZOOM_26km: // 26km
+                updateMapZoomFactor(13);
+                break;
+            case MENU_ZOOM_28km: // 28km
+                updateMapZoomFactor(14);
+                break;
+            case MENU_ZOOM_30km: // 30km
+                updateMapZoomFactor(15);
+                break;
+            case MENU_ZOOM_32km: // 32km
+                updateMapZoomFactor(16);
+                break;
+            case MENU_ZOOM_34km: // 34km
+                updateMapZoomFactor(17);
+                break;
+            case MENU_ZOOM_36km: // 36km
+                updateMapZoomFactor(18);
+                break;
+            case MENU_ZOOM_38km: // 38km
+                updateMapZoomFactor(19);
+                break;
+            case MENU_ZOOM_40km: // 40km
+                updateMapZoomFactor(20);
+                break;
+            case MENU_ZOOM_42km: // 42km
+                updateMapZoomFactor(21);
+                break;
+            case MENU_ZOOM_44km: // 44km
+                updateMapZoomFactor(22);
+                break;
+            case MENU_ZOOM_46km: // 46km
+                updateMapZoomFactor(23);
                 break;
             case MENU_EDIT_UNDO:
                 changeManager.undo();
@@ -485,24 +610,24 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_DEBUG_SELECTED_LOCATION:
                 bDebugShowSelectedLocation = menuItem.isSelected();
                 break;
-            case MENU_DEBUG_FILEIO:
-                bDebugFileIO = menuItem.isSelected();
+            case MENU_DEBUG_LOG_FILEIO:
+                bDebugLogFileIO = menuItem.isSelected();
                 break;
             case MENU_DEBUG_PROFILE:
                 bDebugProfile = menuItem.isSelected();
                 break;
-            case MENU_DEBUG_UNDO:
-                bDebugUndoRedo = menuItem.isSelected();
+            case MENU_DEBUG_LOG_UNDO:
+                bDebugLogUndoRedo = menuItem.isSelected();
                 break;
             case MENU_DEBUG_HEIGHTMAP:
-                bDebugHeightMap = menuItem.isSelected();
+                 bDebugShowHeightMapInfo = menuItem.isSelected();
                 if (!menuItem.isSelected()) showInTextArea("", true, false);
                 break;
-            case MENU_DEBUG_MERGE:
-                bDebugMerge = menuItem.isSelected() ;
+            case MENU_DEBUG_LOG_MERGE:
+                bDebugLogMerge = menuItem.isSelected() ;
                 break;
-            case MENU_DEBUG_ROUTE_MANAGER:
-                bDebugRouteManager = menuItem.isSelected() ;
+            case MENU_DEBUG_LOG_ROUTEMANAGER:
+                bDebugLogRouteManager = menuItem.isSelected() ;
                 break;
             case MENU_DEBUG_TEST:
                 bDebugTest = menuItem.isSelected();
@@ -518,7 +643,7 @@ public class MenuListener implements ActionListener, ItemListener {
     }
 
     private void showAbout() {
-        String mainText = "<html><center>Editor version : " + AUTODRIVE_INTERNAL_VERSION + "<br><br>Build info : Java 13 SDK + IntelliJ IDEA 2021.3.2 Community Edition<br><br><u>AutoDrive Development Team</u><br><br><b>Stephan (Founder & Modder)</b><br><br>TyKonKet (Modder)<br>Oliver (Modder)<br>Axel (Co-Modder)<br>Aletheist (Co-Modder)<br>Willi (Supporter & Tester)<br>Iwan1803 (Community Manager & Supporter)";
+        String mainText = "<html><center>Editor version : " + AUTODRIVE_INTERNAL_VERSION + "<br><br>Build info : Java 13 SDK + IntelliJ IDEA 2022.1 Community Edition<br><br><u>AutoDrive Development Team</u><br><br><b>Stephan (Founder & Modder)</b><br><br>TyKonKet (Modder)<br>Oliver (Modder)<br>Axel (Co-Modder)<br>Aletheist (Co-Modder)<br>Willi (Supporter & Tester)<br>Iwan1803 (Community Manager & Supporter)";
         String linkText = "<br><br>Visit AutoDrive Editor HomePage</b>";
         JEditorPane link = createHyperLink(mainText,linkText, "https://github.com/KillBait/AutoDrive_Course_Editor");
         JOptionPane.showMessageDialog(editor, link, "About AutoDrive Editor", JOptionPane.PLAIN_MESSAGE);

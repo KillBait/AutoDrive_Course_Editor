@@ -48,6 +48,8 @@ public class EditorXML {
     public static int rotationAngle = 5;
     public static int autoSaveInterval = 10;
     public static int maxAutoSaveSlots = 10;
+    public static int maxZoomLevel = 30;
+    public static double nodeSize = 1;
 
     public static ArrayList<MapZoomStore> mapZoomStore  = new ArrayList<>();
 
@@ -81,6 +83,8 @@ public class EditorXML {
             if ( x == -99 || y == -99) noSavedWindowPosition = true;
             width = getIntegerValue(width, e, "WindowWidth");
             height = getIntegerValue(height, e, "WindowHeight");
+            maxZoomLevel = getIntegerValue(maxZoomLevel, e, "MaxZoomLevel");
+            nodeSize = getFloatValue((float)nodeSize, e, "NodeSizeScale");
 
             bUseOnlineMapImages = getBooleanValue(bUseOnlineMapImages, e, "Check_Online_MapImages");
             bContinuousConnections = getBooleanValue(bContinuousConnections, e, "Continuous_Connection");
@@ -149,6 +153,8 @@ public class EditorXML {
             setIntegerValue("WindowY", doc, editor.getBounds().y, root);
             setIntegerValue("WindowWidth", doc, editor.getBounds().width, root);
             setIntegerValue("WindowHeight", doc, editor.getBounds().height, root);
+            setIntegerValue( "MaxZoomLevel", doc, maxZoomLevel, root);
+            setFloatValue("NodeSizeScale", doc, (float)nodeSize, root);
             setBooleanValue("Check_Online_MapImages", doc, bUseOnlineMapImages, root);
             setBooleanValue("Continuous_Connection", doc, bContinuousConnections, root);
             setBooleanValue("MiddleMouseMove", doc, bMiddleMouseMove, root);

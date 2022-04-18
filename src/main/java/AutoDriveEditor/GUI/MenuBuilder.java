@@ -29,10 +29,31 @@ public class MenuBuilder {
     public static final String MENU_EDIT_CUT = "Cut";
     public static final String MENU_EDIT_COPY = "Copy";
     public static final String MENU_EDIT_PASTE = "Paste";
-    public static final String MENU_ZOOM_1x = "1x";
-    public static final String MENU_ZOOM_4x = "4x";
-    public static final String MENU_ZOOM_16x = "16x";
+    public static final String MENU_ZOOM_2km = "2km";
+    public static final String MENU_ZOOM_4km = "4km";
+    public static final String MENU_ZOOM_6km = "6km";
+    public static final String MENU_ZOOM_8km = "8km";
+    public static final String MENU_ZOOM_10km = "10km";
+    public static final String MENU_ZOOM_12km = "12km";
+    public static final String MENU_ZOOM_14km = "14km";
+    public static final String MENU_ZOOM_16km = "16km";
+    public static final String MENU_ZOOM_18km = "18km";
+    public static final String MENU_ZOOM_20km = "20km";
+    public static final String MENU_ZOOM_22km = "22km";
+    public static final String MENU_ZOOM_24km = "24km";
+    public static final String MENU_ZOOM_26km = "26km";
+    public static final String MENU_ZOOM_28km = "28km";
+    public static final String MENU_ZOOM_30km = "30km";
+    public static final String MENU_ZOOM_32km = "32km";
+    public static final String MENU_ZOOM_34km = "34km";
+    public static final String MENU_ZOOM_36km = "36km";
+    public static final String MENU_ZOOM_38km = "38km";
+    public static final String MENU_ZOOM_40km = "40km";
+    public static final String MENU_ZOOM_42km = "42km";
+    public static final String MENU_ZOOM_44km = "44km";
+    public static final String MENU_ZOOM_46km = "45km";
     public static final String MENU_HEIGHTMAP_LOAD = "Load HeightMap";
+    public static final String MENU_HEIGHTMAP_SAVE = "Save Heightmap";
     public static final String MENU_HEIGHTMAP_SHOW = "Show HeightMap";
     public static final String MENU_HEIGHTMAP_FIX = "Fix Node Height";
     public static final String MENU_CHECKBOX_CONTINUECONNECT = "Continuous Connections";
@@ -54,23 +75,37 @@ public class MenuBuilder {
 
     public static final String MENU_DEBUG_MOVETO_NODE = "DEBUG MOVETO NODE";
     public static final String MENU_DEBUG_SHOWID = "DEBUG ID";
-    public static final String MENU_DEBUG_FILEIO = "DEBUG CONFIG";
     public static final String MENU_DEBUG_SELECTED_LOCATION = "DEBUG SELECTED LOCATION";
     public static final String MENU_DEBUG_PROFILE = "DEBUG PROFILE";
-    public static final String MENU_DEBUG_UNDO = "DEBUG UNDO/REDO SYSTEM";
-    public static final String MENU_DEBUG_ZOOMSCALE = "ZOOMSCALE";
     public static final String MENU_DEBUG_HEIGHTMAP = "DEBUG HEIGHTMAP";
-    public static final String MENU_DEBUG_MERGE = "DEBUG MERGE";
-    public static final String MENU_DEBUG_ROUTE_MANAGER = "ROUTE MANAGER";
-
     public static final String MENU_DEBUG_TEST = "TEST";
+
+    public static final String MENU_DEBUG_LOG_FILEIO = "LOG CONFIG";
+    public static final String MENU_DEBUG_LOG_UNDO = "LOG UNDO/REDO SYSTEM";
+    public static final String MENU_DEBUG_LOG_ZOOMSCALE = "LOG ZOOMSCALE";
+    public static final String MENU_DEBUG_LOG_MERGE = "LOG MERGE";
+    public static final String MENU_DEBUG_LOG_ROUTEMANAGER = "LOG ROUTEMANAGER";
+    public static final String MENU_DEBUG_LOG_HEIGHTMAP = "LOG HEIGHTMAP";
+
+
 
     public static int InputEvent_NONE = 0;
     public static int KeyEvent_NONE = 0;
 
     public static MenuListener menuListener;
 
-    public static JMenu fileMenu, editMenu, mapMenu, routesMenu, heightmapMenu, optionsMenu, helpMenu, subMenu, gridMenu, rotationMenu, fixItMenu, debugMenu;
+    public static JMenu fileMenu,
+            editMenu,
+            mapMenu,
+            routesMenu,
+            heightmapMenu,
+            optionsMenu,
+            helpMenu,
+            subMenu,
+            gridMenu,
+            rotationMenu,
+            fixItMenu,
+            debugMenu;
 
     public static JMenuBar menuBar;
     public static JMenuItem loadImageMenuItem;
@@ -85,10 +120,32 @@ public class MenuBuilder {
     public static JMenuItem copyMenuItem;
     public static JMenuItem pasteMenuItem;
     public static JMenuItem pasteOriginalLocationMenuItem;
-    public static JMenuItem zoomOneX;
-    public static JMenuItem zoomFourX;
-    public static JMenuItem zoomSixteenX;
+    public static JMenuItem zoom2km;
+    public static JMenuItem zoom4km;
+    public static JMenuItem zoom6km;
+    public static JMenuItem zoom8km;
+    public static JMenuItem zoom10km;
+    public static JMenuItem zoom12km;
+    public static JMenuItem zoom14km;
+    public static JMenuItem zoom16km;
+    public static JMenuItem zoom18km;
+    public static JMenuItem zoom20km;
+    public static JMenuItem zoom22km;
+    public static JMenuItem zoom24km;
+    public static JMenuItem zoom26km;
+    public static JMenuItem zoom28km;
+    public static JMenuItem zoom30km;
+    public static JMenuItem zoom32km;
+    public static JMenuItem zoom34km;
+    public static JMenuItem zoom36km;
+    public static JMenuItem zoom38km;
+    public static JMenuItem zoom40km;
+    public static JMenuItem zoom42km;
+    public static JMenuItem zoom44km;
+    public static JMenuItem zoom46km;
+
     public static JMenuItem importHeightmapMenuItem;
+    public static JMenuItem exportHeightMapMenuItem;
     public static JMenuItem gridSnapMenuItem;
     public static JMenuItem gridSnapSubDivisionMenuItem;
 
@@ -108,15 +165,17 @@ public class MenuBuilder {
 
     public static boolean bDebugEnable;
     public static boolean bDebugShowID;
-    public static boolean bDebugFileIO;
     public static boolean bDebugShowSelectedLocation;
     public static boolean bDebugProfile;
-    public static boolean bDebugUndoRedo;
-    public static boolean bDebugZoomScale;
-    public static boolean bDebugHeightMap;
-    public static boolean bDebugMerge;
-    public static boolean bDebugRouteManager;
+    public static boolean bDebugShowHeightMapInfo;
     public static boolean bDebugTest;
+
+    public static boolean bDebugLogZoomScale;
+    public static boolean bDebugLogFileIO;
+    public static boolean bDebugLogUndoRedo;
+    public static boolean bDebugLogMerge;
+    public static boolean bDebugLogRouteManager;
+    public static boolean bDebugLogHeightMapInfo;
 
     public static void createMenu() {
         //JMenuItem menuItem;
@@ -162,9 +221,29 @@ public class MenuBuilder {
         mapMenu.addSeparator();
         subMenu = makeSubMenu("menu_map_scale", KeyEvent.VK_M, "menu_map_scale_accstring", mapMenu);
         ButtonGroup menuZoomGroup = new ButtonGroup();
-        zoomOneX = makeRadioButtonMenuItem("menu_map_scale_1x", "menu_map_scale_1x_accstring",KeyEvent.VK_1, InputEvent.ALT_DOWN_MASK, subMenu, menuListener,  MENU_ZOOM_1x,true, menuZoomGroup, true);
-        zoomFourX = makeRadioButtonMenuItem("menu_map_scale_4x", "menu_map_scale_4x_accstring",KeyEvent.VK_2, InputEvent.ALT_DOWN_MASK, subMenu, menuListener,  MENU_ZOOM_4x,true, menuZoomGroup, false);
-        zoomSixteenX = makeRadioButtonMenuItem("menu_map_scale_16x", "menu_map_scale_16x_accstring",KeyEvent.VK_3, InputEvent.ALT_DOWN_MASK, subMenu, menuListener, MENU_ZOOM_16x, true, menuZoomGroup, false);
+        zoom2km = makeRadioButtonMenuItem("menu_map_scale_2km", "menu_map_scale_2km_accstring", subMenu, menuListener, MENU_ZOOM_2km,true, menuZoomGroup, true);
+        zoom4km = makeRadioButtonMenuItem("menu_map_scale_4km", "menu_map_scale_4km_accstring", subMenu, menuListener, MENU_ZOOM_4km,true, menuZoomGroup, false);
+        zoom6km = makeRadioButtonMenuItem("menu_map_scale_6km", "menu_map_scale_6km_accstring", subMenu, menuListener, MENU_ZOOM_6km, true, menuZoomGroup, false);
+        zoom8km = makeRadioButtonMenuItem("menu_map_scale_8km", "menu_map_scale_8km_accstring", subMenu, menuListener, MENU_ZOOM_8km, true, menuZoomGroup, false);
+        zoom10km = makeRadioButtonMenuItem("menu_map_scale_10km", "menu_map_scale_10km_accstring", subMenu, menuListener, MENU_ZOOM_10km, true, menuZoomGroup, false);
+        zoom12km = makeRadioButtonMenuItem("menu_map_scale_12km", "menu_map_scale_12km_accstring", subMenu, menuListener, MENU_ZOOM_12km, true, menuZoomGroup, false);
+        zoom14km = makeRadioButtonMenuItem("menu_map_scale_14km", "menu_map_scale_14km_accstring", subMenu, menuListener, MENU_ZOOM_14km, true, menuZoomGroup, false);
+        zoom16km = makeRadioButtonMenuItem("menu_map_scale_16km", "menu_map_scale_16km_accstring", subMenu, menuListener, MENU_ZOOM_16km, true, menuZoomGroup, false);
+        zoom18km = makeRadioButtonMenuItem("menu_map_scale_18km", "menu_map_scale_18km_accstring", subMenu, menuListener, MENU_ZOOM_18km, true, menuZoomGroup, false);
+        zoom20km = makeRadioButtonMenuItem("menu_map_scale_20km", "menu_map_scale_20km_accstring", subMenu, menuListener, MENU_ZOOM_20km, true, menuZoomGroup, false);
+        zoom22km = makeRadioButtonMenuItem("menu_map_scale_22km", "menu_map_scale_22km_accstring", subMenu, menuListener, MENU_ZOOM_22km, true, menuZoomGroup, false);
+        zoom24km = makeRadioButtonMenuItem("menu_map_scale_24km", "menu_map_scale_24km_accstring", subMenu, menuListener, MENU_ZOOM_24km, true, menuZoomGroup, false);
+        zoom26km = makeRadioButtonMenuItem("menu_map_scale_26km", "menu_map_scale_26km_accstring", subMenu, menuListener, MENU_ZOOM_26km, true, menuZoomGroup, false);
+        zoom28km = makeRadioButtonMenuItem("menu_map_scale_28km", "menu_map_scale_28km_accstring", subMenu, menuListener, MENU_ZOOM_28km, true, menuZoomGroup, false);
+        zoom30km = makeRadioButtonMenuItem("menu_map_scale_30km", "menu_map_scale_30km_accstring", subMenu, menuListener, MENU_ZOOM_30km, true, menuZoomGroup, false);
+        zoom32km = makeRadioButtonMenuItem("menu_map_scale_32km", "menu_map_scale_32km_accstring", subMenu, menuListener, MENU_ZOOM_32km, true, menuZoomGroup, false);
+        zoom34km = makeRadioButtonMenuItem("menu_map_scale_34km", "menu_map_scale_34km_accstring", subMenu, menuListener, MENU_ZOOM_34km, true, menuZoomGroup, false);
+        zoom36km = makeRadioButtonMenuItem("menu_map_scale_36km", "menu_map_scale_36km_accstring", subMenu, menuListener, MENU_ZOOM_36km, true, menuZoomGroup, false);
+        zoom38km = makeRadioButtonMenuItem("menu_map_scale_38km", "menu_map_scale_38km_accstring", subMenu, menuListener, MENU_ZOOM_38km, true, menuZoomGroup, false);
+        zoom40km = makeRadioButtonMenuItem("menu_map_scale_40km", "menu_map_scale_40km_accstring", subMenu, menuListener, MENU_ZOOM_40km, true, menuZoomGroup, false);
+        zoom42km = makeRadioButtonMenuItem("menu_map_scale_42km", "menu_map_scale_42km_accstring", subMenu, menuListener, MENU_ZOOM_42km, true, menuZoomGroup, false);
+        zoom44km = makeRadioButtonMenuItem("menu_map_scale_44km", "menu_map_scale_44km_accstring", subMenu, menuListener, MENU_ZOOM_44km, true, menuZoomGroup, false);
+        zoom46km = makeRadioButtonMenuItem("menu_map_scale_46km", "menu_map_scale_46km_accstring", subMenu, menuListener, MENU_ZOOM_46km, true, menuZoomGroup, false);
         mapMenu.addSeparator();
         importFS19DDSMenuItem = makeMenuItem("menu_import_fs19_dds", "menu_import_fs19_dds_accstring", KeyEvent.VK_I, InputEvent.ALT_DOWN_MASK, mapMenu, menuListener, MENU_IMPORT_FS19_DDS, false);
         importFS22DDSMenuItem = makeMenuItem("menu_import_fs22_dds", "menu_import_fs22_dds_accstring", KeyEvent.VK_P, InputEvent.ALT_DOWN_MASK, mapMenu, menuListener, MENU_IMPORT_FS22_DDS, false);
@@ -174,6 +253,8 @@ public class MenuBuilder {
 
         heightmapMenu = makeMenu("menu_heightmap", KeyEvent.VK_T, "menu_heightmap_accstring", menuBar);
         importHeightmapMenuItem = makeMenuItem("menu_heightmap_import", "menu_heightmap_import_accstring", heightmapMenu, menuListener, MENU_HEIGHTMAP_LOAD,false);
+        exportHeightMapMenuItem = makeMenuItem("menu_heightmap_export", "menu_heightmap_export_accstring", heightmapMenu, menuListener, MENU_HEIGHTMAP_SAVE, false);
+        heightmapMenu.addSeparator();
         showHeightMapMenuItem = makeCheckBoxMenuItem("menu_heightmap_show", "menu_heightmap_show", bShowHeightMap, heightmapMenu, menuListener, MENU_HEIGHTMAP_SHOW, false);
         fixNodesHeightMenuItem = makeMenuItem("menu_heightmap_fix_nodes", "menu_heightmap_fix_nodes_accstring", heightmapMenu, menuListener, MENU_HEIGHTMAP_FIX,false);
 
@@ -221,18 +302,19 @@ public class MenuBuilder {
         makeMenuItem("menu_debug_movetonode", "menu_debug_movetonode_accstring", debugMenu, menuListener, MENU_DEBUG_MOVETO_NODE, true);
         debugMenu.addSeparator();
         makeCheckBoxMenuItem("menu_debug_showID", "menu_debug_showID_accstring", KeyEvent.VK_6, InputEvent.ALT_DOWN_MASK, bDebugShowID, debugMenu, menuListener, MENU_DEBUG_SHOWID, true);
-        makeCheckBoxMenuItem("menu_debug_showselectedlocation", "menu_debug_showselectedlocation_accstring", KeyEvent.VK_7, InputEvent.ALT_DOWN_MASK, bDebugShowSelectedLocation, debugMenu, menuListener, MENU_DEBUG_SELECTED_LOCATION, true);
+        makeCheckBoxMenuItem("menu_debug_shownodelocationinfo", "menu_debug_shownodelocationinfo_accstring", KeyEvent.VK_7, InputEvent.ALT_DOWN_MASK, bDebugShowSelectedLocation, debugMenu, menuListener, MENU_DEBUG_SELECTED_LOCATION, true);
         makeCheckBoxMenuItem("menu_debug_profile", "menu_debug_profile_accstring", bDebugProfile, debugMenu, menuListener, MENU_DEBUG_PROFILE, true);
-        makeCheckBoxMenuItem("menu_debug_heightmap", "menu_debug_heightmap_accstring", bDebugHeightMap, debugMenu, menuListener, MENU_DEBUG_HEIGHTMAP, true);
+        makeCheckBoxMenuItem("menu_debug_heightmap", "menu_debug_heightmap_accstring", bDebugShowHeightMapInfo, debugMenu, menuListener, MENU_DEBUG_HEIGHTMAP, true);
         if (EXPERIMENTAL) {
             makeCheckBoxMenuItem("menu_debug_test", "menu_debug_test_accstring", bDebugTest, debugMenu, menuListener, MENU_DEBUG_TEST, true);
         }
         debugMenu.addSeparator();
-        makeCheckBoxMenuItem("menu_debug_zoom", "menu_debug_zoom_accstring", bDebugZoomScale, debugMenu, menuListener, MENU_DEBUG_ZOOMSCALE, true);
-        makeCheckBoxMenuItem("menu_debug_fileio", "menu_debug_fileio_accstring", bDebugFileIO, debugMenu, menuListener, MENU_DEBUG_FILEIO, true);
-        makeCheckBoxMenuItem("menu_debug_undo", "menu_debug_undo_accstring", bDebugUndoRedo, debugMenu, menuListener, MENU_DEBUG_UNDO, true);
-        makeCheckBoxMenuItem("menu_debug_merge", "menu_debug_merge_accstring", bDebugMerge, debugMenu, menuListener, MENU_DEBUG_MERGE, true);
-        makeCheckBoxMenuItem("menu_debug_routemanager", "menu_debug_routemanager_accstring", bDebugRouteManager, debugMenu, menuListener, MENU_DEBUG_ROUTE_MANAGER, true);
+        makeCheckBoxMenuItem("menu_debug_log_zoom", "menu_debug_log_zoom_accstring", bDebugLogZoomScale, debugMenu, menuListener, MENU_DEBUG_LOG_ZOOMSCALE, true);
+        makeCheckBoxMenuItem("menu_debug_log_fileio", "menu_debug_log_fileio_accstring", bDebugLogFileIO, debugMenu, menuListener, MENU_DEBUG_LOG_FILEIO, true);
+        makeCheckBoxMenuItem("menu_debug_log_undo", "menu_debug_log_undo_accstring", bDebugLogUndoRedo, debugMenu, menuListener, MENU_DEBUG_LOG_UNDO, true);
+        makeCheckBoxMenuItem("menu_debug_log_merge", "menu_debug_log_merge_accstring", bDebugLogMerge, debugMenu, menuListener, MENU_DEBUG_LOG_MERGE, true);
+        makeCheckBoxMenuItem("menu_debug_log_routemanager", "menu_debug_log_routemanager_accstring", bDebugLogRouteManager, debugMenu, menuListener, MENU_DEBUG_LOG_ROUTEMANAGER, true);
+        makeCheckBoxMenuItem("menu_debug_log_heightmapinfo", "menu_debug_log_heightmapinfo_accstring", bDebugLogHeightMapInfo, debugMenu, menuListener, MENU_DEBUG_LOG_HEIGHTMAP, true);
 
     }
 
@@ -248,6 +330,7 @@ public class MenuBuilder {
 
     public static void heightmapMenuEnabled(boolean enabled) {
         showHeightMapMenuItem.setEnabled(enabled);
+        exportHeightMapMenuItem.setEnabled(enabled);
         fixNodesHeightMenuItem.setEnabled(enabled);
     }
 

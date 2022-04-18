@@ -8,12 +8,18 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.*;
+import java.util.LinkedList;
 
 import AutoDriveEditor.AutoDriveEditor;
 import AutoDriveEditor.GUI.GUIBuilder;
 import AutoDriveEditor.GUI.MenuBuilder;
+import AutoDriveEditor.RoadNetwork.MapNode;
+import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
+import static AutoDriveEditor.GUI.GUIBuilder.heightMapLoadedLabel;
+import static AutoDriveEditor.GUI.GUIBuilder.imageLoadedLabel;
 import static AutoDriveEditor.Utils.GUIUtils.*;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.Locale.LocaleManager.*;
@@ -23,6 +29,7 @@ import static AutoDriveEditor.Utils.ImageUtils.*;
 import static AutoDriveEditor.Utils.LoggerUtils.*;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 import static AutoDriveEditor.XMLConfig.GameXML.*;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 
 public class MapImage {
@@ -33,69 +40,125 @@ public class MapImage {
     public static Graphics2D backBufferGraphics = null;
     private static boolean bImageFound = false;
     public static BufferedImage image;
-    public static BufferedImage croppedImage;
+    public static double heightMapScale = 1;
 
     public static void loadMapImage(String mapName) {
 
-        URL url;
-
+        String mapPath = null;
+        File file;
         String location = getCurrentLocation();
+        boolean isLegacyLocation = false;
 
         if (mapName != null) {
 
-            String mapPath = "/mapImages/" + mapName + ".png";
-            url = AutoDriveEditor.class.getResource(mapPath);
+            //
+            // Try and load the mapImage from the listed locations
+            //
 
             try {
-                mapImage = ImageIO.read(url);
+                //try same location as config file
+                String configPath = removeFilenameFromString(xmlConfigFile.toString());
+                mapPath = configPath + mapName + ".png";
+                mapImage = ImageIO.read(new File(mapPath));
+                LOG.info("Loaded mapImage from {}", mapPath);
+                bImageFound = true;
             } catch (Exception e) {
                 try {
-                    LOG.info("failed to load map image from JAR .. trying alternate locations");
+                    //try default location
+                    LOG.info("failed to load map image from {}", mapPath);
                     if (location != null) {
-                        mapPath = location + "mapImages/" + mapName + ".png";
+                        mapPath = location + "mapImages/" + mapName + "/" + mapName + ".png";
                     } else {
-                        mapPath = "./mapImages/" + mapName + ".png";
+                        mapPath = "./mapImages/" + mapName + "/" + mapName + ".png";
                     }
                     mapImage = ImageIO.read(new File(mapPath));
-                    LOG.info("Loaded mapImage from {}", mapPath);
+                    LOG.info("Loaded mapImage from {}", mapPath.substring(1));
                     bImageFound = true;
                 } catch (Exception e1) {
-                    LOG.info("failed to load map image from {}", mapPath.substring(1));
                     try {
+                        // try the legacy location ( v0.80.0 and below )
+                        if (mapPath != null) LOG.info("failed to load map image from {}", mapPath.substring(1));
+                        LOG.info("trying legacy locations");
                         if (location != null) {
-                            mapPath = location + "src/main/resources/mapImages/" + mapName + ".png";
+                            mapPath = location + "mapImages/" + mapName + ".png";
                         } else {
-                            mapPath = "./src/mapImages/" + mapName + ".png";
+                            mapPath = "./mapImages/" + mapName + ".png";
                         }
                         mapImage = ImageIO.read(new File(mapPath));
-                        LOG.info("Loaded mapImage from {}", mapPath);
+                        LOG.info("Loaded mapImage from legacy location {}", mapPath);
+                        isLegacyLocation = true;
                         bImageFound = true;
                     } catch (Exception e2) {
-                        LOG.info("failed to load map image from {}", mapPath.substring(1));
+                        // try the resource location from sourcecode
+                        if (mapPath != null) LOG.info("failed to load map image from {}", mapPath.substring(1));
                         try {
                             if (location != null) {
-                                mapPath = location + mapName + ".png";
+                                mapPath = location + "src/main/resources/mapImages/" + mapName + ".png";
                             } else {
-                                mapPath = "./" + mapName + ".png";
+                                mapPath = "./src/mapImages/" + mapName + ".png";
                             }
                             mapImage = ImageIO.read(new File(mapPath));
                             LOG.info("Loaded mapImage from {}", mapPath);
                             bImageFound = true;
                         } catch (Exception e3) {
+                            // try the same location as JAR file
                             LOG.info("failed to load map image from {}", mapPath.substring(1));
-                            loadImageMenuItem.setEnabled(true);
-                            bImageFound = false;
+                            try {
+                                if (location != null) {
+                                    mapPath = location + mapName + ".png";
+                                } else {
+                                    mapPath = "./" + mapName + ".png";
+                                }
+                                heightMapImage = ImageIO.read(new File(mapPath));
+                                LOG.info("Loaded mapImage from {}", mapPath);
+                                bImageFound = true;
+                            } catch (Exception e4) {
+                                LOG.info("failed to load map image from {}", mapPath.substring(1));
+                                loadImageMenuItem.setEnabled(true);
+                                bImageFound = false;
+                            }
                         }
                     }
                 }
+            }
+
+            if (isLegacyLocation) {
+                LOG.info("Moving Legacy file to correct location");
+                if (location != null) {
+                    mapPath = location + "mapImages/" + mapName + "/" + mapName + ".png";
+                } else {
+                    mapPath = "./mapImages/" + mapName + "/" + mapName + ".png";
+                }
+
+                file = new File(mapPath);
+                if (!file.exists()) {
+                    File parent = file.getParentFile();
+                    if ((parent != null) && (!parent.exists())) {
+                        if (parent.mkdirs()) {
+                            LOG.info("Created correct directory for legacy file - {}", parent.getAbsolutePath());
+
+                        } else {
+                            LOG.info("Failed to create directory {}", parent.getAbsolutePath());
+                        }
+                    }
+                }
+                try {
+                    Files.move(Paths.get("mapImages/" + mapName + ".png"), Paths.get("mapImages/" + mapName + "/" + mapName + ".png"), REPLACE_EXISTING);
+                    LOG.info("Moved legacy file to {}", mapPath);
+                } catch (IOException e) {
+                    LOG.info("Failed to move legacy file to new location");
+                    e.printStackTrace();
+                }
+
             }
 
             if (!bImageFound) {
                 if (bUseOnlineMapImages) {
                     String fullPath;
                     if (location != null) {
-                        String gitPath = "https://github.com/KillBait/FS19_AutoDrive_MapImages/raw/main/mapImages/" + mapName + ".png";
-                        showInTextArea(localeString.getString("mapimage_github_check") + mapName + ".png", true, false);
+                        // https://github.com/KillBait/AutoDriveEditor_MapImages/raw/master/mapImages/FS19_Pine_Cove_Farm_By_Stevie_/FS19_Pine_Cove_Farm_By_Stevie__Heightmap.png
+                        String gitPath = "https://github.com/KillBait/AutoDriveEditor_MapImages/raw/master/mapImages/" + mapName + "/" + mapName + ".png";
+                        showInTextArea(localeString.getString("mapimage_github_check") + " " + mapName + ".png", true, false);
                         LOG.info("Checking GitHub repository for {}",gitPath);
                         URL gitUrl = null;
                         try {
@@ -104,8 +167,8 @@ public class MapImage {
                             ex.printStackTrace();
                         }
 
-                        fullPath = location + "mapImages/" + mapName + ".png";
-                        File file = new File(fullPath);
+                        fullPath = location + "mapImages/" + mapName + "/" + mapName + ".png";
+                        file = new File(fullPath);
 
 
                         File loadImage = null;
@@ -126,7 +189,7 @@ public class MapImage {
 
                         }
                     } else {
-                        if (bDebugFileIO) LOG.info("getCurrentLocation returned null");
+                        if (bDebugLogFileIO) LOG.info("getCurrentLocation returned null");
                         bImageFound = false;
                     }
                 } else {
@@ -137,11 +200,15 @@ public class MapImage {
 
         if (bImageFound) {
             setImage(mapImage, false);
+            imageLoadedLabel.setForeground(new Color(0,100,0));
+            imageLoadedLabel.setText("Loaded");
         } else {
             LOG.info("Using Default Image");
             JOptionPane.showMessageDialog(editor, localeString.getString("dialog_mapimage_not_found_message"), localeString.getString("dialog_mapimage_not_found_title"), JOptionPane.ERROR_MESSAGE);
             LOG.info(localeString.getString("dialog_mapimage_not_found_message"));
             useDefaultMapImage();
+            imageLoadedLabel.setForeground(new Color(200,0,0));
+            imageLoadedLabel.setText("Not Found");
         }
 
         GUIBuilder.updateGUIButtons(true);
@@ -149,33 +216,139 @@ public class MapImage {
         getMapZoomFactor(mapName);
 
         MenuBuilder.mapMenuEnabled(true);
-        //editorState = GUIBuilder.EDITORSTATE_NOOP;
-
     }
 
-    public static void  loadHeightMap(File path) {
+    public static void loadHeightMap(File path, boolean isManualLoad) {
         BufferedImage heightImage;
-        String pathStr = path.toString();
-        //pathStr.replaceAll("/", "V\");
-        String launchPath = pathStr.substring(0, pathStr.lastIndexOf("\\") + 1) + "terrain.heightmap.png";
-        LOG.info("HeightMap path = {}", launchPath);
-        heightMapImage = null;
-        try {
-            heightImage = ImageIO.read(new File(launchPath));
-            //heightMapImage = new BufferedImage(heightImage.getWidth(), heightImage.getHeight(), BufferedImage.TYPE_USHORT_565_RGB);
-            heightMapImage = getNewBufferImage(heightImage.getWidth(), heightImage.getHeight());
-            //LOG.info("type = {}", heightMapImage.toString());
-            Graphics2D g = (Graphics2D) heightMapImage.getGraphics();
-            g.drawImage( heightImage, 0, 0, heightImage.getWidth(), heightImage.getHeight(), null);
-            g.dispose();
-            heightmapMenuEnabled(true);
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(editor, localeString.getString("dialog_heightmap_not_found"), localeString.getString("dialog_heightmap_not_found_title"), JOptionPane.ERROR_MESSAGE);
-            LOG.info("Failed to load HeightMap");
-            importHeightmapMenuItem.setEnabled(true);
-            fixNodesHeightMenuItem.setEnabled(false);
-            showHeightMapMenuItem.setEnabled(false);
-            e.printStackTrace();
+        String heightMapPath;
+        boolean bHeightMapFound = false;
+
+        if (path != null) {
+            if (isManualLoad) {
+                heightMapPath = path.toString();
+            } else {
+                String pathStr = path.toString();
+                heightMapPath = pathStr.substring(0, pathStr.lastIndexOf("\\") + 1) + "terrain.heightmap.png";
+            }
+            LOG.info("Loading HeightMap...");
+            heightImage = null;
+            String location = getCurrentLocation();
+
+            try {
+                //try same location as config file
+                heightImage = ImageIO.read(new File(heightMapPath));
+                LOG.info("Loaded heightMapImage from {}", heightMapPath);
+                bHeightMapFound = true;
+            } catch (IOException e1) {
+                //try default location
+                LOG.info("failed to load heightMap from config location {}", heightMapPath);
+
+                if (location != null) {
+                    heightMapPath = location + "mapImages/" + roadMap.roadMapName + "/" + roadMap.roadMapName + "_HeightMap.png";
+                } else {
+                    heightMapPath = "./mapImages/" + roadMap.roadMapName + "/" + roadMap.roadMapName + "_HeightMap.png";
+                }
+
+                try {
+                    heightImage = ImageIO.read(new File(heightMapPath));
+                    LOG.info("Loaded mapImage from {}", heightMapPath.substring(1));
+                    bHeightMapFound = true;
+                } catch (IOException e2) {
+                    LOG.info("failed to load heightMap from default location {}", heightMapPath);
+
+                    //
+                    // check gitHub for heightmap
+                    //
+
+                    if (bUseOnlineMapImages) {
+                        String fullPath;
+                        if (location != null) {
+                            String gitPath = "https://github.com/KillBait/AutoDrive_MapImages/raw/main/mapImages/" + roadMap.roadMapName + "/" + roadMap.roadMapName + "_HeightMap.png";
+                            showInTextArea(localeString.getString("mapimage_github_check") + " " + roadMap.roadMapName + "_HeightMap.png", true, false);
+                            LOG.info("Checking GitHub repository for {}",gitPath);
+                            URL gitUrl = null;
+                            try {
+                                gitUrl = new URL(gitPath);
+                            } catch (MalformedURLException ex) {
+                                ex.printStackTrace();
+                            }
+
+                            fullPath = location + "mapImages/" + roadMap.roadMapName + "/" + roadMap.roadMapName + "_HeightMap.png";
+                            File file = new File(fullPath);
+
+
+                            File loadImage = null;
+                            if (gitUrl != null) {
+                                loadImage = copyURLToFile(gitUrl, file, fullPath);
+                            }
+
+                            if (loadImage != null) {
+                                try {
+                                    heightImage = ImageIO.read(loadImage);
+                                    showInTextArea(roadMap.roadMapName + "_HeightMap.png " + localeString.getString("mapimage_github_repo_download"), false, false);
+                                    bHeightMapFound = true;
+                                } catch (IOException ex) {
+                                    ex.printStackTrace();
+                                    showInTextArea(roadMap.roadMapName + "_HeightMap.png " + localeString.getString("mapimage_github_repo_not_found"), false, false);
+                                }
+
+                            }
+                        } else {
+                            if (bDebugLogFileIO) LOG.info("getCurrentLocation returned null");
+                            bImageFound = false;
+                        }
+                    } else {
+                        showInTextArea(localeString.getString("mapimage_github_bypass"), true, true);
+                    }
+                }
+            }
+
+            if (bHeightMapFound && heightImage != null) {
+                LOG.info("HeightMap size = {} x {}", heightImage.getWidth(), heightImage.getHeight());
+                //heightMapImage = ImageIO.read(new File(heightMapPath));
+                //heightMapImage = new BufferedImage(heightImage.getWidth(), heightImage.getHeight(), BufferedImage.TYPE_USHORT_565_RGB);
+                heightMapImage = getNewBufferImage(heightImage.getWidth(), heightImage.getHeight());
+                Graphics2D g = (Graphics2D) heightMapImage.getGraphics();
+                g.drawImage(heightImage, 0, 0, heightImage.getWidth(), heightImage.getHeight(), null);
+                g.dispose();
+                if (isManualLoad) {
+                    heightMapLoadedLabel.setForeground(new Color(150,100,20));
+                    heightMapLoadedLabel.setText("Imported");
+                } else {
+                    heightMapLoadedLabel.setForeground(new Color(0,100,0));
+                    heightMapLoadedLabel.setText("Loaded");
+                }
+
+                heightmapMenuEnabled(true);
+                heightMapScale = calculateHeightMapScaling();
+                LOG.info("HeightMap Scale = {}", heightMapScale);
+            } else {
+                LOG.info("Failed to load HeightMap");
+                heightMapScale = 1;
+                heightMapLoadedLabel.setForeground(new Color(200,0,0));
+                heightMapLoadedLabel.setText("Not Found");
+                importHeightmapMenuItem.setEnabled(true);
+                exportHeightMapMenuItem.setEnabled(false);
+                fixNodesHeightMenuItem.setEnabled(false);
+                showHeightMapMenuItem.setEnabled(false);
+                JOptionPane.showMessageDialog(editor, localeString.getString("dialog_heightmap_not_found"), localeString.getString("dialog_heightmap_not_found_title"), JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    public static float  calculateHeightMapScaling(){
+        double heightDiff = 0;
+
+        LinkedList<MapNode> mapNodes = RoadMap.mapNodes;
+        if (heightMapImage != null) {
+            for (MapNode node : mapNodes) {
+                heightDiff += ((getYValueFromHeightMap(node.x, node.z) - node.y) / node.y);
+            }
+            int result = Math.round((float)heightDiff / mapNodes.size());
+            if (result < 1 ) result = 1;
+            return result;
+        } else {
+            return 1;
         }
     }
 
@@ -191,8 +364,6 @@ public class MapImage {
             }
         }
     }
-
-
 
     public static void getNewBackBufferImage(int width, int height) {
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -276,12 +447,53 @@ public class MapImage {
                 //return store.zoomFactor;
                 LOG.info("Update zoomfactor for {}", mapName);
                 updateMapZoomFactor(store.zoomFactor);
+                LOG.info("ZoomFactor = {}", store.zoomFactor);
                 if (store.zoomFactor == 1) {
-                    zoomOneX.setSelected(true);
+                    zoom2km.setSelected(true);
                 } else if (store.zoomFactor == 2) {
-                    zoomFourX.setSelected(true);
+                    zoom4km.setSelected(true);
+                } else if (store.zoomFactor == 3) {
+                    zoom6km.setSelected(true);
                 } else if (store.zoomFactor == 4) {
-                    zoomSixteenX.setSelected(true);
+                    zoom8km.setSelected(true);
+                } else if (store.zoomFactor == 5) {
+                    zoom10km.setSelected(true);
+                } else if (store.zoomFactor == 6) {
+                    zoom12km.setSelected(true);
+                } else if (store.zoomFactor == 7) {
+                    zoom14km.setSelected(true);
+                } else if (store.zoomFactor == 8) {
+                    zoom16km.setSelected(true);
+                } else if (store.zoomFactor == 9) {
+                    zoom18km.setSelected(true);
+                } else if (store.zoomFactor == 10) {
+                    zoom20km.setSelected(true);
+                } else if (store.zoomFactor == 11) {
+                    zoom22km.setSelected(true);
+                } else if (store.zoomFactor == 12) {
+                    zoom24km.setSelected(true);
+                } else if (store.zoomFactor == 13) {
+                    zoom26km.setSelected(true);
+                } else if (store.zoomFactor == 14) {
+                    zoom28km.setSelected(true);
+                } else if (store.zoomFactor == 15) {
+                    zoom30km.setSelected(true);
+                } else if (store.zoomFactor == 16) {
+                    zoom32km.setSelected(true);
+                } else if (store.zoomFactor == 17) {
+                    zoom34km.setSelected(true);
+                } else if (store.zoomFactor == 18) {
+                    zoom36km.setSelected(true);
+                } else if (store.zoomFactor == 19) {
+                    zoom38km.setSelected(true);
+                } else if (store.zoomFactor == 20) {
+                    zoom40km.setSelected(true);
+                } else if (store.zoomFactor == 21) {
+                    zoom42km.setSelected(true);
+                } else if (store.zoomFactor == 22) {
+                    zoom44km.setSelected(true);
+                } else if (store.zoomFactor == 23) {
+                    zoom46km.setSelected(true);
                 }
             }
         }

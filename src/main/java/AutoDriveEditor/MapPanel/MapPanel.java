@@ -9,8 +9,12 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.Collator;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -65,6 +69,7 @@ public class MapPanel extends JPanel{
     private static CountDownLatch latch;
     public static volatile boolean canAutoSave= true;
 
+    public static BufferedImage croppedImage;
 
     public int offsetX, oldOffsetX;
     public int offsetY, oldOffsetY;
@@ -75,7 +80,6 @@ public class MapPanel extends JPanel{
     private static double y = 0.5;
     public static double zoomLevel = 1.0;
     public static int mapZoomFactor = 1;
-    public static double nodeSize = 1.0;
 
     public static boolean stale = false;
 
@@ -236,8 +240,11 @@ public class MapPanel extends JPanel{
                     int width = getMapPanel().getWidth();
                     int height = getMapPanel().getHeight();
 
-                    int sizeScaled = (int) (nodeSize * zoomLevel);
-                    int sizeScaledHalf = (int) (sizeScaled * 0.5);
+                    int nodeSizeScaled = (int) (nodeSize * zoomLevel);
+                    int nodeSizeScaledHalf = (int) (nodeSizeScaled * 0.5);
+                    int nodeSizeScaledQuarter = (int) (nodeSizeScaled * 0.25);
+
+
 
                     if (backBufferGraphics != null) {
 
@@ -253,25 +260,25 @@ public class MapPanel extends JPanel{
                             for (MapNode mapNode : mapNodes) {
                                 Point2D nodePos = worldPosToScreenPos(mapNode.x, mapNode.z);
                                 if (0 < nodePos.getX() && width > nodePos.getX() && 0 < nodePos.getY() && height > nodePos.getY()) {
-                                    if (mapNode.hasWarning && mapNode.isSelected) {
-                                        backBufferGraphics.drawImage(nodeImageSelected, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
-                                    } else if (mapNode.isSelected && mapNode.flag == 0) {
-                                        backBufferGraphics.drawImage(nodeImageSelected, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
-                                    } else if (mapNode.isSelected && mapNode.flag == 1) {
-                                        backBufferGraphics.drawImage(subPrioNodeImageSelected, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
+                                    /*if (mapNode.hasWarning && mapNode.isSelected) {
+                                        backBufferGraphics.drawImage(nodeImageSelected, (int) (nodePos.getX() - nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf), nodeSizeScaled, nodeSizeScaled, null);
+                                    } else*/ if (mapNode.isSelected && mapNode.flag == 0) {
+                                        backBufferGraphics.drawImage(nodeImageSelected, (int) (nodePos.getX() - nodeSizeScaledQuarter), (int) (nodePos.getY() - nodeSizeScaledQuarter), nodeSizeScaledHalf, nodeSizeScaledHalf, null);
+                                    } else if(mapNode.isSelected && mapNode.flag == 1) {
+                                        backBufferGraphics.drawImage(subPrioNodeImageSelected, (int) (nodePos.getX() - nodeSizeScaledQuarter), (int) (nodePos.getY() - nodeSizeScaledQuarter), nodeSizeScaledHalf, nodeSizeScaledHalf, null);
                                     } else if (mapNode.flag == 1) {
-                                        backBufferGraphics.drawImage(subPrioNodeImage, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
+                                        backBufferGraphics.drawImage(subPrioNodeImage, (int) (nodePos.getX() - nodeSizeScaledQuarter), (int) (nodePos.getY() - nodeSizeScaledQuarter), nodeSizeScaledHalf, nodeSizeScaledHalf, null);
                                     } else {
-                                        backBufferGraphics.drawImage(nodeImage, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
+                                        backBufferGraphics.drawImage(nodeImage, (int) (nodePos.getX() - nodeSizeScaledQuarter), (int) (nodePos.getY() - nodeSizeScaledQuarter), nodeSizeScaledHalf, nodeSizeScaledHalf, null);
                                     }
 
                                     if (mapNode.hasWarning) {
                                         if (mapNode.warningType == NODE_WARNING_OVERLAP) {
-                                            backBufferGraphics.drawImage(warningImage, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), warningImage.getWidth(), warningImage.getHeight(), null);
+                                            backBufferGraphics.drawImage(warningImage, (int) (nodePos.getX() - (warningImage.getWidth() / 2)), (int) (nodePos.getY() - (warningImage.getHeight() / 2)), warningImage.getWidth(), warningImage.getHeight(), null);
                                         }
                                     } else {
                                         if (mapNode.y == -1) {
-                                            backBufferGraphics.drawImage(warningYImage, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), warningYImage.getWidth(), warningYImage.getHeight(), null);
+                                            backBufferGraphics.drawImage(warningYImage, (int) (nodePos.getX() - nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf), warningYImage.getWidth(), warningYImage.getHeight(), null);
                                         }
                                     }
                                 }
@@ -293,9 +300,9 @@ public class MapPanel extends JPanel{
                         if (hoveredNode != null) {
                             Point2D hoverNodePos = worldPosToScreenPos(hoveredNode.x, hoveredNode.z);
                             if (hoveredNode.flag == NODE_FLAG_STANDARD) {
-                                backBufferGraphics.drawImage(nodeImageSelected, (int) (hoverNodePos.getX() - sizeScaledHalf), (int) (hoverNodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
+                                backBufferGraphics.drawImage(nodeImageSelected, (int) (hoverNodePos.getX() - nodeSizeScaledQuarter), (int) (hoverNodePos.getY() - nodeSizeScaledQuarter), nodeSizeScaledHalf, nodeSizeScaledHalf, null);
                             } else if (hoveredNode.flag == NODE_FLAG_SUBPRIO) {
-                                backBufferGraphics.drawImage(subPrioNodeImageSelected, (int) (hoverNodePos.getX() - sizeScaledHalf), (int) (hoverNodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
+                                backBufferGraphics.drawImage(subPrioNodeImageSelected, (int) (hoverNodePos.getX() - nodeSizeScaledQuarter), (int) (hoverNodePos.getY() - nodeSizeScaledQuarter), nodeSizeScaledHalf, nodeSizeScaledHalf, null);
                             }
                             for (MapMarker mapMarker : RoadMap.mapMarkers) {
                                 if (hoveredNode.id == mapMarker.mapNode.id) {
@@ -375,7 +382,7 @@ public class MapPanel extends JPanel{
 
                                     // don't draw the circle for the last node in the array
                                     if (j < linearLine.lineNodeList.size() - 1 ) {
-                                        backBufferGraphics.drawImage(curveNodeImage, (int) (startNodePos.getX() - sizeScaledHalf), (int) (startNodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
+                                        backBufferGraphics.drawImage(curveNodeImage, (int) (startNodePos.getX() - nodeSizeScaledHalf), (int) (startNodePos.getY() - nodeSizeScaledHalf), nodeSizeScaled, nodeSizeScaled, null);
                                     }
                                     if ( connectionType == CONNECTION_DUAL ) {
                                         colour = Color.BLUE;
@@ -431,9 +438,9 @@ public class MapPanel extends JPanel{
                             // draw control point
                             Point2D nodePos = worldPosToScreenPos(quadCurve.getControlPoint().x, quadCurve.getControlPoint().z);
                             if (quadCurve.getControlPoint().isSelected || hoveredNode == quadCurve.getControlPoint()) {
-                                backBufferGraphics.drawImage(controlPointImageSelected, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
+                                backBufferGraphics.drawImage(controlPointImageSelected, (int) (nodePos.getX() - nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf), nodeSizeScaled, nodeSizeScaled, null);
                             } else {
-                                backBufferGraphics.drawImage(controlPointImage, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
+                                backBufferGraphics.drawImage(controlPointImage, (int) (nodePos.getX() - nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf), nodeSizeScaled, nodeSizeScaled, null);
                             }
 
                             //draw interpolation points for curve
@@ -449,9 +456,9 @@ public class MapPanel extends JPanel{
                                 //don't draw the first node as it already been drawn
                                 if (j != 0) {
                                     if (quadCurve.getNodeType() == NODE_FLAG_STANDARD) {
-                                        backBufferGraphics.drawImage(curveNodeImage,(int) (currentNodePos.getX() - sizeScaledHalf), (int) (currentNodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
+                                        backBufferGraphics.drawImage(curveNodeImage,(int) (currentNodePos.getX() - nodeSizeScaledHalf), (int) (currentNodePos.getY() - nodeSizeScaledHalf), nodeSizeScaled, nodeSizeScaled, null);
                                     } else {
-                                        backBufferGraphics.drawImage(subPrioNodeImage,(int) (currentNodePos.getX() - (sizeScaledHalf / 2 )), (int) (currentNodePos.getY() - (sizeScaledHalf / 2 )), sizeScaledHalf, sizeScaledHalf, null);
+                                        backBufferGraphics.drawImage(subPrioNodeImage,(int) (currentNodePos.getX() - (nodeSizeScaledHalf / 2 )), (int) (currentNodePos.getY() - (nodeSizeScaledHalf / 2 )), nodeSizeScaledHalf, nodeSizeScaledHalf, null);
                                     }
                                 }
 
@@ -483,16 +490,16 @@ public class MapPanel extends JPanel{
                             // draw control point
                             Point2D nodePos = worldPosToScreenPos(cubicCurve.getControlPoint1().x, cubicCurve.getControlPoint1().z);
                             if (cubicCurve.getControlPoint1().isSelected || hoveredNode == cubicCurve.getControlPoint1()) {
-                                backBufferGraphics.drawImage(controlPointImageSelected, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
+                                backBufferGraphics.drawImage(controlPointImageSelected, (int) (nodePos.getX() - nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf), nodeSizeScaled, nodeSizeScaled, null);
                             } else {
-                                backBufferGraphics.drawImage(controlPointImage, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
+                                backBufferGraphics.drawImage(controlPointImage, (int) (nodePos.getX() - nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf), nodeSizeScaled, nodeSizeScaled, null);
                             }
 
                             nodePos = worldPosToScreenPos(cubicCurve.getControlPoint2().x, cubicCurve.getControlPoint2().z);
                             if (cubicCurve.getControlPoint2().isSelected || hoveredNode == cubicCurve.getControlPoint2()) {
-                                backBufferGraphics.drawImage(controlPointImageSelected, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
+                                backBufferGraphics.drawImage(controlPointImageSelected, (int) (nodePos.getX() - nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf), nodeSizeScaled, nodeSizeScaled, null);
                             } else {
-                                backBufferGraphics.drawImage(controlPointImage, (int) (nodePos.getX() - sizeScaledHalf), (int) (nodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
+                                backBufferGraphics.drawImage(controlPointImage, (int) (nodePos.getX() - nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf), nodeSizeScaled, nodeSizeScaled, null);
                             }
 
                             //draw interpolation points for curve
@@ -508,9 +515,9 @@ public class MapPanel extends JPanel{
                                 //don't draw the first node as it already been drawn
                                 if (j != 0) {
                                     if (cubicCurve.getNodeType() == NODE_FLAG_STANDARD) {
-                                        backBufferGraphics.drawImage(curveNodeImage,(int) (currentNodePos.getX() - sizeScaledHalf), (int) (currentNodePos.getY() - sizeScaledHalf), sizeScaled, sizeScaled, null);
+                                        backBufferGraphics.drawImage(curveNodeImage,(int) (currentNodePos.getX() - nodeSizeScaledHalf), (int) (currentNodePos.getY() - nodeSizeScaledHalf), nodeSizeScaled, nodeSizeScaled, null);
                                     } else {
-                                        backBufferGraphics.drawImage(subPrioNodeImage,(int) (currentNodePos.getX() - (sizeScaledHalf / 2 )), (int) (currentNodePos.getY() - (sizeScaledHalf / 2 )), sizeScaledHalf, sizeScaledHalf, null);
+                                        backBufferGraphics.drawImage(subPrioNodeImage,(int) (currentNodePos.getX() - (nodeSizeScaledHalf / 2 )), (int) (currentNodePos.getY() - (nodeSizeScaledHalf / 2 )), nodeSizeScaledHalf, nodeSizeScaledHalf, null);
                                     }
                                 }
 
@@ -837,21 +844,21 @@ public class MapPanel extends JPanel{
             if ( (int) x + widthScaled > image.getWidth() ) {
                 while ( widthScaled > image.getWidth() ) {
                     double step = -1 * (zoomLevel * 0.1);
-                    if (bDebugZoomScale) LOG.info("widthScaled is out of bounds ( {} ) .. increasing zoomLevel by {}", widthScaled, step);
+                    if (bDebugLogZoomScale) LOG.info("widthScaled is out of bounds ( {} ) .. increasing zoomLevel by {}", widthScaled, step);
                     zoomLevel -= step;
                     widthScaled = (int) (this.getWidth() / zoomLevel);
                 }
-                if (bDebugZoomScale) LOG.info("widthScaled is {}", widthScaled);
+                if (bDebugLogZoomScale) LOG.info("widthScaled is {}", widthScaled);
             }
 
             if ( (int) y + heightScaled > image.getHeight() ) {
                 while ( heightScaled > image.getHeight() ) {
                     double step = -1 * (zoomLevel * 0.1);
-                    if (bDebugZoomScale) LOG.info("heightScaled is out of bounds ( {} ) .. increasing zoomLevel by {}", heightScaled, step);
+                    if (bDebugLogZoomScale) LOG.info("heightScaled is out of bounds ( {} ) .. increasing zoomLevel by {}", heightScaled, step);
                     zoomLevel -= step;
                     heightScaled = (int) (this.getHeight() / zoomLevel);
                 }
-                if (bDebugZoomScale) LOG.info("heightScaled is {}", heightScaled);
+                if (bDebugLogZoomScale) LOG.info("heightScaled is {}", heightScaled);
             }
 
             double calcX = ((this.getWidth() * 0.5) / zoomLevel) / image.getWidth();
@@ -905,9 +912,11 @@ public class MapPanel extends JPanel{
         if (((this.getWidth()/(zoomLevel - step)) > image.getWidth()) || ((this.getHeight()/(zoomLevel - step)) > image.getHeight())){
             return;
         }
-        if ((zoomLevel - step) >=0 && (zoomLevel - step) < 30) {
+        if ((zoomLevel - step) >=0 && (zoomLevel - step) < maxZoomLevel) {
             zoomLevel -= step;
             getResizedMap();
+            DecimalFormat numberFormat = new DecimalFormat("#.00");
+            zoomLevelLabel.setText(numberFormat.format(zoomLevel));
             this.repaint();
         }
     }
@@ -1085,14 +1094,24 @@ public class MapPanel extends JPanel{
     public static double getYValueFromHeightMap(double worldX, double worldZ) {
         if (heightMapImage != null) {
             double x, y;
-            x = ((512 * mapZoomFactor)) + (int) Math.ceil(worldX / 2);
-            y = ((512 * mapZoomFactor)) + (int) Math.ceil(worldZ / 2);
+
+            double scaleX = (float)mapImage.getWidth() / (float)heightMapImage.getWidth();
+            double scaleY = (float)mapImage.getHeight() / (float)heightMapImage.getHeight();
+            if (bDebugLogHeightMapInfo) LOG.info("heightmap scale = {} , {}", scaleX, scaleY);
+
+            x = ((double)heightMapImage.getWidth() / 2) + (int) Math.floor((worldX / mapZoomFactor) / scaleX );
+            y = ((double)heightMapImage.getHeight() / 2) + (int) Math.floor((worldZ / mapZoomFactor) / scaleY );
+
             if (x <0) x = 0;
             if (y <0) y = 0;
-            if (x > 1024) x = 1024;
-            if (y > 1024) y = 1024;
+            if (x > heightMapImage.getWidth()) x = heightMapImage.getWidth() - 1;
+            if (y > heightMapImage.getHeight()) y = heightMapImage.getHeight() - 1;
+            //LOG.info("X = {} , y = {}", x, y);
             Color color = new Color(heightMapImage.getRGB((int)x, (int)y));
-            return color.getRed() + 0.5;
+            BigDecimal bd = new BigDecimal(Double.toString((float)((color.getRed()<<8) + color.getGreen()) / 256));
+            bd = bd.setScale(3, RoundingMode.HALF_UP);
+            return bd.doubleValue() / heightMapScale;
+            //return Double.(float)((color.getRed()<<8) + color.getGreen()) / 256;
         }
         return -1;
     }
@@ -1161,7 +1180,7 @@ public class MapPanel extends JPanel{
         double diffScaledX = screenX / zoomLevel;
         double diffScaledY = screenY / zoomLevel;
 
-        int centerPointOffset = 1024 * mapZoomFactor;
+        int centerPointOffset = 1024 * mapZoomFactor; // TODO : Remove hardcoded half width of map image and replace with imagesize / 2 !!
 
         double worldPosX = ((topLeftX + diffScaledX) * mapZoomFactor) - centerPointOffset;
         double worldPosY = ((topLeftY + diffScaledY) * mapZoomFactor) - centerPointOffset;
@@ -1199,8 +1218,9 @@ public class MapPanel extends JPanel{
             start.outgoing.add(target);
 
             if (type == CONNECTION_STANDARD) {
-                if (!target.incoming.contains(start))
-                target.incoming.add(start);
+                if (!target.incoming.contains(start)) {
+                    target.incoming.add(start);
+                }
             } else if (type == CONNECTION_REVERSE ) {
                 start.incoming.remove(target);
                 target.incoming.remove(start);
@@ -1243,7 +1263,10 @@ public class MapPanel extends JPanel{
             if (configType == CONFIG_ROUTEMANAGER) {
                 boolean found = false;
                 for (MarkerGroup marker : markerGroup) {
-                    if (Objects.equals(marker.groupName, groupName)) found = true;
+                    if (Objects.equals(marker.groupName, groupName)) {
+                        found = true;
+                        break;
+                    }
                 }
                 if (!found && !groupName.equals("All")) {
                     LOG.info("Adding new group {} to markerGroup", groupName);
@@ -1309,7 +1332,7 @@ public class MapPanel extends JPanel{
         for (MapNode node : multiSelectList) {
 
             addToDeleteList(node);
-            if (bDebugUndoRedo) LOG.info("Added ID {} to delete list", node.id);
+            if (bDebugLogUndoRedo) LOG.info("Added ID {} to delete list", node.id);
         }
         changeManager.addChangeable( new DeleteNodeChanger(deleteNodeList));
         canAutoSave = false;
@@ -1447,8 +1470,8 @@ public class MapPanel extends JPanel{
 
         // calculate where to start the line based around the circumference of the node
 
-        double distCos = ((nodeSize * zoomLevel) * 0.5) * Math.cos(angleRad);
-        double distSin = ((nodeSize * zoomLevel) * 0.5) * Math.sin(angleRad);
+        double distCos = ((nodeSize * zoomLevel) * 0.25) * Math.cos(angleRad);
+        double distSin = ((nodeSize * zoomLevel) * 0.25) * Math.sin(angleRad);
 
         double lineStartX = startX - distCos;
         double lineStartY = startY - distSin;
@@ -1460,7 +1483,7 @@ public class MapPanel extends JPanel{
         g.drawLine((int) lineStartX, (int) lineStartY, (int) lineEndX, (int) lineEndY);
 
         if (zoomLevel > 2.5) {
-            double arrowLength = 1.3 * zoomLevel;
+            double arrowLength = (nodeSize * zoomLevel) * 0.70;
 
             double arrowLeft = normalizeAngle(angleRad + Math.toRadians(-20));
             double arrowLeftX = targetX + Math.cos(arrowLeft) * arrowLength;
@@ -1563,19 +1586,27 @@ public class MapPanel extends JPanel{
     public void mouseMoved(int mousePosX, int mousePosY) {
         if (image != null) {
 
-            if (bDebugHeightMap) {
+            if (bDebugShowHeightMapInfo) {
                 if (heightMapImage != null) {
                     double x, y;
                     Point2D point = MapPanel.screenPosToWorldPos(mousePosX, mousePosY);
-                    x = ((512 * mapZoomFactor)) + (int) Math.ceil(point.getX() / 2);
-                    y = ((512 * mapZoomFactor)) + (int) Math.ceil(point.getY() / 2);
+
+                    double scaleX = (float)mapImage.getWidth() / (float)heightMapImage.getWidth();
+                    double scaleY = (float)mapImage.getHeight() / (float)heightMapImage.getHeight();
+                    if (bDebugLogHeightMapInfo) LOG.info("heightmap scale = {} , {}", scaleX, scaleY);
+
+                    x = ((double)heightMapImage.getWidth() / 2) + (int) Math.floor((point.getX() / mapZoomFactor) / scaleX );
+                    y = ((double)heightMapImage.getHeight() / 2) + (int) Math.floor((point.getY() / mapZoomFactor) / scaleY );
+                    if (bDebugLogHeightMapInfo) LOG.info(" - mapZoomFactor {} - halfWidth {} , halfHeight {} :: halfPointX {} , halfPointY {}", mapZoomFactor, heightMapImage.getWidth() / 2, heightMapImage.getHeight() / 2, (point.getX() / mapZoomFactor), (point.getY() / mapZoomFactor));
+                    if (bDebugLogHeightMapInfo) LOG.info(" - heightmap coords {} , {} - Point coord {} , {}", x, y, point.getX(), point.getY());
                     if (x <0) x = 0;
                     if (y <0) y = 0;
                     //int color = heightMapImage.getRGB((int)x,(int)y);
                     Color color = new Color(heightMapImage.getRGB((int)x, (int)y));
-                    String colourText="Heightmap R = " + color.getRed() + " , G = " + color.getGreen() + " , B = " + color.getBlue() + " , (" + (float)((color.getRed()<<8) + color.getGreen()) / 256 + ")";
+                    double heightValue = (float)((color.getRed()<<8) + color.getGreen()) / 256;
+                    String colourText="Heightmap Red = " + color.getRed() + " , Green = " + color.getGreen() + " -- Calculated Y Value = " + (float)heightValue / heightMapScale + " ( " + heightValue + " / " + heightMapScale + " ) --";
                     showInTextArea(colourText, true, false);
-                    String pointerText = "Mouse X = " + x + ", Y =" + y;
+                    String pointerText = "HeightMap X = " + x + ", Y =" + y;
                     showInTextArea(pointerText, false, false);
                 }
             }
@@ -1774,7 +1805,11 @@ public class MapPanel extends JPanel{
         }
 
         if (editorState == EDITORSTATE_ALIGN_DEPTH) {
-            if (DEBUG) LOG.info("{} , {} , {}", isMultipleSelected, multiSelectList.size(), movingNode);
+            if (DEBUG) {
+                if (multiSelectList != null) {
+                    LOG.info("{} , {} , {}", isMultipleSelected, multiSelectList.size(), movingNode);
+                }
+            }
             if (isMultipleSelected && multiSelectList != null && movingNode != null) {
                 LOG.info("Depth Aligning {} nodes at {}",multiSelectList.size(), movingNode.y);
                 changeManager.addChangeable( new AlignmentChanger(multiSelectList, 0, movingNode.y, 0));

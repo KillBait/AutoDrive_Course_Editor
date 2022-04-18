@@ -103,7 +103,7 @@ public class ImportManager {
         MapPanel.isUsingConvertedImage = true;
     }
 
-    public static void exportMapImage(String filePath) {
+    public static boolean exportImageToDisk(BufferedImage image, String filePath) {
         try {
             //String location = getCurrentLocation();
             //String path = location + "mapImages/" + fileName + ".png";
@@ -121,11 +121,14 @@ public class ImportManager {
                     throw new IOException("File '" + outputFile + "' could not be created");
                 }
             }
-            ImageIO.write(getImage(), "png", outputFile);
+            ImageIO.write(image, "png", outputFile);
             LOG.info("{} {}", localeString.getString("console_map_saveimage_done"), outputFile.getAbsolutePath());
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
         }
-
     }
+
+
 }

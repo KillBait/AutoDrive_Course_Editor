@@ -29,7 +29,7 @@ public class RoadMap {
         // so when we insert the node all the id's match their index
 
         LinkedList<MapNode> nodes = mapNodes;
-        if (bDebugUndoRedo) LOG.info("## insertMapNode() ## bumping all ID's of mapNodes index {} -> {} by +1", toAdd.id - 1, nodes.size() - 1);
+        if (bDebugLogUndoRedo) LOG.info("## insertMapNode() ## bumping all ID's of mapNodes index {} -> {} by +1", toAdd.id - 1, nodes.size() - 1);
         for (int i = toAdd.id - 1; i <= nodes.size() - 1; i++) {
             MapNode mapNode = nodes.get(i);
             mapNode.id++;
@@ -37,7 +37,7 @@ public class RoadMap {
 
         // insert the MapNode into the list
 
-        if (bDebugUndoRedo) LOG.info("## insertMapNode() ## inserting index {} ( ID {} ) into mapNodes", toAdd.id - 1, toAdd.id );
+        if (bDebugLogUndoRedo) LOG.info("## insertMapNode() ## inserting index {} ( ID {} ) into mapNodes", toAdd.id - 1, toAdd.id );
         mapNodes.add(toAdd.id -1 , toAdd);
 
         //now we need to restore all the connections to/from it
