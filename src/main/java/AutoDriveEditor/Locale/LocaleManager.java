@@ -1,14 +1,22 @@
 package AutoDriveEditor.Locale;
 
+import javax.swing.text.DateFormatter;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import static AutoDriveEditor.Utils.LoggerUtils.*;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public class LocaleManager {
 
@@ -19,11 +27,8 @@ public class LocaleManager {
 
         String localePath;
         String classPath = null;
-        File newFile;
-        URL url;
 
         try {
-
             ResourceBundle bundle = ResourceBundle.getBundle("locale.AutoDriveEditor", Locale.getDefault());
             LOG.info("'AutoDriveEditor_{}.properties' loaded", Locale.getDefault());
             return bundle;

@@ -1,5 +1,11 @@
 package AutoDriveEditor.MapPanel;
 
+import AutoDriveEditor.AutoDriveEditor;
+import AutoDriveEditor.GUI.GUIBuilder;
+import AutoDriveEditor.GUI.MenuBuilder;
+import AutoDriveEditor.RoadNetwork.MapNode;
+import AutoDriveEditor.RoadNetwork.RoadMap;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -8,25 +14,20 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.LinkedList;
-
-import AutoDriveEditor.AutoDriveEditor;
-import AutoDriveEditor.GUI.GUIBuilder;
-import AutoDriveEditor.GUI.MenuBuilder;
-import AutoDriveEditor.RoadNetwork.MapNode;
-import AutoDriveEditor.RoadNetwork.RoadMap;
+import java.util.Objects;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
-import static AutoDriveEditor.GUI.GUIBuilder.heightMapLoadedLabel;
-import static AutoDriveEditor.GUI.GUIBuilder.imageLoadedLabel;
-import static AutoDriveEditor.Utils.GUIUtils.*;
+import static AutoDriveEditor.GUI.GUIBuilder.*;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
-import static AutoDriveEditor.Locale.LocaleManager.*;
+import static AutoDriveEditor.Locale.LocaleManager.localeString;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.FileUtils.*;
-import static AutoDriveEditor.Utils.ImageUtils.*;
-import static AutoDriveEditor.Utils.LoggerUtils.*;
+import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
+import static AutoDriveEditor.Utils.ImageUtils.getNewBufferedImage;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 import static AutoDriveEditor.XMLConfig.GameXML.*;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -104,11 +105,7 @@ public class MapImage {
                             // try the same location as JAR file
                             LOG.info("failed to load map image from {}", mapPath.substring(1));
                             try {
-                                if (location != null) {
-                                    mapPath = location + mapName + ".png";
-                                } else {
-                                    mapPath = "./" + mapName + ".png";
-                                }
+                                mapPath = Objects.requireNonNullElse(location, "./") + mapName + ".png";
                                 heightMapImage = ImageIO.read(new File(mapPath));
                                 LOG.info("Loaded mapImage from {}", mapPath);
                                 bImageFound = true;
@@ -156,7 +153,6 @@ public class MapImage {
                 if (bUseOnlineMapImages) {
                     String fullPath;
                     if (location != null) {
-                        // https://github.com/KillBait/AutoDriveEditor_MapImages/raw/master/mapImages/FS19_Pine_Cove_Farm_By_Stevie_/FS19_Pine_Cove_Farm_By_Stevie__Heightmap.png
                         String gitPath = "https://github.com/KillBait/AutoDriveEditor_MapImages/raw/master/mapImages/" + mapName + "/" + mapName + ".png";
                         showInTextArea(localeString.getString("mapimage_github_check") + " " + mapName + ".png", true, false);
                         LOG.info("Checking GitHub repository for {}",gitPath);
@@ -203,17 +199,20 @@ public class MapImage {
             imageLoadedLabel.setForeground(new Color(0,100,0));
             imageLoadedLabel.setText("Loaded");
         } else {
-            LOG.info("Using Default Image");
-            JOptionPane.showMessageDialog(editor, localeString.getString("dialog_mapimage_not_found_message"), localeString.getString("dialog_mapimage_not_found_title"), JOptionPane.ERROR_MESSAGE);
-            LOG.info(localeString.getString("dialog_mapimage_not_found_message"));
+            if (configType == CONFIG_SAVEGAME) {
+                JOptionPane.showMessageDialog(editor, localeString.getString("dialog_gamexml_mapimage_not_found_message"), localeString.getString("dialog_mapimage_not_found_title"), JOptionPane.ERROR_MESSAGE);
+            } else if (configType == CONFIG_ROUTEMANAGER) {
+                JOptionPane.showMessageDialog(editor, localeString.getString("dialog_routexml_mapimage_not_found_message"), localeString.getString("dialog_mapimage_not_found_title"), JOptionPane.ERROR_MESSAGE);
+            }
+            LOG.info(localeString.getString("console_editor_no_map"));
             useDefaultMapImage();
             imageLoadedLabel.setForeground(new Color(200,0,0));
             imageLoadedLabel.setText("Not Found");
         }
 
         GUIBuilder.updateGUIButtons(true);
-        getMapPanel().repaint();
-        getMapZoomFactor(mapName);
+        //getMapsZoomFactor(mapName);
+        //getMapPanel().repaint();
 
         MenuBuilder.mapMenuEnabled(true);
     }
@@ -242,72 +241,80 @@ public class MapImage {
             } catch (IOException e1) {
                 //try default location
                 LOG.info("failed to load heightMap from config location {}", heightMapPath);
+                if (roadMap.mapName != null) {
+                    if (location != null) {
+                        heightMapPath = location + "mapImages/" + roadMap.mapName + "/" + roadMap.mapName + "_HeightMap.png";
+                    } else {
+                        heightMapPath = "./mapImages/" + roadMap.mapName + "/" + roadMap.mapName + "_HeightMap.png";
+                    }
 
-                if (location != null) {
-                    heightMapPath = location + "mapImages/" + roadMap.roadMapName + "/" + roadMap.roadMapName + "_HeightMap.png";
-                } else {
-                    heightMapPath = "./mapImages/" + roadMap.roadMapName + "/" + roadMap.roadMapName + "_HeightMap.png";
-                }
+                    try {
+                        heightImage = ImageIO.read(new File(heightMapPath));
+                        LOG.info("Loaded heightMap from {}", heightMapPath.substring(1));
+                        bHeightMapFound = true;
+                    } catch (IOException e2) {
+                        LOG.info("failed to load heightMap from default location {}", heightMapPath);
 
-                try {
-                    heightImage = ImageIO.read(new File(heightMapPath));
-                    LOG.info("Loaded mapImage from {}", heightMapPath.substring(1));
-                    bHeightMapFound = true;
-                } catch (IOException e2) {
-                    LOG.info("failed to load heightMap from default location {}", heightMapPath);
+                        //
+                        // check gitHub for heightmap
+                        //
 
-                    //
-                    // check gitHub for heightmap
-                    //
-
-                    if (bUseOnlineMapImages) {
-                        String fullPath;
-                        if (location != null) {
-                            String gitPath = "https://github.com/KillBait/AutoDrive_MapImages/raw/main/mapImages/" + roadMap.roadMapName + "/" + roadMap.roadMapName + "_HeightMap.png";
-                            showInTextArea(localeString.getString("mapimage_github_check") + " " + roadMap.roadMapName + "_HeightMap.png", true, false);
-                            LOG.info("Checking GitHub repository for {}",gitPath);
-                            URL gitUrl = null;
-                            try {
-                                gitUrl = new URL(gitPath);
-                            } catch (MalformedURLException ex) {
-                                ex.printStackTrace();
-                            }
-
-                            fullPath = location + "mapImages/" + roadMap.roadMapName + "/" + roadMap.roadMapName + "_HeightMap.png";
-                            File file = new File(fullPath);
-
-
-                            File loadImage = null;
-                            if (gitUrl != null) {
-                                loadImage = copyURLToFile(gitUrl, file, fullPath);
-                            }
-
-                            if (loadImage != null) {
+                        if (bUseOnlineMapImages) {
+                            String fullPath;
+                            if (location != null) {
+                                String gitPath = "https://github.com/KillBait/AutoDrive_MapImages/raw/main/mapImages/" + roadMap.mapName + "/" + roadMap.mapName + "_HeightMap.png";
+                                showInTextArea(localeString.getString("mapimage_github_check") + " " + roadMap.mapName + "_HeightMap.png", true, false);
+                                LOG.info("Checking GitHub repository for {}",gitPath);
+                                URL gitUrl = null;
                                 try {
-                                    heightImage = ImageIO.read(loadImage);
-                                    showInTextArea(roadMap.roadMapName + "_HeightMap.png " + localeString.getString("mapimage_github_repo_download"), false, false);
-                                    bHeightMapFound = true;
-                                } catch (IOException ex) {
+                                    gitUrl = new URL(gitPath);
+                                } catch (MalformedURLException ex) {
                                     ex.printStackTrace();
-                                    showInTextArea(roadMap.roadMapName + "_HeightMap.png " + localeString.getString("mapimage_github_repo_not_found"), false, false);
                                 }
 
+                                fullPath = location + "mapImages/" + roadMap.mapName + "/" + roadMap.mapName + "_HeightMap.png";
+                                File file = new File(fullPath);
+
+
+                                File loadImage = null;
+                                if (gitUrl != null) {
+                                    loadImage = copyURLToFile(gitUrl, file, fullPath);
+                                }
+
+                                if (loadImage != null) {
+                                    try {
+                                        heightImage = ImageIO.read(loadImage);
+                                        showInTextArea(roadMap.mapName + "_HeightMap.png " + localeString.getString("mapimage_github_repo_download"), false, false);
+                                        bHeightMapFound = true;
+                                    } catch (IOException ex) {
+                                        ex.printStackTrace();
+                                        showInTextArea(roadMap.mapName + "_HeightMap.png " + localeString.getString("mapimage_github_repo_not_found"), false, false);
+                                    }
+
+                                }
+                            } else {
+                                if (bDebugLogFileIO) LOG.info("getCurrentLocation returned null");
+                                bImageFound = false;
                             }
                         } else {
-                            if (bDebugLogFileIO) LOG.info("getCurrentLocation returned null");
-                            bImageFound = false;
+                            showInTextArea(localeString.getString("mapimage_github_bypass"), true, true);
                         }
-                    } else {
-                        showInTextArea(localeString.getString("mapimage_github_bypass"), true, true);
                     }
                 }
             }
 
             if (bHeightMapFound && heightImage != null) {
                 LOG.info("HeightMap size = {} x {}", heightImage.getWidth(), heightImage.getHeight());
-                //heightMapImage = ImageIO.read(new File(heightMapPath));
-                //heightMapImage = new BufferedImage(heightImage.getWidth(), heightImage.getHeight(), BufferedImage.TYPE_USHORT_565_RGB);
-                heightMapImage = getNewBufferImage(heightImage.getWidth(), heightImage.getHeight());
+                try {
+                    heightMapImage = ImageIO.read(new File(heightMapPath));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                if (EXPERIMENTAL) {
+                    heightMapImage = new BufferedImage(heightImage.getWidth(), heightImage.getHeight(), BufferedImage.TYPE_USHORT_565_RGB);
+                } else {
+                    heightMapImage = getNewBufferImage(heightImage.getWidth(), heightImage.getHeight());
+                }
                 Graphics2D g = (Graphics2D) heightMapImage.getGraphics();
                 g.drawImage(heightImage, 0, 0, heightImage.getWidth(), heightImage.getHeight(), null);
                 g.dispose();
@@ -331,7 +338,12 @@ public class MapImage {
                 exportHeightMapMenuItem.setEnabled(false);
                 fixNodesHeightMenuItem.setEnabled(false);
                 showHeightMapMenuItem.setEnabled(false);
-                JOptionPane.showMessageDialog(editor, localeString.getString("dialog_heightmap_not_found"), localeString.getString("dialog_heightmap_not_found_title"), JOptionPane.ERROR_MESSAGE);
+                if (configType == CONFIG_SAVEGAME) {
+                    JOptionPane.showMessageDialog(editor, localeString.getString("dialog_heightmap_not_found_game"), localeString.getString("dialog_heightmap_not_found_title"), JOptionPane.ERROR_MESSAGE);
+                } else if (configType == CONFIG_ROUTEMANAGER) {
+                    JOptionPane.showMessageDialog(editor, localeString.getString("dialog_heightmap_not_found_route"), localeString.getString("dialog_heightmap_not_found_title"), JOptionPane.ERROR_MESSAGE);
+                }
+
             }
         }
     }
@@ -371,7 +383,7 @@ public class MapImage {
         GraphicsConfiguration gc = gd.getDefaultConfiguration();
 
         backBufferImage = gc.createCompatibleImage(width, height, Transparency.OPAQUE);
-        if (DEBUG) LOG.info("Accelerated BackBufferImage = {}", gc.getImageCapabilities().isAccelerated());
+        if (bDebugLogRenderInfo) LOG.info("Accelerated BackBufferImage = {}", gc.getImageCapabilities().isAccelerated());
         backBufferImage.setAccelerationPriority(1);
         backBufferGraphics = (Graphics2D) backBufferImage.getGraphics();
         backBufferGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -391,7 +403,7 @@ public class MapImage {
         GraphicsConfiguration gc = gd.getDefaultConfiguration();
 
         BufferedImage bufferImage = gc.createCompatibleImage(width, height, Transparency.OPAQUE);
-        if (DEBUG) LOG.info("Accelerated bufferImage = {}", gc.getImageCapabilities().isAccelerated());
+        if (bDebugLogRenderInfo) LOG.info("Accelerated bufferImage = {}", gc.getImageCapabilities().isAccelerated());
         bufferImage.setAccelerationPriority(1);
         return bufferImage;
     }
@@ -440,79 +452,93 @@ public class MapImage {
         }
     }
 
-    public static void getMapZoomFactor(String mapName) {
-        for (int i = 0; i <= mapZoomStore.size() - 1; i++) {
-            MapZoomStore store = mapZoomStore.get(i);
-            if (store.mapName.equals(mapName)) {
-                //return store.zoomFactor;
-                LOG.info("Update zoomfactor for {}", mapName);
-                updateMapZoomFactor(store.zoomFactor);
-                LOG.info("ZoomFactor = {}", store.zoomFactor);
-                if (store.zoomFactor == 1) {
-                    zoom2km.setSelected(true);
-                } else if (store.zoomFactor == 2) {
-                    zoom4km.setSelected(true);
-                } else if (store.zoomFactor == 3) {
-                    zoom6km.setSelected(true);
-                } else if (store.zoomFactor == 4) {
-                    zoom8km.setSelected(true);
-                } else if (store.zoomFactor == 5) {
-                    zoom10km.setSelected(true);
-                } else if (store.zoomFactor == 6) {
-                    zoom12km.setSelected(true);
-                } else if (store.zoomFactor == 7) {
-                    zoom14km.setSelected(true);
-                } else if (store.zoomFactor == 8) {
-                    zoom16km.setSelected(true);
-                } else if (store.zoomFactor == 9) {
-                    zoom18km.setSelected(true);
-                } else if (store.zoomFactor == 10) {
-                    zoom20km.setSelected(true);
-                } else if (store.zoomFactor == 11) {
-                    zoom22km.setSelected(true);
-                } else if (store.zoomFactor == 12) {
-                    zoom24km.setSelected(true);
-                } else if (store.zoomFactor == 13) {
-                    zoom26km.setSelected(true);
-                } else if (store.zoomFactor == 14) {
-                    zoom28km.setSelected(true);
-                } else if (store.zoomFactor == 15) {
-                    zoom30km.setSelected(true);
-                } else if (store.zoomFactor == 16) {
-                    zoom32km.setSelected(true);
-                } else if (store.zoomFactor == 17) {
-                    zoom34km.setSelected(true);
-                } else if (store.zoomFactor == 18) {
-                    zoom36km.setSelected(true);
-                } else if (store.zoomFactor == 19) {
-                    zoom38km.setSelected(true);
-                } else if (store.zoomFactor == 20) {
-                    zoom40km.setSelected(true);
-                } else if (store.zoomFactor == 21) {
-                    zoom42km.setSelected(true);
-                } else if (store.zoomFactor == 22) {
-                    zoom44km.setSelected(true);
-                } else if (store.zoomFactor == 23) {
-                    zoom46km.setSelected(true);
+    public static void getMapsZoomFactor(String mapName) {
+
+        boolean isKnown = false;
+        if (mapName != null) {
+            for (int i = 0; i <= mapZoomStore.size() - 1; i++) {
+                MapZoomStore store = mapZoomStore.get(i);
+                if (store.mapName.equals(mapName)) {
+                    LOG.info("Found map name ( {} ) in MapZoomFactor entries, setting map scale to {}x", mapName, store.zoomFactor);
+                    updateMapZoomFactor(store.zoomFactor);
+                    isKnown = true;
+                    break;
                 }
             }
+        } else {
+            LOG.info("Map name is null, defaulting to 1x map");
+            updateDisplayedMapScale(1);
+            updateMapZoomFactor(1);
+        }
+
+        if (!isKnown && mapName != null) {
+            LOG.info("Map name ( {} ) not found in Editors ZoomStore, adding as new map with default 1x", mapName);
+            mapZoomStore.add(new MapZoomStore(mapName, 1));
+            currentMapSizeLabel.setText("2km");
         }
     }
 
-    public static void updateMapZoomStore(String mapName, int zoomFactor) {
-        boolean found = false;
-        for (int i = 0; i <= mapZoomStore.size() - 1; i++) {
-            MapZoomStore store = mapZoomStore.get(i);
-            if (store.mapName.equals(mapName)) {
-                LOG.info("found {} in list of known zoomFactors, setting to {}x", store.mapName, zoomFactor);
-                store.zoomFactor = zoomFactor;
-                found = true;
-                break;
-            }
+    public static void updateDisplayedMapScale(int zoomFactor) {
+        if (zoomFactor == 1) {
+            zoom2km.setSelected(true);
+        } else if (zoomFactor == 2) {
+            zoom4km.setSelected(true);
+        } else if (zoomFactor == 3) {
+            zoom6km.setSelected(true);
+        } else if (zoomFactor == 4) {
+            zoom8km.setSelected(true);
+        } else if (zoomFactor == 5) {
+            zoom10km.setSelected(true);
+        } else if (zoomFactor == 6) {
+            zoom12km.setSelected(true);
+        } else if (zoomFactor == 7) {
+            zoom14km.setSelected(true);
+        } else if (zoomFactor == 8) {
+            zoom16km.setSelected(true);
+        } else if (zoomFactor == 9) {
+            zoom18km.setSelected(true);
+        } else if (zoomFactor == 10) {
+            zoom20km.setSelected(true);
+        } else if (zoomFactor == 11) {
+            zoom22km.setSelected(true);
+        } else if (zoomFactor == 12) {
+            zoom24km.setSelected(true);
+        } else if (zoomFactor == 13) {
+            zoom26km.setSelected(true);
+        } else if (zoomFactor == 14) {
+            zoom28km.setSelected(true);
+        } else if (zoomFactor == 15) {
+            zoom30km.setSelected(true);
+        } else if (zoomFactor == 16) {
+            zoom32km.setSelected(true);
+        } else if (zoomFactor == 17) {
+            zoom34km.setSelected(true);
+        } else if (zoomFactor == 18) {
+            zoom36km.setSelected(true);
+        } else if (zoomFactor == 19) {
+            zoom38km.setSelected(true);
+        } else if (zoomFactor == 20) {
+            zoom40km.setSelected(true);
+        } else if (zoomFactor == 21) {
+            zoom42km.setSelected(true);
+        } else if (zoomFactor == 22) {
+            zoom44km.setSelected(true);
+        } else if (zoomFactor == 23) {
+            zoom46km.setSelected(true);
         }
-        if (!found) {
-            LOG.info("New map detected");
-            mapZoomStore.add(new MapZoomStore(mapName, 1));
+        currentMapSizeLabel.setText("" + zoomFactor *2 + "km");
+    }
+
+    public static void updateMapZoomStore(String mapName, int zoomFactor) {
+        if (mapName != null) {
+            for (int i = 0; i <= mapZoomStore.size() - 1; i++) {
+                MapZoomStore store = mapZoomStore.get(i);
+                if (store.mapName.equals(mapName)) {
+                    LOG.info("found {} in known zoomFactors, updating it's entry to {}x", store.mapName, zoomFactor);
+                    store.zoomFactor = zoomFactor;
+                    break;
+                }
+            }
         }
     }
 }

@@ -1,22 +1,22 @@
 package AutoDriveEditor.MapPanel;
 
-import java.awt.event.MouseAdapter;
-import java.awt.geom.Point2D;
-import java.util.LinkedList;
-
-import AutoDriveEditor.AutoDriveEditor;
 import AutoDriveEditor.GUI.GUIBuilder;
 import AutoDriveEditor.Managers.ChangeManager;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
 
-import static AutoDriveEditor.AutoDriveEditor.*;
-import static AutoDriveEditor.GUI.GUIBuilder.*;
+import java.awt.event.MouseAdapter;
+import java.awt.geom.Point2D;
+import java.util.LinkedList;
+
+import static AutoDriveEditor.AutoDriveEditor.changeManager;
+import static AutoDriveEditor.GUI.GUIBuilder.editorState;
+import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogCurveInfo;
 import static AutoDriveEditor.Listeners.MouseListener.prevMousePosX;
 import static AutoDriveEditor.Listeners.MouseListener.prevMousePosY;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.RoadNetwork.MapNode.*;
-import static AutoDriveEditor.Utils.LoggerUtils.*;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
 public class QuadCurve extends MouseAdapter {
@@ -26,7 +26,7 @@ public class QuadCurve extends MouseAdapter {
     private MapNode curveEndNode;
     private MapNode controlPoint1;
     private final Point2D.Double virtualControlPoint1;
-    private final double movementScaler;
+    //private final double movementScaler;
 
     private int numInterpolationPoints;
     private int nodeType;
@@ -44,7 +44,7 @@ public class QuadCurve extends MouseAdapter {
         this.isReversePath = GUIBuilder.curvePathReverse.isSelected();
         this.isDualPath = GUIBuilder.curvePathDual.isSelected();
         this.nodeType = GUIBuilder.curvePathRegular.isSelected() ? NODE_FLAG_STANDARD : NODE_FLAG_SUBPRIO;
-        this.movementScaler = controlPointMoveScaler;
+        //this.movementScaler = controlPointMoveScaler;
         this.updateCurve();
         GUIBuilder.curvePanel.setVisible(true);
     }
@@ -131,7 +131,7 @@ public class QuadCurve extends MouseAdapter {
 
         canAutoSave = true;
 
-        if (AutoDriveEditor.DEBUG) LOG.info("QuadCurve created {} nodes", mergeNodesList.size() - 2);
+        if (bDebugLogCurveInfo) LOG.info("QuadCurve created {} nodes", mergeNodesList.size() - 2);
     }
 
     public static void connectNodes(LinkedList<MapNode> mergeNodesList, boolean reversePath, boolean dualPath) {
@@ -156,17 +156,12 @@ public class QuadCurve extends MouseAdapter {
         this.curveStartNode = null;
         this.curveEndNode = null;
         if (cubicCurve == null) GUIBuilder.curvePanel.setVisible(false);
-        //GUIBuilder.curvePanel.setVisible(false);
-    }
-
-    public Boolean isCurveValid() {
-        return this.curveNodesList != null && this.controlPoint1 != null && this.curveNodesList.size() > 2;
     }
 
     private void updateVirtualControlPoint(double diffX, double diffY) {
         if (editorState == GUIBuilder.EDITORSTATE_QUADRATICBEZIER) {
-            this.virtualControlPoint1.x += diffX * movementScaler;
-            this.virtualControlPoint1.y += diffY * movementScaler;
+            this.virtualControlPoint1.x += diffX * controlPointMoveScaler;
+            this.virtualControlPoint1.y += diffY * controlPointMoveScaler;
         } else {
             this.virtualControlPoint1.x += diffX;
             this.virtualControlPoint1.y += diffY;
@@ -218,8 +213,10 @@ public class QuadCurve extends MouseAdapter {
         return isDualPath;
     }
 
-    public Boolean isControlNode(MapNode node) {
-        return node == this.controlPoint1;
+    public Boolean isCurveAnchorPoint(MapNode node) { return node == this.curveStartNode || node == this.curveEndNode; }
+
+    public Boolean isCurveValid() {
+        return this.curveNodesList != null && this.controlPoint1 != null && this.curveNodesList.size() > 2;
     }
 
     // getters

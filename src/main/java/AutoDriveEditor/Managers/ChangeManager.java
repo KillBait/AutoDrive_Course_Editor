@@ -1,18 +1,23 @@
 package AutoDriveEditor.Managers;
 
-import java.util.LinkedList;
-
 import AutoDriveEditor.MapPanel.LinearLine;
 import AutoDriveEditor.MapPanel.MapPanel;
-import AutoDriveEditor.RoadNetwork.MapMarker;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
 
+import javax.swing.*;
+import java.util.LinkedList;
+import java.util.UUID;
+
+import static AutoDriveEditor.AutoDriveEditor.editor;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
-import static AutoDriveEditor.Managers.ScanManager.*;
+import static AutoDriveEditor.Locale.LocaleManager.localeString;
+import static AutoDriveEditor.Managers.ScanManager.checkAreaForNodeOverlap;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.Utils.DebugUtils.*;
-import static AutoDriveEditor.Utils.LoggerUtils.*;
+import static AutoDriveEditor.Utils.DebugUtils.startTimer;
+import static AutoDriveEditor.Utils.DebugUtils.stopTimer;
+import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 /**
  * Manages a Queue of Changables to perform undo and/or redo operations. Clients can add implementations of the Changeable
@@ -45,11 +50,15 @@ public class ChangeManager {
      * Creates a new ChangeManager object which is initially empty.
      */
     public ChangeManager(){
+        LOG.info("Initializing new ChangeManager");
+        undoMenuItem.setEnabled(false);
+        redoMenuItem.setEnabled(false);
         currentIndex = parentNode;
     }
 
      // Creates a new ChangeManager which is a duplicate of the parameter in both contents and current index.
 
+    @SuppressWarnings("unused")
     public ChangeManager(ChangeManager manager){
         this();
         currentIndex = manager.currentIndex;
@@ -57,6 +66,7 @@ public class ChangeManager {
 
      // Clears all Changables contained in this manager.
 
+    @SuppressWarnings("unused")
     public void clear(){
         currentIndex = parentNode;
     }
@@ -68,19 +78,17 @@ public class ChangeManager {
         currentIndex.right = node;
         node.left = currentIndex;
         currentIndex = node;
+        LOG.info("addChangeable");
+        undoMenuItem.setEnabled(true);
     }
 
      // Return if undo can be performed.
 
-    public boolean canUndo() {
-        return currentIndex != parentNode;
-    }
+    public boolean canUndo() { return currentIndex != parentNode;}
 
      // Return if redo can be performed.
 
-    public boolean canRedo(){
-        return currentIndex.right != null;
-    }
+    public boolean canRedo() { return currentIndex.right != null;}
 
      // Undoes the Changeable at the current index.
 
@@ -89,6 +97,7 @@ public class ChangeManager {
         canAutoSave = false;
         if ( !canUndo() ){
             LOG.info("Reached Beginning of Undo History.");
+            undoMenuItem.setEnabled(false);
             canAutoSave = true;
             return;
             //throw new IllegalStateException("Cannot undo. Index is out of range.");
@@ -114,6 +123,9 @@ public class ChangeManager {
             throw new IllegalStateException("Internal index set to null.");
         }
         currentIndex = currentIndex.left;
+        undoMenuItem.setEnabled(canUndo());
+        redoMenuItem.setEnabled(canRedo());
+
     }
 
     /**
@@ -126,6 +138,8 @@ public class ChangeManager {
             throw new IllegalStateException("Internal index set to null.");
         }
         currentIndex = currentIndex.right;
+        undoMenuItem.setEnabled(canUndo());
+        redoMenuItem.setEnabled(canRedo());
     }
 
     /**
@@ -138,6 +152,7 @@ public class ChangeManager {
         canAutoSave = false;
         if ( !canRedo() ){
             LOG.info("Reached End of Undo History.");
+            redoMenuItem.setEnabled(false);
             canAutoSave = true;
             return;
         }
@@ -149,11 +164,12 @@ public class ChangeManager {
         } else {
             LOG.info("Unable to Redo");
         }
+
         canAutoSave = true;
     }
 
     /**
-     * Inner class to implement a doubly linked list for our queue of Changeables.
+     * Inner class to implement a doubly linked list for our queue of changeables.
      * @author Greg Cope
      *
      */
@@ -180,16 +196,16 @@ public class ChangeManager {
         private final LinkedList<MapNode> moveNodes;
         private final int diffX;
         private final int diffY;
-        private final boolean wasSnapMove;
+        //private final boolean wasSnapMove;
         private final boolean isStale;
 
-        public MoveNodeChanger(LinkedList<MapNode> mapNodesMoved, int movedX, int movedY, boolean snapMove){
+        public MoveNodeChanger(LinkedList<MapNode> mapNodesMoved, int movedX, int movedY){
             super();
             this.moveNodes = new LinkedList<>();
             if (bDebugLogUndoRedo) LOG.info("node moved = {} , {}", movedX, movedY);
             this.diffX = movedX;
             this.diffY = movedY;
-            this.wasSnapMove = snapMove;
+            //this.wasSnapMove = snapMove;
             this.moveNodes.addAll(mapNodesMoved);
             this.isStale = getMapPanel().isStale();
         }
@@ -250,6 +266,7 @@ public class ChangeManager {
 
         public PasteSelectionChanger(LinkedList<MapNode> nodes){
             super();
+            //noinspection unchecked
             this.storeNodes = (LinkedList<MapNode>) nodes.clone();
             this.isStale = getMapPanel().isStale();
         }
@@ -274,39 +291,46 @@ public class ChangeManager {
 
     public static class DeleteNodeChanger implements Changeable{
 
-        private LinkedList<NodeLinks> nodeListToDelete = new LinkedList<>();
+        private final LinkedList<NodeLinks> nodeListToDelete;
         private final boolean isStale;
+        private final UUID opUUID;
 
+        @SuppressWarnings("unchecked")
         public DeleteNodeChanger(LinkedList<NodeLinks> nodeLinks){
             super();
             this.nodeListToDelete =  (LinkedList<NodeLinks>) nodeLinks.clone();
             this.isStale = getMapPanel().isStale();
+            this.opUUID = RoadMap.uuid;
         }
 
         public void undo(){
-            if (bDebugTest) startTimer();
-            for (NodeLinks insertNode : this.nodeListToDelete) {
-                if (bDebugLogUndoRedo) LOG.info("Insert {} ({})",insertNode.node.id,insertNode.nodeIDBackup);
-                if (insertNode.node.id != insertNode.nodeIDBackup) {
-                    if (bDebugLogUndoRedo) LOG.info("## RemoveNode Undo ## ID mismatch.. correcting ID {} -> ID {}", insertNode.node.id, insertNode.nodeIDBackup);
-                    insertNode.node.id = insertNode.nodeIDBackup;
+            showInTextArea("Restoring " + this.nodeListToDelete.size() + " Nodes.", true, false);
+            if (bDebugProfile) startTimer();
+            try {
+                for (NodeLinks insertNode : this.nodeListToDelete) {
+                    if (bDebugLogUndoRedo) LOG.info("Insert {} ({})",insertNode.node.id,insertNode.nodeIDBackup);
+                    if (insertNode.node.id != insertNode.nodeIDBackup) {
+                        if (bDebugLogUndoRedo) LOG.info("## RemoveNode Undo ## ID mismatch.. correcting ID {} -> ID {}", insertNode.node.id, insertNode.nodeIDBackup);
+                        insertNode.node.id = insertNode.nodeIDBackup;
+                    }
+                    roadMap.insertMapNode(insertNode.node, insertNode.otherIncoming, insertNode.otherOutgoing);
                 }
-                roadMap.insertMapNode(insertNode.node, insertNode.otherIncoming, insertNode.otherOutgoing);
-                if (insertNode.linkedMarker != null) {
-                    if (bDebugLogUndoRedo) LOG.info("## RemoveNode Undo ## MapNode ID {} has a linked MapMarker.. restoring {} ( {} )", insertNode.node.id, insertNode.linkedMarker.name, insertNode.linkedMarker.group);
-                    roadMap.addMapMarker(insertNode.linkedMarker);
+                String text = this.nodeListToDelete.size() + " nodes restored";
+                if (bDebugProfile) {
+                    float result = stopTimer();
+                    text += " in " + result/1000 + " seconds";
+                }
+                showInTextArea(text, true, true);
+            } catch (IndexOutOfBoundsException outOfBoundsException) {
+                if (bDebugLogUndoRedo) stopTimer();
+                if (!this.opUUID.equals(RoadMap.uuid)) {
+                    JOptionPane.showMessageDialog(editor, localeString.getString("dialog_undo_uuid_mismatch"), localeString.getString("dialog_undo_error_title"), JOptionPane.ERROR_MESSAGE);
+                    showInTextArea(localeString.getString("dialog_undo_uuid_mismatch"), true, true);
+                } else {
+                    JOptionPane.showMessageDialog(editor, localeString.getString("dialog_undo_outofbounds"), localeString.getString("dialog_undo_error_title"), JOptionPane.ERROR_MESSAGE);
+                    showInTextArea(localeString.getString("dialog_undo_outofbounds"), true, true);
                 }
             }
-
-            /*if (!bDebugTest) {
-                LinkedList<MapNode> nodes = getMapPanel().getRoadMap().mapNodes;
-                for (int i = 0; i <= nodes.size() - 1 ; i++) {
-                    MapNode mapNode = nodes.get(i);
-                    mapNode.id = i+1;
-                }
-            }*/
-
-            if (bDebugTest) LOG.info("result = {}", stopTimer());
             getMapPanel().repaint();
             getMapPanel().setStale(this.isStale);
         }
@@ -314,7 +338,7 @@ public class ChangeManager {
         public void redo(){
             for (NodeLinks nodeLinks : this.nodeListToDelete) {
                 MapNode toDelete = nodeLinks.node;
-                roadMap.removeMapNode(toDelete);
+                RoadMap.removeMapNode(toDelete);
             }
             getMapPanel().repaint();
             getMapPanel().setStale(true);
@@ -332,8 +356,6 @@ public class ChangeManager {
         private final LinkedList<MapNodeStore> autoGeneratedNodes;
         private final int connectionType;
         private final boolean isStale;
-
-        //TODO: save/restore isStale() status
 
         public LinearLineChanger(MapNode from, MapNode to, LinkedList<MapNode> inbetweenNodes, int type){
             super();
@@ -360,7 +382,7 @@ public class ChangeManager {
                     MapNodeStore storedNode = this.autoGeneratedNodes.get(j);
                     MapNode toDelete = storedNode.getMapNode();
                     if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger.undo ## undo is removing ID {} from MapNodes", toDelete.id);
-                    MapPanel.roadMap.removeMapNode(toDelete);
+                    RoadMap.removeMapNode(toDelete);
                     if (storedNode.hasChangedID()) {
                         if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger.undo ## Removed node changed ID {}", storedNode.mapNode.id);
                         storedNode.resetID();
@@ -435,7 +457,7 @@ public class ChangeManager {
             for (int i = 1; i <= this.storedCurveNodeList.size() - 2 ; i++) {
                 MapNodeStore curveNode = this.storedCurveNodeList.get(i);
                 if (bDebugLogUndoRedo) LOG.info("## QuadCurveChanger.undo ## Removing node ID {}", curveNode.mapNode.id);
-                roadMap.removeMapNode(curveNode.mapNode);
+                RoadMap.removeMapNode(curveNode.mapNode);
                 if (curveNode.hasChangedID()) {
                     if (bDebugLogUndoRedo) LOG.info("## QuadCurveChanger.undo ## ID {} changed", curveNode.mapNode.id);
                     curveNode.resetID();
@@ -529,91 +551,97 @@ public class ChangeManager {
     }
 
     public static class MarkerAddChanger implements Changeable{
-        private final MapMarker markerToChange;
+        //private final MapMarker markerToChange;
+        private final MapNode markerNode;
+        private final String markerName;
+        private final String markerGroup;
         private final Boolean isStale;
 
-        public MarkerAddChanger(MapMarker marker){
+        public MarkerAddChanger(MapNode mapNode, String markerName, String markerGroup){
             super();
-            this.markerToChange = marker;
+            //this.markerToChange = mapMarker;
+            this.markerNode = mapNode;
+            this.markerName = markerName;
+            this.markerGroup = markerGroup;
             this.isStale = getMapPanel().isStale();
         }
 
         public void undo(){
-            RoadMap.removeMapMarker(this.markerToChange);
+            this.markerNode.removeMapMarker();
+            //RoadMap.removeMapMarker(this.markerToChange);
             getMapPanel().repaint();
             getMapPanel().setStale(this.isStale);
         }
 
         public void redo(){
-            roadMap.addMapMarker(this.markerToChange);
+            this.markerNode.createMapMarker(this.markerName, this.markerGroup);
+            //roadMap.createMapMarker(this.markerToChange);
             getMapPanel().repaint();
             getMapPanel().setStale(true);
         }
     }
 
     public static class MarkerRemoveChanger implements Changeable{
+        private final MapNode markerNode;
+        private final String markerName;
+        private final String markerGroup;
         private final Boolean isStale;
-        private final MapMarker markerStore;
+        //private final MapMarker markerStore;
 
-        public MarkerRemoveChanger(MapMarker marker){
+        public MarkerRemoveChanger(MapNode mapnode){
             super();
-            this.markerStore = marker;
+            //this.markerStore = marker;
+            this.markerNode = mapnode;
+            this.markerName = mapnode.getMarkerName();
+            this.markerGroup = mapnode.getMarkerGroup();
             this.isStale = getMapPanel().isStale();
         }
 
         public void undo(){
-            roadMap.addMapMarker(this.markerStore);
+            this.markerNode.createMapMarker(this.markerName, this.markerGroup);
+            //roadMap.createMapMarker(this.markerStore);
             getMapPanel().repaint();
             getMapPanel().setStale(this.isStale);
         }
 
         public void redo(){
-            roadMap.removeMapMarker(this.markerStore);
+            this.markerNode.removeMapMarker();
+            //roadMap.removeMapMarker(this.markerStore);
             getMapPanel().repaint();
             getMapPanel().setStale(true);
         }
     }
 
-    public static class MarkerEditChanger implements Changeable{
+    public static class NodeMarkerEditChanger implements Changeable{
         private final Boolean isStale;
         private final MapNode mapNode;
-        private final int mapNodeID;
+        //private final int mapNodeID;
         private final String oldName;
         private final String newName;
         private final String oldGroup;
         private final String newGroup;
 
-        public MarkerEditChanger(MapNode mapNode, int id, String prevName, String newName, String prevGroup, String newGroup){
+        public NodeMarkerEditChanger(MapNode mapNode, String newName, String newGroup){
             super();
             this.isStale = getMapPanel().isStale();
             this.mapNode = mapNode;
-            this.mapNodeID = id;
-            this.oldName = prevName;
+            //this.mapNodeID = id;
+            this.oldName = mapNode.getMarkerName();
             this.newName = newName;
-            this.oldGroup = prevGroup;
+            this.oldGroup = mapNode.getMarkerGroup();
             this.newGroup = newGroup;
         }
 
         public void undo() {
-            for (int i = 0; i < roadMap.mapMarkers.size(); i++) {
-                MapMarker mapMarker = roadMap.mapMarkers.get(i);
-                if (mapMarker.mapNode == this.mapNode) {
-                    mapMarker.name = this.oldName;
-                    mapMarker.group = this.oldGroup;
-                }
-            }
+            this.mapNode.setMarkerName(oldName);
+            this.mapNode.setMarkerGroup(oldGroup);
             getMapPanel().repaint();
             getMapPanel().setStale(this.isStale);
         }
 
         public void redo() {
-            for (int i = 0; i < roadMap.mapMarkers.size(); i++) {
-                MapMarker mapMarker = roadMap.mapMarkers.get(i);
-                if (mapMarker.mapNode == this.mapNode) {
-                    mapMarker.name = this.newName;
-                    mapMarker.group = this.newGroup;
-                }
-            }
+            this.mapNode.setMarkerName(this.newName);
+            this.mapNode.setMarkerGroup(this.newGroup);
             getMapPanel().repaint();
             getMapPanel().setStale(true);
         }
@@ -645,9 +673,9 @@ public class ChangeManager {
 
         public void redo() {
             for (ZStore storedNode : nodeList) {
-                storedNode.mapNode.x += -storedNode.diffX;
-                storedNode.mapNode.y += -storedNode.diffY;
-                storedNode.mapNode.z += -storedNode.diffZ;
+                storedNode.mapNode.x -= storedNode.diffX;
+                storedNode.mapNode.y -= storedNode.diffY;
+                storedNode.mapNode.z -= storedNode.diffZ;
             }
             getMapPanel().repaint();
             getMapPanel().setStale(true);
@@ -722,12 +750,16 @@ public class ChangeManager {
             copyList(this.outgoingBackup, this.mapNode.outgoing);
         }
 
+        @SuppressWarnings("unused")
         public void backupIncoming() { copyList(this.mapNode.incoming, this.incomingBackup); }
 
+        @SuppressWarnings("unused")
         public void restoreIncoming() { copyList(this.incomingBackup, this.mapNode.incoming); }
 
+        @SuppressWarnings("unused")
         public void backupOutgoing() { copyList(this.mapNode.outgoing, this.outgoingBackup); }
 
+        @SuppressWarnings("unused")
         public void restoreOutgoing() { copyList(this.outgoingBackup, this.mapNode.outgoing); }
 
         private void copyList(LinkedList<MapNode> from, LinkedList<MapNode> to) {

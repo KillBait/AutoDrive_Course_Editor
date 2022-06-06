@@ -9,6 +9,7 @@ import java.awt.event.ItemListener;
 import AutoDriveEditor.GUI.GUIBuilder;
 import AutoDriveEditor.MapPanel.MapPanel;
 
+import static AutoDriveEditor.AutoDriveEditor.DEBUG;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.RoadNetwork.MapNode.*;
@@ -19,7 +20,7 @@ public class CurvePanelListener implements ItemListener, ChangeListener {
     @Override
     public void itemStateChanged(ItemEvent e) {
         AbstractButton button = (AbstractButton) e.getItem();
-        LOG.info("CurvePanel ItemStateChange: {}", button.getActionCommand());
+        if (DEBUG) LOG.info("CurvePanel ItemStateChange: {}", button.getActionCommand());
         switch (button.getActionCommand()) {
             case RADIOBUTTON_PATHTYPE_REGULAR:
                 if (quadCurve != null && isQuadCurveCreated) {
@@ -30,9 +31,9 @@ public class CurvePanelListener implements ItemListener, ChangeListener {
                 mapPanel.repaint();
                 break;
             case RADIOBUTTON_PATHTYPE_SUBPRIO:
-                if (quadCurve != null && isQuadCurveCreated) {
+                if (quadCurve != null) {
                     quadCurve.setNodeType(NODE_FLAG_SUBPRIO);
-                } else if (cubicCurve != null && isCubicCurveCreated) {
+                } else if (cubicCurve != null) {
                     cubicCurve.setNodeType(NODE_FLAG_SUBPRIO);
                 }
                 mapPanel.repaint();
@@ -73,12 +74,11 @@ public class CurvePanelListener implements ItemListener, ChangeListener {
         JSlider source = (JSlider) e.getSource();
         if (source.getValueIsAdjusting()) {
             int value = source.getValue();
-            if (value < 2) value = 2;
             if (MapPanel.quadCurve != null) {
-                MapPanel.quadCurve.setNumInterpolationPoints(value);
+                MapPanel.quadCurve.setNumInterpolationPoints(value + 1);
                 MapPanel.getMapPanel().repaint();
             } else if (cubicCurve != null) {
-                MapPanel.cubicCurve.setNumInterpolationPoints(value);
+                MapPanel.cubicCurve.setNumInterpolationPoints(value + 1);
                 MapPanel.getMapPanel().repaint();
             }
         }

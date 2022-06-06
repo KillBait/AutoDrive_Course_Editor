@@ -3,7 +3,8 @@ package AutoDriveEditor.GUI;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
 
-import static AutoDriveEditor.Utils.ImageUtils.*;
+import static AutoDriveEditor.Utils.ImageUtils.getImageIcon;
+import static AutoDriveEditor.Utils.ImageUtils.loadImage;
 
 
 public class GUIImages {
@@ -17,8 +18,8 @@ public class GUIImages {
     public static BufferedImage controlPointImageSelected;
     public static BufferedImage curveNodeImage;
     public static BufferedImage rotateRing;
-    public static BufferedImage warningImage;
-    public static BufferedImage warningYImage;
+    public static BufferedImage overlapWarningImage;
+    public static BufferedImage negativeHeightWarningImage;
 
     public static ImageIcon markerIcon;
     public static ImageIcon regularConnectionIcon;
@@ -33,6 +34,8 @@ public class GUIImages {
     public static ImageIcon reverseConnectionSelectedIcon;
     public static ImageIcon reverseConnectionSubPrioIcon;
     public static ImageIcon reverseConnectionSubPrioSelectedIcon;
+    public static ImageIcon conConnectIcon;
+    public static ImageIcon conConnectSelectedIcon;
 
     public static void loadIcons() {
         //AD Tractor icon for main window
@@ -41,8 +44,8 @@ public class GUIImages {
         markerIcon = getImageIcon("editor/marker.png");
         // node images for MapPanel
         nodeImage = loadImage("editor/nodes/node.png");
-        warningImage = loadImage("editor/nodes/node_warning.png");
-        warningYImage = loadImage("editor/nodes/node_warning_y.png");
+        overlapWarningImage = loadImage("editor/nodes/node_warning.png");
+        negativeHeightWarningImage = loadImage("editor/nodes/node_warning_y.png");
         nodeImageSelected = loadImage("editor/nodes/node_selected.png");
         subPrioNodeImage = loadImage("editor/nodes/subprionode.png");
         subPrioNodeImageSelected = loadImage("editor/nodes/subprionode_selected.png");
@@ -67,6 +70,9 @@ public class GUIImages {
         reverseConnectionSelectedIcon = getImageIcon("editor/buttons/connectreverse_selected.png");
         reverseConnectionSubPrioIcon = getImageIcon("editor/buttons/connectreverse_subprio.png");
         reverseConnectionSubPrioSelectedIcon = getImageIcon("editor/buttons/connectreverse_subprio_selected.png");
+
+        conConnectIcon = getImageIcon("editor/buttons/conconnect.png");
+        conConnectSelectedIcon = getImageIcon("editor/buttons/conconnect_selected.png");
     }
 
     public static ImageIcon getMarkerIcon() {

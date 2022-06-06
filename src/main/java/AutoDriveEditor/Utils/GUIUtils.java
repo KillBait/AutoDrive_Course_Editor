@@ -1,18 +1,21 @@
 package AutoDriveEditor.Utils;
 
-import javax.swing.*;
-import java.awt.*;
-import java.net.URL;
-
 import AutoDriveEditor.AutoDriveEditor;
 import AutoDriveEditor.Listeners.CurvePanelListener;
 import AutoDriveEditor.Listeners.EditorListener;
 import AutoDriveEditor.Listeners.MenuListener;
 
-import static AutoDriveEditor.GUI.GUIBuilder.*;
-import static AutoDriveEditor.GUI.MenuBuilder.*;
-import static AutoDriveEditor.Locale.LocaleManager.*;
-import static AutoDriveEditor.Utils.LoggerUtils.*;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ItemListener;
+import java.net.URL;
+
+import static AutoDriveEditor.GUI.GUIBuilder.textArea;
+import static AutoDriveEditor.GUI.GUIBuilder.textPanel;
+import static AutoDriveEditor.GUI.MenuBuilder.InputEvent_NONE;
+import static AutoDriveEditor.GUI.MenuBuilder.KeyEvent_NONE;
+import static AutoDriveEditor.Locale.LocaleManager.localeString;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public class GUIUtils {
 
@@ -60,11 +63,16 @@ public class GUIUtils {
     // Button Creation functions
     //
 
-    public static JButton makeButton(String actionCommand,String toolTipText,String altText, JPanel panel, boolean enabled) {
+    public static JButton makeBasicButton(String actionCommand, String toolTipText, String altText, JPanel panel, boolean enabled, boolean useLocale) {
         JButton button = new JButton();
-        button.setActionCommand(actionCommand);
-        button.setToolTipText(localeString.getString(toolTipText));
-        button.setText(localeString.getString(altText));
+        if (actionCommand != null) button.setActionCommand(actionCommand);
+        if (useLocale) {
+            if (toolTipText != null) button.setToolTipText(localeString.getString(toolTipText));
+            if (altText != null) button.setText(localeString.getString(altText));
+        } else {
+            button.setToolTipText(toolTipText);
+            button.setText(altText);
+        }
         panel.add(button);
         button.setEnabled(enabled);
 
@@ -89,11 +97,46 @@ public class GUIUtils {
         return button;
     }
 
-    public static JToggleButton makeImageToggleButton(String imageName, String actionCommand, String toolTipText, String altText, JPanel panel, ButtonGroup group, boolean isGroupDefault, EditorListener editorListener) {
-        return makeImageToggleButton(imageName, null, actionCommand, toolTipText, altText, panel, group, isGroupDefault, editorListener);
+    public static JToggleButton makeImageButton(String imageName, String selectedImageName, String actionCommand, String toolTipText, String altText, JPanel panel, EditorListener editorListener) {
+
+        JToggleButton imageButton = new JToggleButton();
+
+        imageButton.setActionCommand(actionCommand);
+        imageButton.setToolTipText(localeString.getString(toolTipText));
+        imageButton.addActionListener(editorListener);
+        imageButton.setFocusPainted(false);
+        imageButton.setSelected(false);
+        imageButton.setBorderPainted(false);
+        imageButton.setContentAreaFilled(false);
+
+        //Load image
+
+        String imgLocation = "/editor/" + imageName + ".png";
+        URL imageURL = AutoDriveEditor.class.getResource(imgLocation);
+        if (imageURL != null) {
+            //image found
+            imageButton.setIcon(new ImageIcon(imageURL, altText));
+            imageButton.setBorder(BorderFactory.createEmptyBorder());
+            if (selectedImageName !=  null) {
+                String selectedImagePath = "/editor/" + selectedImageName + ".png";
+                URL selectedImageURL = AutoDriveEditor.class.getResource(selectedImagePath);
+                if (selectedImageURL != null) {
+                    imageButton.setSelectedIcon(new ImageIcon(selectedImageURL, altText));
+                }
+            }
+        } else {
+            //no image found
+            imageButton.setText(localeString.getString(altText));
+        }
+        panel.add(imageButton);
+        return imageButton;
     }
 
-    public static JToggleButton makeImageToggleButton(String imageName, String selectedImageName, String actionCommand, String toolTipText, String altText, JPanel panel, ButtonGroup group, boolean isGroupDefault, EditorListener editorListener) {
+    public static JToggleButton makeImageToggleButton(String imageName, String actionCommand, String toolTipText, String altText, JPanel panel, boolean isSelected, ButtonGroup group, boolean isGroupDefault, EditorListener editorListener) {
+        return makeImageToggleButton(imageName, null, actionCommand, toolTipText, altText, panel, isSelected, group, isGroupDefault, editorListener);
+    }
+
+    public static JToggleButton makeImageToggleButton(String imageName, String selectedImageName, String actionCommand, String toolTipText, String altText, JPanel panel, boolean isSelected, ButtonGroup group, boolean isGroupDefault, EditorListener editorListener) {
 
         JToggleButton toggleButton = new JToggleButton();
 
@@ -101,7 +144,9 @@ public class GUIUtils {
         toggleButton.setToolTipText(localeString.getString(toolTipText));
         toggleButton.addActionListener(editorListener);
         toggleButton.setFocusPainted(false);
-        toggleButton.setSelected(false);
+        toggleButton.setSelected(isSelected);
+        toggleButton.setBorderPainted(false);
+        toggleButton.setContentAreaFilled(false);
 
         //Load image
 
@@ -111,7 +156,6 @@ public class GUIUtils {
             //image found
             toggleButton.setIcon(new ImageIcon(imageURL, altText));
             toggleButton.setBorder(BorderFactory.createEmptyBorder());
-            //selectedImageName="deletemarker";
             if (selectedImageName !=  null) {
                 String selectedImagePath = "/editor/" + selectedImageName + ".png";
                 URL selectedImageURL = AutoDriveEditor.class.getResource(selectedImagePath);
@@ -140,8 +184,8 @@ public class GUIUtils {
     // special version of JToggleButton using a separate listener to change it's right click behaviour
 
     //
-    public static JToggleButton makeStateChangeImageToggleButton (String imageName, String selectedImageName, String actionCommand, String toolTipText, String altText, JPanel panel, ButtonGroup group,  boolean isGroupDefault, EditorListener editorListener) {
-        JToggleButton button = makeImageToggleButton(imageName, selectedImageName, actionCommand, toolTipText, altText, panel, group, isGroupDefault, editorListener);
+    public static JToggleButton makeStateChangeImageToggleButton (String imageName, String selectedImageName, String actionCommand, String toolTipText, String altText, JPanel panel, Boolean isSelected, ButtonGroup group,  boolean isGroupDefault, EditorListener editorListener) {
+        JToggleButton button = makeImageToggleButton(imageName, selectedImageName, actionCommand, toolTipText, altText, panel, isSelected, group, isGroupDefault, editorListener);
         button.addMouseListener(editorListener);
 
         return button;
@@ -156,11 +200,12 @@ public class GUIUtils {
     }
 
     public static JRadioButton makeRadioButton(String text, String actionCommand, String toolTipText, Color textColour, boolean isSelected, boolean isOpaque, JPanel panel, ButtonGroup group,  boolean isGroupDefault, EditorListener actionListener, CurvePanelListener itemListener) {
-        TransparentRadioButton radioButton = new TransparentRadioButton(localeString.getString(text));
+        TransparentRadioButton radioButton = new TransparentRadioButton(null);
+        if (text != null) radioButton.setText(localeString.getString(text));
         radioButton.setActionCommand(actionCommand);
         radioButton.setToolTipText(localeString.getString(toolTipText));
         radioButton.setSelected(isSelected);
-        radioButton.setOpaque(false);
+        radioButton.setOpaque(isOpaque);
         radioButton.setForeground(textColour);
         radioButton.setHorizontalAlignment(SwingConstants.LEADING);
         if (actionListener != null ) radioButton.addActionListener(actionListener);
@@ -203,7 +248,7 @@ public class GUIUtils {
 
     public static JMenuItem makeMenuItem(String menuName, String accString, int keyEvent, int inputEvent, JMenu menu, MenuListener listener, String actionCommand, Boolean enabled) {
         JMenuItem menuItem = new JMenuItem(localeString.getString(menuName));
-        if (keyEvent != 0 && inputEvent != 0) {
+        if (keyEvent != 0) {
             menuItem.setAccelerator(KeyStroke.getKeyStroke(keyEvent, inputEvent));
         }
         menuItem.getAccessibleContext().setAccessibleDescription(localeString.getString(accString));
@@ -212,6 +257,23 @@ public class GUIUtils {
         menuItem.addActionListener(listener);
         menu.add(menuItem);
         return menuItem;
+    }
+
+    public static JCheckBox makeCheckBox(JLabel label, String name, ItemListener listener, boolean enabled, boolean isSelected) {
+
+        JCheckBox checkBox = new JCheckBox(" ", isSelected);
+        checkBox.setName(name);
+        if (listener != null) checkBox.addItemListener(listener);
+        checkBox.setEnabled(enabled);
+        checkBox.setHorizontalTextPosition(SwingConstants.LEFT);
+        checkBox.setIconTextGap(0);
+        checkBox.setMargin(new Insets(0, 0, 0, 0));
+        checkBox.setBorderPainted(false);
+        checkBox.setContentAreaFilled(false);
+        checkBox.setFocusPainted(false);
+        label.setLabelFor(checkBox);
+
+        return checkBox;
     }
 
     public static JCheckBoxMenuItem makeCheckBoxMenuItem (String text, String accString, Boolean isSelected, JMenu menu, MenuListener itemListener, String actionCommand, Boolean enabled) {
@@ -239,6 +301,22 @@ public class GUIUtils {
         return cbMenuItem;
     }
 
+    public static JRadioButtonMenuItem makeSimpleRadioButtonMenuItem(String text, String accString, JMenu menu,MenuListener itemListener, String actionCommand, Boolean enabled, ButtonGroup buttonGroup, boolean isGroupDefault) {
+        JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(text);
+        menuItem.getAccessibleContext().setAccessibleDescription(localeString.getString(accString) + " " + text);
+        menuItem.setEnabled(enabled);
+        if (actionCommand != null) menuItem.setActionCommand(actionCommand);
+        menuItem.addActionListener(itemListener);
+        if (buttonGroup != null) {
+            buttonGroup.add(menuItem);
+            if (isGroupDefault) {
+                buttonGroup.setSelected(menuItem.getModel(), true);
+            }
+        }
+        menu.add(menuItem);
+        return menuItem;
+    }
+
     public static JRadioButtonMenuItem makeRadioButtonMenuItem(String menuName, String accString, JMenu menu, MenuListener itemListener, String actionCommand, Boolean enabled, ButtonGroup buttonGroup, boolean isGroupDefault) {
         return makeRadioButtonMenuItem(menuName, accString, 0, 0, menu, itemListener, actionCommand, enabled, buttonGroup, isGroupDefault);
     }
@@ -256,7 +334,6 @@ public class GUIUtils {
         if (buttonGroup != null) {
             buttonGroup.add(menuItem);
             if (isGroupDefault) {
-                //ButtonModel groupDefault = menuItem.getModel();
                 buttonGroup.setSelected(menuItem.getModel(), true);
             }
         }
@@ -267,9 +344,10 @@ public class GUIUtils {
     public static void showInTextArea(String text, boolean clearAll, boolean outputToLogFile) {
         if (clearAll) {
             textArea.selectAll();
-            textArea.replaceSelection("");
+            textArea.replaceSelection(null);
         }
         if (outputToLogFile) LOG.info(text);
         textArea.append(text + "\n");
+        textPanel.repaint();
     }
 }

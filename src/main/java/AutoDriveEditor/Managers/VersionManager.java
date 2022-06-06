@@ -7,7 +7,6 @@ import org.xml.sax.SAXException;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -21,9 +20,9 @@ import java.net.URL;
 import java.net.URLConnection;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
-import static AutoDriveEditor.Utils.LoggerUtils.*;
-import static AutoDriveEditor.Utils.XMLUtils.*;
-import static AutoDriveEditor.XMLConfig.EditorXML.*;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.Utils.XMLUtils.getTextValue;
+import static AutoDriveEditor.XMLConfig.EditorXML.bShowUpdateMessage;
 
 public class VersionManager {
 
@@ -52,14 +51,14 @@ public class VersionManager {
                 Element e = doc.getDocumentElement();
 
                 String remoteVersion = getTextValue(null, e, "latest_version");
-                Semver localSem = new Semver(AUTODRIVE_INTERNAL_VERSION);
+                Semver localSem = new Semver(COURSE_EDITOR_VERSION);
                 if (localSem.isLowerThan(remoteVersion)) {
                     if (bShowUpdateMessage) {
-                        LOG.info("Update is available... Current version {} is lower than remote version {}", AUTODRIVE_INTERNAL_VERSION, remoteVersion);
-                        String mainText = "<center>AutoDrive Editor Update is available<br><br>Current Version v" + AUTODRIVE_INTERNAL_VERSION + "<br><br><b>New Version v" + remoteVersion;
-                        String linkText = "<br><br>Visit AutoDrive Editor HomePage</b>";
-                        JEditorPane link = createHyperLink(mainText,linkText, "https://github.com/KillBait/AutoDrive_Course_Editor");
-                        JOptionPane.showMessageDialog(editor, link, "AutoDrive", JOptionPane.PLAIN_MESSAGE);
+                        LOG.info("Update is available... Current version {} is lower than remote version {}", COURSE_EDITOR_VERSION, remoteVersion);
+                        String mainText = "<center>AutoDrive Editor update is available<br><br>Current Version v" + COURSE_EDITOR_VERSION + "<br><br><b>New Version v" + remoteVersion + "</b>";
+                        String linkText = "<br><br>Visit AutoDrive Editor Release Page</b>";
+                        JEditorPane link = createHyperLink(mainText,linkText, "https://github.com/KillBait/AutoDrive_Course_Editor/releases");
+                        JOptionPane.showMessageDialog(editor, link, COURSE_EDITOR_NAME, JOptionPane.PLAIN_MESSAGE);
                     }
                     bShowUpdateMessage = false;
                 } else if (localSem.isEqualTo(remoteVersion)){
@@ -67,13 +66,9 @@ public class VersionManager {
                     bShowUpdateMessage = true;
                 } else {
                     // yes.... this is a "Back To The Future" reference.. :-P
-                    LOG.info("Wait a minute, Doc. Are you telling me you built a time machine... current version {} is higher than remote version {}", AUTODRIVE_INTERNAL_VERSION, remoteVersion);
+                    LOG.info("Wait a minute, Doc. Are you telling me you built a time machine... current version {} is higher than remote version {}", COURSE_EDITOR_VERSION, remoteVersion);
                 }
-            } catch (ParserConfigurationException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (SAXException e) {
+            } catch (ParserConfigurationException | IOException | SAXException e) {
                 e.printStackTrace();
             }
         }

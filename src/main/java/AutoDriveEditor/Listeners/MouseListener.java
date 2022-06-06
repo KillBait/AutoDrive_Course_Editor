@@ -1,18 +1,11 @@
 package AutoDriveEditor.Listeners;
 
-import java.awt.*;
+import AutoDriveEditor.MapPanel.MapPanel;
+
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-import java.awt.geom.Point2D;
-
-import AutoDriveEditor.MapPanel.MapPanel;
-
-import static AutoDriveEditor.Utils.GUIUtils.*;
-import static AutoDriveEditor.GUI.MenuBuilder.*;
-import static AutoDriveEditor.MapPanel.MapImage.*;
-import static AutoDriveEditor.MapPanel.MapPanel.*;
 
 public class MouseListener implements java.awt.event.MouseListener, MouseMotionListener, MouseWheelListener {
 

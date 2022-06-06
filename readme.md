@@ -19,10 +19,17 @@ real life doesn't always allow for quick answers.
 
 ## Map Images
 
-I maintain another repository of map images that are ready to use with the editor.
+I maintain another GitHub repository of map images that the editor uses to automatically download when needed [here](https://github.com/KillBait/AutoDrive_MapImages)
 
-Go [here](https://github.com/KillBait/AutoDrive_MapImages) .. Do you have any map images that are not on the repository?, please consider doing a pull request to add to
-the collection, it will help other people.. Help with pull requests can be found on [GitHub Docs](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)
+## Map Image Requests
+
+Do you have any map images that are not on the repository?, please consider doing a pull request to add to
+the collection, it will help other people.
+
+Help with pull requests can be found on [GitHub Docs](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)
+
+**Not familiar with GitHub.. go over to the [Discussion](https://github.com/KillBait/AutoDrive_MapImages/discussions) section of the map image repository and create a request**
+
 
 ## License
 

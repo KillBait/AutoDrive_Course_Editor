@@ -1,29 +1,32 @@
 package AutoDriveEditor.MapPanel;
 
-import java.awt.geom.Point2D;
-import java.util.LinkedList;
-
 import AutoDriveEditor.Managers.ChangeManager;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
 
-import static AutoDriveEditor.AutoDriveEditor.*;
-import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.RoadNetwork.MapNode.*;
-import static AutoDriveEditor.Utils.LoggerUtils.*;
-import static AutoDriveEditor.XMLConfig.EditorXML.*;
+import java.awt.geom.Point2D;
+import java.util.LinkedList;
 
+import static AutoDriveEditor.AutoDriveEditor.changeManager;
+import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogCurveInfo;
+import static AutoDriveEditor.MapPanel.MapPanel.canAutoSave;
+import static AutoDriveEditor.MapPanel.MapPanel.getYValueFromHeightMap;
+import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_STANDARD;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.XMLConfig.EditorXML.linearLineNodeDistance;
+
+@SuppressWarnings("AccessStaticViaInstance")
 public class LinearLine {
 
-    public LinkedList<MapNode> lineNodeList;
+    private static LinkedList<MapNode> lineNodeList;
     private MapNode lineStartNode;
     private int interpolationPointDistance;
 
-    public LinearLine(MapNode startNode, double mousex, double mousey, int nodeDistance) {
+    public LinearLine(MapNode startNode, double mouseX, double mouseY, int nodeDistance) {
         this.lineNodeList = new LinkedList<>();
         this.lineStartNode = startNode;
         this.interpolationPointDistance = nodeDistance;
-        getLinearInterpolationPointsForLine(this.lineStartNode, mousex, mousey);
+        getLinearInterpolationPointsForLine(this.lineStartNode, mouseX, mouseY);
     }
 
     public LinearLine(MapNode startNode, double mouseX, double mouseY) {this(startNode, mouseX, mouseY, linearLineNodeDistance);}
@@ -32,7 +35,7 @@ public class LinearLine {
 
     private void getLinearInterpolationPointsForLine(MapNode startNode, double endX, double endY) {
 
-        lineNodeList.clear();
+        this.lineNodeList.clear();
 
         double diffX = endX - startNode.x;
         double diffY = endY - startNode.z;
@@ -54,6 +57,8 @@ public class LinearLine {
         }
     }
 
+    public static LinkedList<MapNode> getLinearLineNodeList() { return lineNodeList; }
+
     public void updateLine(double mouseX, double mouseY) {
         if ((this.lineStartNode != null && this.interpolationPointDistance >0)) {
             getLinearInterpolationPointsForLine(this.lineStartNode, mouseX, mouseY);
@@ -70,7 +75,7 @@ public class LinearLine {
 
         LinkedList<MapNode> mergeNodesList  = new LinkedList<>();
 
-        if (DEBUG) LOG.info("LinearLine size = {}",this.lineNodeList.size());
+        if (bDebugLogCurveInfo) LOG.info("LinearLine size = {}",this.lineNodeList.size());
         mergeNodesList.add(lineStartNode);
 
         if (lineEndNode.y == -1 && lineStartNode.y != -1) lineEndNode.y = lineStartNode.y;
@@ -79,8 +84,9 @@ public class LinearLine {
 
 
         float yInterpolation = (float) ((lineEndNode.y - lineStartNode.y) / (this.lineNodeList.size() - 1));
-
-        LOG.info(" start = {} , end = {}, interp = {}", lineStartNode.y, lineEndNode.y, yInterpolation );
+        if (bDebugLogCurveInfo) {
+            LOG.info("Y interpolation -- start Y = {} , end Y = {}, difference = {}", lineStartNode.y, lineEndNode.y, yInterpolation );
+        }
 
         for (int j = 1; j < this.lineNodeList.size() - 1; j++) {
             MapNode tempNode = this.lineNodeList.get(j);
@@ -94,7 +100,7 @@ public class LinearLine {
         }
 
         mergeNodesList.add(lineEndNode);
-        if (DEBUG) LOG.info("mergeNodesList size = {}",mergeNodesList.size());
+        if (bDebugLogCurveInfo) LOG.info("mergeNodesList size = {}",mergeNodesList.size());
         changeManager.addChangeable( new ChangeManager.LinearLineChanger(this.lineStartNode, lineEndNode, mergeNodesList, connectionType));
         connectNodes(mergeNodesList, connectionType);
 
@@ -112,6 +118,7 @@ public class LinearLine {
         canAutoSave = true;
     }
 
+    @SuppressWarnings("unused")
     public boolean isLineCreated() {
         return this.lineNodeList.size() >0;
     }
@@ -119,12 +126,14 @@ public class LinearLine {
     // getters
     public MapNode getLineStartNode() { return this.lineStartNode; }
 
+    @SuppressWarnings("unused")
     public int getInterpolationPointDistance() { return this.interpolationPointDistance; }
 
     //
     // setters
     //
 
+    @SuppressWarnings("unused")
     public void setInterpolationDistance(int distance) {
         this.interpolationPointDistance = distance;
     }

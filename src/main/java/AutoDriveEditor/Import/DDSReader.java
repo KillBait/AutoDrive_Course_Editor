@@ -25,6 +25,9 @@ package AutoDriveEditor.Import;
  *    SOFTWARE.
 */
 
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+
+@SuppressWarnings("unused")
 public class DDSReader {
     public static final Order ARGB = new Order(16, 8, 0, 24);
     public static final Order ABGR = new Order(0, 8, 16, 24);
@@ -126,10 +129,11 @@ public class DDSReader {
             case A8R8G8B8: pixels = readA8R8G8B8(width, height, offset, buffer, order); break;
             case X8R8G8B8: pixels = readX8R8G8B8(width, height, offset, buffer, order); break;
         }
-
+        LOG.info("DDSReader - Finished Decoding DDS");
         return pixels;
     }
 
+    @SuppressWarnings("StatementWithEmptyBody")
     private static int getType(byte [] buffer) {
 
         int type = 0;
@@ -226,7 +230,7 @@ public class DDSReader {
                     int t1 = (buffer[index] & 0x0C) >> 2;
                     int t2 = (buffer[index] & 0x30) >> 4;
                     int t3 = (buffer[index++] & 0xC0) >> 6;
-                    pixels[4*width*i+4*j+width*k+0] = getDXTColor(c0, c1, 0xFF, t0, order);
+                    pixels[4*width*i+4*j+width * k] = getDXTColor(c0, c1, 0xFF, t0, order);
                     if(4*j+1 >= width) continue;
                     pixels[4*width*i+4*j+width*k+1] = getDXTColor(c0, c1, 0xFF, t1, order);
                     if(4*j+2 >= width) continue;
@@ -244,6 +248,7 @@ public class DDSReader {
     }
 
     private static int [] decodeDXT3(int width, int height, int offset, byte [] buffer, Order order) {
+        LOG.info("DDSReader - Decoding DDS ( DXT3 )");
         int index = offset;
         int w = (width+3)/4;
         int h = (height+3)/4;
@@ -256,7 +261,7 @@ public class DDSReader {
                     int a0 = (buffer[index++] & 0xFF);
                     int a1 = (buffer[index++] & 0xFF);
                     // 4bit alpha to 8bit alpha
-                    alphaTable[4*k+0] = 17 * ((a0 & 0xF0)>>4);
+                    alphaTable[4 * k] = 17 * ((a0 & 0xF0)>>4);
                     alphaTable[4*k+1] = 17 * (a0 & 0x0F);
                     alphaTable[4*k+2] = 17 * ((a1 & 0xF0)>>4);
                     alphaTable[4*k+3] = 17 * (a1 & 0x0F);
@@ -269,7 +274,7 @@ public class DDSReader {
                     int t1 = (buffer[index] & 0x0C) >> 2;
                     int t2 = (buffer[index] & 0x30) >> 4;
                     int t3 = (buffer[index++] & 0xC0) >> 6;
-                    pixels[4*width*i+4*j+width*k+0] = getDXTColor(c0, c1, alphaTable[4*k+0], t0, order);
+                    pixels[4*width*i+4*j+width*k] = getDXTColor(c0, c1, alphaTable[4 * k], t0, order);
                     if(4*j+1 >= width) continue;
                     pixels[4*width*i+4*j+width*k+1] = getDXTColor(c0, c1, alphaTable[4*k+1], t1, order);
                     if(4*j+2 >= width) continue;
@@ -287,6 +292,7 @@ public class DDSReader {
     }
 
     private static int [] decodeDXT5(int width, int height, int offset, byte [] buffer, Order order) {
+        LOG.info("DDSReader - Decoding DDS ( DXT5 )");
         int index = offset;
         int w = (width+3)/4;
         int h = (height+3)/4;
@@ -323,7 +329,7 @@ public class DDSReader {
                     int t1 = (buffer[index] & 0x0C) >> 2;
                     int t2 = (buffer[index] & 0x30) >> 4;
                     int t3 = (buffer[index++] & 0xC0) >> 6;
-                    pixels[4*width*i+4*j+width*k+0] = getDXTColor(c0, c1, getDXT5Alpha(a0, a1, alphaTable[4*k+0]), t0, order);
+                    pixels[4*width*i+4*j+width*k] = getDXTColor(c0, c1, getDXT5Alpha(a0, a1, alphaTable[4 * k]), t0, order);
                     if(4*j+1 >= width) continue;
                     pixels[4*width*i+4*j+width*k+1] = getDXTColor(c0, c1, getDXT5Alpha(a0, a1, alphaTable[4*k+1]), t1, order);
                     if(4*j+2 >= width) continue;

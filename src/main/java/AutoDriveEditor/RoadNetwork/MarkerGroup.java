@@ -1,5 +1,10 @@
 package AutoDriveEditor.RoadNetwork;
 
+//
+// Used for storing all the marker groups and ID's in Route config files
+//
+
+@SuppressWarnings("rawtypes")
 public class MarkerGroup implements Comparable{
 
     public int groupIndex;

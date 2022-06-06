@@ -1,24 +1,31 @@
 package AutoDriveEditor.GUI;
 
-import javax.swing.*;
-import javax.swing.border.BevelBorder;
-import java.awt.*;
-
-import AutoDriveEditor.AutoDriveEditor;
 import AutoDriveEditor.Listeners.CurvePanelListener;
 import AutoDriveEditor.Listeners.EditorListener;
 import AutoDriveEditor.MapPanel.MapPanel;
 
-import static AutoDriveEditor.Utils.GUIUtils.*;
-import static AutoDriveEditor.Locale.LocaleManager.*;
+import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
+import java.awt.*;
+
+import static AutoDriveEditor.AutoDriveEditor.EXPERIMENTAL;
+import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogGUIInfo;
+import static AutoDriveEditor.Locale.LocaleManager.localeString;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
+import static AutoDriveEditor.Utils.GUIUtils.*;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
-import static AutoDriveEditor.XMLConfig.GameXML.*;
+import static AutoDriveEditor.XMLConfig.GameXML.oldConfigFormat;
 import static javax.swing.BoxLayout.X_AXIS;
 import static javax.swing.BoxLayout.Y_AXIS;
 
 
 public class GUIBuilder {
+
+    // Editor states
 
     public static final int EDITORSTATE_NOOP = -1;
     public static final int EDITORSTATE_MOVING = 0;
@@ -27,9 +34,9 @@ public class GUIBuilder {
     public static final int EDITORSTATE_CHANGE_NODE_PRIORITY = 3;
     public static final int EDITORSTATE_CREATE_SUBPRIO_NODE = 4;
     public static final int EDITORSTATE_DELETE_NODES = 5;
-    public static final int EDITORSTATE_CREATING_DESTINATION = 6;
-    public static final int EDITORSTATE_EDITING_DESTINATION = 7;
-    public static final int EDITORSTATE_DELETING_DESTINATION = 8;
+    public static final int EDITORSTATE_CREATE_MARKER = 6;
+    public static final int EDITORSTATE_EDIT_MARKER = 7;
+    public static final int EDITORSTATE_DELETE_MARKER = 8;
     public static final int EDITORSTATE_ALIGN_HORIZONTAL = 9;
     public static final int EDITORSTATE_ALIGN_VERTICAL = 10;
     public static final int EDITORSTATE_ALIGN_DEPTH = 11;
@@ -38,7 +45,7 @@ public class GUIBuilder {
     public static final int EDITORSTATE_QUADRATICBEZIER = 14;
     public static final int EDITORSTATE_CUBICBEZIER = 15;
 
-    public static int editorState = GUIBuilder.EDITORSTATE_NOOP;
+    // Nodes Panel ActionCommands
 
     public static final String BUTTON_MOVE_NODES = "Move Nodes";
     public static final String BUTTON_CONNECT_NODES = "Connect Nodes";
@@ -48,21 +55,9 @@ public class GUIBuilder {
     public static final String BUTTON_CREATE_REVERSE_CONNECTION = "Create Reverse Connection";
     public static final String BUTTON_CREATE_DUAL_CONNECTION = "Create Dual Connection";
     public static final String BUTTON_REMOVE_NODES = "Remove Nodes";
-    public static final String BUTTON_CREATE_DESTINATIONS = "Create Destinations";
-    public static final String BUTTON_EDIT_DESTINATIONS_GROUPS = "Manage Destination Groups";
-    public static final String BUTTON_DELETE_DESTINATIONS = "Remove Destinations";
-    public static final String BUTTON_COPYPASTE_SELECT = "CopyPaste Select";
-    public static final String BUTTON_COPYPASTE_CUT = "CopyPaste Cut";
-    public static final String BUTTON_COPYPASTE_COPY = "CopyPaste Copy";
-    public static final String BUTTON_COPYPASTE_PASTE = "CopyPaste Paste";
-    public static final String BUTTON_COPYPASTE_PASTE_ORIGINAL = "CopyPaste Paste Original Location";
 
-    // OCD modes
+    // Curve Panel ActionCommands
 
-    public static final String BUTTON_ALIGN_HORIZONTAL = "Horizontally Align Nodes";
-    public static final String BUTTON_ALIGN_VERTICAL = "Vertically Align Nodes";
-    public static final String BUTTON_ALIGN_DEPTH = "Depth Align Nodes";
-    public static final String BUTTON_ALIGN_EDIT_NODE = "Edit Node Location";
     public static final String BUTTON_CREATE_QUADRATICBEZIER = "Quadratic Bezier";
     public static final String BUTTON_CREATE_CUBICBEZIER = "Cubic Bezier";
     public static final String BUTTON_COMMIT_CURVE = "Confirm Curve";
@@ -72,148 +67,340 @@ public class GUIBuilder {
     public static final String RADIOBUTTON_PATHTYPE_REVERSE = "Reverse";
     public static final String RADIOBUTTON_PATHTYPE_DUAL = "Dual";
 
-    public static MapPanel mapPanel;
+    // Markers Panel ActionCommands
+
+    public static final String BUTTON_CREATE_DESTINATIONS = "Create Destinations";
+    public static final String BUTTON_EDIT_DESTINATIONS_GROUPS = "Manage Destination Groups";
+    public static final String BUTTON_DELETE_DESTINATIONS = "Remove Destinations";
+
+    // Alignment Panel ActionCommands
+
+    public static final String BUTTON_ALIGN_HORIZONTAL = "Horizontally Align Nodes";
+    public static final String BUTTON_ALIGN_VERTICAL = "Vertically Align Nodes";
+    public static final String BUTTON_ALIGN_DEPTH = "Depth Align Nodes";
+    public static final String BUTTON_ALIGN_EDIT_NODE = "Edit Node Location";
+
+    // Edit Panel ActionCommands
+
+    public static final String BUTTON_COPYPASTE_SELECT = "CopyPaste Select";
+    public static final String BUTTON_COPYPASTE_CUT = "CopyPaste Cut";
+    public static final String BUTTON_COPYPASTE_COPY = "CopyPaste Copy";
+    public static final String BUTTON_COPYPASTE_PASTE = "CopyPaste Paste";
+    public static final String BUTTON_COPYPASTE_PASTE_ORIGINAL = "CopyPaste Original Location";
+
+    // Option Panel ActionCommands
+
+    public static final String BUTTON_OPTIONS_NODE_SIZE_INCREASE = "Node Size Up";
+    public static final String BUTTON_OPTIONS_NODE_SIZE_DECREASE = "Node Size Down";
+    public static final String BUTTON_OPTIONS_OPEN_CONFIG = "Open Config";
+    public static final String BUTTON_OPTIONS_NETWORK_INFO = "Network Info";
+    public static final String BUTTON_OPTIONS_CON_CONNECT = "Continuous Connections";
+
+    // Curve Panel Button Listener
     public static CurvePanelListener curvePanelListener;
 
-    public static JPanel nodeBox;
-    public static JToggleButton removeNode;
-    public static JToggleButton removeDestination;
+
+    // Main Window Reference
+
+    public static MapPanel mapPanel;
+
+    // default Editor State
+
+    public static int editorState = GUIBuilder.EDITORSTATE_NOOP;
+
+
+    // Node Panel Buttons
+
     public static JToggleButton moveNode;
     public static JToggleButton createRegularConnection;
     public static JToggleButton createPrimaryNode;
-    public static JToggleButton createDestination;
-    public static JToggleButton changePriority;
+    public static JToggleButton createDualConnection;
     public static JToggleButton createSecondaryNode;
     public static JToggleButton createReverseConnection;
-    public static JToggleButton createDualConnection;
+    public static JToggleButton changePriority;
+    public static JToggleButton removeNode;
+
+    // Curves Panel Buttons
+
+    public static JToggleButton quadBezier;
+    public static JToggleButton cubicBezier;
+
+    // Markers Panel Buttons
+
+    public static JToggleButton createDestination;
     public static JToggleButton editDestination;
+    public static JToggleButton removeDestination;
+
+    // Alignment Panel Buttons
+
     public static JToggleButton alignHorizontal;
     public static JToggleButton alignVertical;
     public static JToggleButton alignDepth;
     public static JToggleButton editNode;
-    public static JToggleButton quadBezier;
-    public static JToggleButton cubicBezier;
-    public static JToggleButton commitCurve;
-    public static JToggleButton cancelCurve;
+
+    // Edit Panel Buttons
+
     public static JToggleButton select;
     public static JToggleButton cut;
     public static JToggleButton copy;
     public static JToggleButton paste;
 
-    public static JLabel zoomLevelLabel;
-    public static JLabel imageLoadedLabel;
-    public static JLabel heightMapLoadedLabel;
+    // Options Panel
 
+    public static JToggleButton nodeSizeIncrease;
+    public static JToggleButton nodeSizeDecrease;
+    public static JToggleButton openConfig;
+    public static JToggleButton networkInfo;
+    public static JToggleButton conConnect;
+
+    // Curve Panel
+
+    public static JToggleButton commitCurve;
+    public static JToggleButton cancelCurve;
     public static JSlider numIterationsSlider;
     public static JPanel curvePanel;
-    public static JTextArea textArea;
     public static JRadioButton curvePathRegular;
     public static JRadioButton curvePathSubPrio;
     public static JRadioButton curvePathReverse;
     public static JRadioButton curvePathDual;
 
+    // Info Panel Labels
 
-    public static MapPanel createMapPanel(AutoDriveEditor editor, EditorListener listener) {
+    public static JLabel imageLoadedLabel;
+    public static JLabel heightMapLoadedLabel;
+    public static JLabel currentMapSizeLabel;
+
+    // Text Area Panel
+
+    public static JTextArea textArea;
+
+    // Toolbar Panels
+
+    static JToolBar buttonToolbar = new JToolBar();
+    static JPanel nodePanel = new JPanel();
+    static JPanel curvesPanel = new JPanel();
+    static JPanel markerPanel = new JPanel();
+    static JPanel alignPanel = new JPanel();
+    static JPanel editPanel = new JPanel();
+    static JPanel optionsPanel = new JPanel();
+    static JPanel testPanel = new JPanel();
+
+    public static JPanel textPanel;
+
+
+
+    public static MapPanel createMapPanel(EditorListener listener) {
 
         mapPanel = new MapPanel();
         mapPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLoweredBevelBorder(), BorderFactory.createRaisedBevelBorder()));
         mapPanel.add( new AlphaContainer(initCurvePanel(listener)));
-
         //JRotation rot = new JRotation();
         //mapPanel.add(rot);
-
         return mapPanel;
 
     }
 
-    public static JPanel createButtonPanel(EditorListener editorListener) {
+    public static JToolBar createButtonPanel(EditorListener editorListener, BorderLayout mainLayout, String layoutPosition, Boolean isFloating) {
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        //JToolBar buttonPanel = new JToolBar(BorderLayout.PAGE_START);
+        // Set the initial toolbar rotation
+
+        boolean isToolbarHorizontal = layoutPosition.equals(BorderLayout.PAGE_START);
+        if (isToolbarHorizontal) {
+            buttonToolbar.setOrientation(SwingConstants.HORIZONTAL);
+            buttonToolbar.setLayout(new FlowLayout());
+        } else {
+            buttonToolbar.setOrientation(SwingConstants.VERTICAL);
+            buttonToolbar.setLayout(new BoxLayout(buttonToolbar, Y_AXIS));
+        }
+
+        buttonToolbar.addAncestorListener(new AncestorListener() {
+            @Override
+            public void ancestorAdded(AncestorEvent event) {
+                SwingUtilities.invokeLater(() -> {
+                    String pos = (String) mainLayout.getConstraints(event.getComponent()); // null if detached;
+                    if (pos == null) {
+                        toolbarPosition = "Floating";
+                    } else if (pos.equals("First") || pos.equals("North")) {
+                        toolbarPosition = "Top";
+                    } else if (pos.equals("Before") || pos.equals("West")) {
+                        toolbarPosition = "Left";
+                    } else if (pos.equals("After") || pos.equals("East")) {
+                        toolbarPosition = "Right";
+                    }
+                    if (bDebugLogGUIInfo) LOG.info("Toolbar Position Changed --> {} , {}", pos, toolbarPosition);
+                });
+            }
+
+            @Override
+            public void ancestorRemoved(AncestorEvent event) {}
+
+            @Override
+            public void ancestorMoved(AncestorEvent event) {}
+        });
+        buttonToolbar.addPropertyChangeListener(evt -> {
+            String propertyName = evt.getPropertyName();
+            if ("orientation".equals(propertyName)) {
+                Integer newValue = (Integer) evt.getNewValue();
+                if ( newValue == JToolBar.HORIZONTAL) {
+                    switchToolbarLayoutToHorizontal();
+                } else {
+                    switchToolbarLayoutToVertical();
+                }
+            }
+        });
 
         //
         // Create node panel
         //
 
-        nodeBox = new JPanel();
-        nodeBox.setBorder(BorderFactory.createTitledBorder(localeString.getString("panel_nodes")));
-        buttonPanel.add(nodeBox);
+        TitledBorder nodeBorder = BorderFactory.createTitledBorder(localeString.getString("panel_nodes"));
+        nodeBorder.setTitleJustification(TitledBorder.CENTER);
+        nodePanel.setBorder(nodeBorder);
 
-        moveNode = makeImageToggleButton("buttons/movenode", "buttons/movenode_selected", BUTTON_MOVE_NODES,"nodes_move_tooltip","nodes_move_alt", nodeBox, null, false, editorListener);
-        createRegularConnection = makeStateChangeImageToggleButton("buttons/connectregular", "buttons/connectregular_selected", BUTTON_CONNECT_NODES,"nodes_connect_tooltip","nodes_connect_alt", nodeBox, null, false, editorListener);
-        createPrimaryNode = makeImageToggleButton("buttons/createprimary","buttons/createprimary_selected", BUTTON_CREATE_PRIMARY_NODE,"nodes_createprimary_tooltip","nodes_createprimary_alt", nodeBox, null, false, editorListener);
-        createDualConnection = makeStateChangeImageToggleButton("buttons/connectdual","buttons/connectdual_selected", BUTTON_CREATE_DUAL_CONNECTION,"nodes_createdual_tooltip","nodes_createdual_alt", nodeBox, null, false, editorListener);
-        changePriority = makeImageToggleButton("buttons/swappriority","buttons/swappriority_selected", BUTTON_CHANGE_NODE_PRIORITY,"nodes_priority_tooltip","nodes_priority_alt", nodeBox, null, false, editorListener);
-        createSecondaryNode = makeImageToggleButton("buttons/createsecondary","buttons/createsecondary_selected", BUTTON_CREATE_SUBPRIO_NODE,"nodes_createsecondary_tooltip","nodes_createsecondary_alt", nodeBox, null, false, editorListener);
-        createReverseConnection = makeStateChangeImageToggleButton("buttons/connectreverse","buttons/connectreverse_selected", BUTTON_CREATE_REVERSE_CONNECTION,"nodes_createreverse_tooltip","nodes_createreverse_alt", nodeBox, null, false, editorListener);
+        buttonToolbar.add(nodePanel);
 
-        nodeBox.add(Box.createRigidArea(new Dimension(8, 0)));
-        quadBezier = makeImageToggleButton("buttons/quadcurve","buttons/quadcurve_selected", BUTTON_CREATE_QUADRATICBEZIER,"helper_quadbezier_tooltip","helper_quadbezier_alt", nodeBox, null, false, editorListener);
-        cubicBezier = makeImageToggleButton("buttons/cubiccurve","buttons/cubiccurve_selected", BUTTON_CREATE_CUBICBEZIER,"helper_cubicbezier_tooltip","helper_cubicbezier_alt", nodeBox, null,  false, editorListener);
-        nodeBox.add(Box.createRigidArea(new Dimension(8, 0)));
-        removeNode = makeImageToggleButton("buttons/deletenodes","buttons/deletenodes_selected", BUTTON_REMOVE_NODES,"nodes_remove_tooltip","nodes_remove_alt", nodeBox, null, false, editorListener);
+        moveNode = makeImageToggleButton("buttons/movenode", "buttons/movenode_selected", BUTTON_MOVE_NODES,"nodes_move_tooltip","nodes_move_alt", nodePanel, false, null, false, editorListener);
+        createRegularConnection = makeStateChangeImageToggleButton("buttons/connectregular", "buttons/connectregular_selected", BUTTON_CONNECT_NODES,"nodes_connect_tooltip","nodes_connect_alt", nodePanel, false, null, false, editorListener);
+        createPrimaryNode = makeImageToggleButton("buttons/createprimary","buttons/createprimary_selected", BUTTON_CREATE_PRIMARY_NODE, "nodes_create_primary_tooltip", "nodes_create_primary_alt", nodePanel, false, null, false, editorListener);
+        createDualConnection = makeStateChangeImageToggleButton("buttons/connectdual","buttons/connectdual_selected", BUTTON_CREATE_DUAL_CONNECTION, "nodes_create_dual_tooltip", "nodes_create_dual_alt", nodePanel, false, null, false, editorListener);
+        createSecondaryNode = makeImageToggleButton("buttons/createsecondary","buttons/createsecondary_selected", BUTTON_CREATE_SUBPRIO_NODE, "nodes_create_secondary_tooltip", "nodes_create_secondary_alt", nodePanel, false, null, false, editorListener);
+        createReverseConnection = makeStateChangeImageToggleButton("buttons/connectreverse","buttons/connectreverse_selected", BUTTON_CREATE_REVERSE_CONNECTION, "nodes_create_reverse_tooltip", "nodes_create_reverse_alt", nodePanel, false, null, false, editorListener);
+        changePriority = makeImageToggleButton("buttons/swappriority","buttons/swappriority_selected", BUTTON_CHANGE_NODE_PRIORITY,"nodes_priority_tooltip","nodes_priority_alt", nodePanel, false, null, false, editorListener);
+        removeNode = makeImageToggleButton("buttons/deletenodes","buttons/deletenodes_selected", BUTTON_REMOVE_NODES,"nodes_remove_tooltip","nodes_remove_alt", nodePanel, false, null, false, editorListener);
+
+        //
+        // Create Curve panel
+        //
+
+        TitledBorder curvesBorder = BorderFactory.createTitledBorder(localeString.getString("panel_curves"));
+        curvesBorder.setTitleJustification(TitledBorder.CENTER);
+        curvesPanel.setBorder(curvesBorder);
+
+        buttonToolbar.add(curvesPanel);
+
+        quadBezier = makeImageToggleButton("buttons/quadcurve","buttons/quadcurve_selected", BUTTON_CREATE_QUADRATICBEZIER, "panel_curves_quadbezier_tooltip", "panel_curves_quadbezier_alt", curvesPanel, false, null, false, editorListener);
+        cubicBezier = makeImageToggleButton("buttons/cubiccurve","buttons/cubiccurve_selected", BUTTON_CREATE_CUBICBEZIER, "panel_curves_cubicbezier_tooltip", "panel_curves_cubicbezier_alt", curvesPanel, false, null,  false, editorListener);
 
         //
         // Create markers panel
         //
 
-        JPanel markerBox = new JPanel();
-        markerBox.setBorder(BorderFactory.createTitledBorder(localeString.getString("panel_markers")));
-        buttonPanel.add(markerBox);
+        TitledBorder markerBorder = BorderFactory.createTitledBorder(localeString.getString("panel_markers"));
+        markerBorder.setTitleJustification(TitledBorder.CENTER);
+        markerPanel.setBorder(markerBorder);
+        //markerPanel.setBorder(BorderFactory.createTitledBorder(localeString.getString("panel_markers")));
+        buttonToolbar.add(markerPanel);
 
-        createDestination = makeImageToggleButton("buttons/addmarker","buttons/addmarker_selected", BUTTON_CREATE_DESTINATIONS,"markers_add_tooltip","markers_add_alt", markerBox, null, false, editorListener);
-        editDestination = makeImageToggleButton("buttons/editmarker","buttons/editmarker_selected", BUTTON_EDIT_DESTINATIONS_GROUPS,"markers_edit_tooltip","markers_edit_alt", markerBox, null, false, editorListener);
-        markerBox.add(Box.createRigidArea(new Dimension(8, 0)));
-        removeDestination = makeImageToggleButton("buttons/deletemarker","buttons/deletemarker_selected", BUTTON_DELETE_DESTINATIONS,"markers_delete_tooltip","markers_delete_alt", markerBox, null, false, editorListener);
+        createDestination = makeImageToggleButton("buttons/addmarker","buttons/addmarker_selected", BUTTON_CREATE_DESTINATIONS,"markers_add_tooltip","markers_add_alt", markerPanel, false, null, false, editorListener);
+        editDestination = makeImageToggleButton("buttons/editmarker","buttons/editmarker_selected", BUTTON_EDIT_DESTINATIONS_GROUPS,"markers_edit_tooltip","markers_edit_alt", markerPanel, false, null, false, editorListener);
+        markerPanel.add(Box.createRigidArea(new Dimension(10, 1)));
+        removeDestination = makeImageToggleButton("buttons/deletemarker","buttons/deletemarker_selected", BUTTON_DELETE_DESTINATIONS,"markers_delete_tooltip","markers_delete_alt", markerPanel, false, null, false, editorListener);
 
         //
         // Create alignment panel
         //
 
-        JPanel alignBox = new JPanel();
-        alignBox.setBorder(BorderFactory.createTitledBorder(localeString.getString("panel_align")));
-        buttonPanel.add(alignBox);
+        TitledBorder alignmentBorder = BorderFactory.createTitledBorder(localeString.getString("panel_align"));
+        alignmentBorder.setTitleJustification(TitledBorder.CENTER);
+        alignPanel.setBorder(alignmentBorder);
+        buttonToolbar.add(alignPanel);
 
-        alignHorizontal = makeImageToggleButton("buttons/horizontalalign","buttons/horizontalalign_selected", BUTTON_ALIGN_HORIZONTAL,"align_horizontal_tooltip","align_horizontal_alt", alignBox, null, false, editorListener);
-        alignVertical = makeImageToggleButton("buttons/verticalalign","buttons/verticalalign_selected", BUTTON_ALIGN_VERTICAL,"align_vertical_tooltip","align_vertical_alt", alignBox, null, false, editorListener);
-        alignDepth = makeImageToggleButton("buttons/depthalign","buttons/depthalign_selected", BUTTON_ALIGN_DEPTH,"align_depth_tooltip","align_depth_alt", alignBox, null, false, editorListener);
-        alignBox.add(Box.createRigidArea(new Dimension(16, 0)));
-        editNode = makeImageToggleButton("buttons/editlocation","buttons/editlocation_selected", BUTTON_ALIGN_EDIT_NODE,"align_node_edit_tooltip","align_node_edit_alt", alignBox, null, false, editorListener);
+        alignHorizontal = makeImageToggleButton("buttons/horizontalalign","buttons/horizontalalign_selected", BUTTON_ALIGN_HORIZONTAL,"align_horizontal_tooltip","align_horizontal_alt", alignPanel, false, null, false, editorListener);
+        alignVertical = makeImageToggleButton("buttons/verticalalign","buttons/verticalalign_selected", BUTTON_ALIGN_VERTICAL,"align_vertical_tooltip","align_vertical_alt", alignPanel, false, null, false, editorListener);
+        alignDepth = makeImageToggleButton("buttons/depthalign","buttons/depthalign_selected", BUTTON_ALIGN_DEPTH,"align_depth_tooltip","align_depth_alt", alignPanel, false, null, false, editorListener);
+        editNode = makeImageToggleButton("buttons/editlocation","buttons/editlocation_selected", BUTTON_ALIGN_EDIT_NODE,"align_node_edit_tooltip","align_node_edit_alt", alignPanel, false, null, false, editorListener);
 
         //
         // copy/paste panel
         //
 
-        JPanel copyBox = new JPanel();
-        copyBox.setBorder(BorderFactory.createTitledBorder(localeString.getString("panel_copypaste")));
-        copyBox.setVisible(true);
-        buttonPanel.add(copyBox);
+        TitledBorder copyBorder = BorderFactory.createTitledBorder(localeString.getString("panel_copypaste"));
+        copyBorder.setTitleJustification(TitledBorder.CENTER);
+        editPanel.setBorder(copyBorder);
 
-        select = makeImageToggleButton("buttons/select","buttons/select_selected", BUTTON_COPYPASTE_SELECT, "copypaste_select_tooltip","copypaste_select_alt", copyBox, null, false, editorListener);
-        cut = makeImageToggleButton("buttons/cut","buttons/cut_selected", BUTTON_COPYPASTE_CUT, "copypaste_cut_tooltip","copypaste_cut_alt", copyBox, null, false, editorListener);
-        copy = makeImageToggleButton("buttons/copy","buttons/copy_selected", BUTTON_COPYPASTE_COPY, "copypaste_copy_tooltip","copypaste_copy_alt", copyBox, null, false, editorListener);
-        paste = makeImageToggleButton("buttons/paste","buttons/paste_selected", BUTTON_COPYPASTE_PASTE, "copypaste_paste_tooltip","copypaste_paste_alt", copyBox, null, false, editorListener);
+        buttonToolbar.add(editPanel);
+
+        select = makeImageToggleButton("buttons/select","buttons/select_selected", BUTTON_COPYPASTE_SELECT, "copypaste_select_tooltip","copypaste_select_alt", editPanel, false, null, false, editorListener);
+        cut = makeImageToggleButton("buttons/cut","buttons/cut_selected", BUTTON_COPYPASTE_CUT, "copypaste_cut_tooltip","copypaste_cut_alt", editPanel, false, null, false, editorListener);
+        copy = makeImageToggleButton("buttons/copy","buttons/copy_selected", BUTTON_COPYPASTE_COPY, "copypaste_copy_tooltip","copypaste_copy_alt", editPanel, false, null, false, editorListener);
+        paste = makeImageToggleButton("buttons/paste","buttons/paste_selected", BUTTON_COPYPASTE_PASTE, "copypaste_paste_tooltip","copypaste_paste_alt", editPanel, false, null, false, editorListener);
+
+        //
+        // create options panel
+        //
+
+        TitledBorder optionsBorder = BorderFactory.createTitledBorder(localeString.getString("panel_options"));
+        optionsBorder.setTitleJustification(TitledBorder.CENTER);
+        optionsPanel.setBorder(optionsBorder);
+
+        buttonToolbar.add(optionsPanel);
+
+        nodeSizeDecrease = makeImageButton("buttons/nodeminus", "buttons/nodeminus_selected", BUTTON_OPTIONS_NODE_SIZE_DECREASE,"options_node_size_minus_tooltip","options_node_size_minus_alt", optionsPanel, editorListener);
+        nodeSizeIncrease = makeImageButton("buttons/nodeplus", "buttons/nodeplus_selected", BUTTON_OPTIONS_NODE_SIZE_INCREASE,"options_node_size_plus_tooltip","options_node_size_plus_alt", optionsPanel, editorListener);
+        openConfig = makeImageButton("buttons/config2", "buttons/config2_selected", BUTTON_OPTIONS_OPEN_CONFIG, "options_config_open_tooltip","options_config_open_alt", optionsPanel, editorListener);
+        String tooltip;
+        if (bContinuousConnections) {
+            tooltip = "options_con_connect_enabled_tooltip";
+        } else {
+            tooltip = "options_con_connect_disabled_tooltip";
+        }
+        conConnect = makeImageToggleButton("buttons/conconnect", "buttons/conconnect_selected", BUTTON_OPTIONS_CON_CONNECT, tooltip, "options_con_connect_alt", optionsPanel, !bContinuousConnections, null, false, editorListener);
+
+        if (EXPERIMENTAL) {
+            networkInfo = makeImageButton("buttons/networkinfo", "buttons/networkinfo", BUTTON_OPTIONS_NETWORK_INFO,"options_info_network_info_tooltip","options_info_network_info_alt", optionsPanel, editorListener);
+        }
 
         //
         // create experimental panel
         //
 
-        JPanel testBox = new JPanel();
-        testBox.setBorder(BorderFactory.createTitledBorder(localeString.getString("panel_helper")));
-        testBox.setVisible(false);
-        buttonPanel.add(testBox);
+        testPanel.setBorder(BorderFactory.createTitledBorder(localeString.getString("panel_helper")));
+        testPanel.setVisible(false);
+        buttonToolbar.add(testPanel);
 
 
-        testBox.add(Box.createRigidArea(new Dimension(48, 0)));
+        testPanel.add(Box.createRigidArea(new Dimension(48, 0)));
 
-        return buttonPanel;
+        if (isToolbarHorizontal) {
+            switchToolbarLayoutToHorizontal();
+        } else {
+            switchToolbarLayoutToVertical();
+        }
+
+        return buttonToolbar;
    }
+
+    private static void switchToolbarLayoutToHorizontal() {
+        buttonToolbar.setLayout(new FlowLayout());
+        nodePanel.setLayout(new FlowLayout());
+        curvesPanel.setLayout(new FlowLayout());
+        markerPanel.setLayout(new FlowLayout());
+        alignPanel.setLayout(new FlowLayout());
+        editPanel.setLayout(new FlowLayout());
+        optionsPanel.setLayout(new FlowLayout());
+        testPanel.setLayout(new FlowLayout());
+    }
+
+    private static void switchToolbarLayoutToVertical() {
+        buttonToolbar.setLayout(new BoxLayout(buttonToolbar, Y_AXIS));
+        nodePanel.setLayout(new GridLayout(4,2,8,8));
+        nodePanel.setMaximumSize(new Dimension(80, (int)nodePanel.getPreferredSize().getHeight()));
+        curvesPanel.setLayout(new GridLayout(1,2,8,8));
+        curvesPanel.setMaximumSize(new Dimension(80, (int)curvesPanel.getPreferredSize().getHeight()));
+        markerPanel.setLayout(new GridLayout(2,2,8,8));
+        markerPanel.setMaximumSize(new Dimension(80, (int)markerPanel.getPreferredSize().getHeight()));
+        alignPanel.setLayout(new GridLayout(2,2,8,8));
+        alignPanel.setMaximumSize(new Dimension(80, (int)alignPanel.getPreferredSize().getHeight()));
+        editPanel.setLayout(new GridLayout(2,2,8,8));
+        editPanel.setMaximumSize(new Dimension(80, (int) editPanel.getPreferredSize().getHeight()));
+        optionsPanel.setLayout(new GridLayout(2,2,8,8));
+        optionsPanel.setMaximumSize(new Dimension(80, (int) optionsPanel.getPreferredSize().getHeight()));
+        testPanel.setLayout(new GridLayout(2,2,8,8));
+    }
 
     public static JPanel initCurvePanel(EditorListener editorListener) {
 
-        //
         // curve panel (hidden by default)
-        //
 
         curvePanel = new JPanel();
         curvePanel.setLayout(new BoxLayout(curvePanel, X_AXIS)); //create container ( left to right layout)
@@ -245,14 +432,14 @@ public class GUIBuilder {
         interpSliderPanel.setBorder(BorderFactory.createEmptyBorder());
         interpSliderPanel.setOpaque(false);
 
-
         // add padding before the label to centre it
+
         interpSliderPanel.add(Box.createRigidArea(new Dimension(72, 5)));
         JLabel textLabel = new JLabel(localeString.getString("panel_slider_label"));
         textLabel.setForeground(Color.ORANGE);
         interpSliderPanel.add(textLabel);
 
-        numIterationsSlider = new JSlider(JSlider.HORIZONTAL,0, quadSliderMax, quadSliderDefault);
+        numIterationsSlider = new JSlider(JSlider.HORIZONTAL,0, curveSliderMax, curveSliderDefault);
         numIterationsSlider.setVisible(true);
         numIterationsSlider.setOpaque(false);
         numIterationsSlider.setForeground(Color.ORANGE);
@@ -264,48 +451,48 @@ public class GUIBuilder {
         curvePanel.add(interpSliderPanel);
 
         curvePanel.add(Box.createRigidArea(new Dimension(8, 0)));
-        commitCurve = makeImageToggleButton("curvepanel/confirm","curvepanel/confirm_select", BUTTON_COMMIT_CURVE,"panel_slider_confirm_curve","panel_slider_confirm_curve_alt", curvePanel, null, false, editorListener);
+        commitCurve = makeImageToggleButton("curvepanel/confirm","curvepanel/confirm_select", BUTTON_COMMIT_CURVE,"panel_slider_confirm_curve","panel_slider_confirm_curve_alt", curvePanel, false, null, false, editorListener);
         curvePanel.add(Box.createRigidArea(new Dimension(8, 0)));
-        cancelCurve = makeImageToggleButton("curvepanel/cancel","curvepanel/cancel_select", BUTTON_CANCEL_CURVE,"panel_slider_cancel_curve","panel_slider_cancel_curve_alt", curvePanel, null, false, editorListener);
+        cancelCurve = makeImageToggleButton("curvepanel/cancel","curvepanel/cancel_select", BUTTON_CANCEL_CURVE,"panel_slider_cancel_curve","panel_slider_cancel_curve_alt", curvePanel, false, null, false, editorListener);
         curvePanel.add(Box.createRigidArea(new Dimension(8, 0)));
-
-
 
         return curvePanel;
     }
 
     public static JPanel initTextPanel() {
-        JPanel textPanel = new JPanel(new BorderLayout());
+
+        // Setup the text panel to show info to user
+        textPanel = new JPanel(new BorderLayout());
         textArea = new JTextArea("Welcome to the AutoDrive Editor... Load a config to start editing..\n ",3,0);
         JScrollPane scrollPane = new JScrollPane(textArea);
         textArea.setEditable(false);
+        Font textAreaFont = textArea.getFont();
+        textArea.setFont(new Font(textArea.getFont().toString(), Font.PLAIN, textAreaFont.getSize() - 1));
         textPanel.add(scrollPane, BorderLayout.CENTER);
+
+        // Setup the info panel to show if map images/heightmaps are loaded
+
         JPanel infoPanel = new JPanel(new GridLayout(3,2));
         infoPanel.setPreferredSize(new Dimension(150,50));
         infoPanel.setBorder(BorderFactory.createEtchedBorder());
 
-        JLabel imageLabel = new JLabel(" " + "Map Image : ");
-        //infoPanel.add(Box.createRigidArea(new Dimension(1, 1)));
+        JLabel imageLabel = new JLabel(" Map Image : ");
         infoPanel.add(imageLabel);
         imageLoadedLabel = new JLabel("");
         infoPanel.add(imageLoadedLabel);
-        //makeImageToggleButton("curvepanel/confirm","curvepanel/confirm_select", BUTTON_COMMIT_CURVE,"panel_slider_confirm_curve","panel_slider_confirm_curve_alt", infoPanel, null, false, null);
 
-        JLabel heightMapLabel = new JLabel(" " + "HeightMap : ");
-        //infoPanel.add(Box.createRigidArea(new Dimension(1, 1)));
+        JLabel heightMapLabel = new JLabel(" HeightMap : ");
         infoPanel.add(heightMapLabel);
         heightMapLoadedLabel = new JLabel("");
         infoPanel.add(heightMapLoadedLabel);
-        //makeImageToggleButton("curvepanel/confirm","curvepanel/confirm_select", BUTTON_COMMIT_CURVE,"panel_slider_confirm_curve","panel_slider_confirm_curve_alt", infoPanel, null, false, null);
 
+        JLabel mapSizeLabel = new JLabel(" Map Scale : ");
+        infoPanel.add(mapSizeLabel);
+        currentMapSizeLabel = new JLabel("");
+        infoPanel.add(currentMapSizeLabel);
 
-        JLabel zoomLabel = new JLabel(" " + "Zoomlevel = ");
-        infoPanel.add(zoomLabel);
-
-        zoomLevelLabel = new JLabel("");
-
-        infoPanel.add(zoomLevelLabel);
         textPanel.add(infoPanel, BorderLayout.LINE_END);
+
         return textPanel;
     }
 
@@ -322,6 +509,7 @@ public class GUIBuilder {
         markerBoxSetEnabled(enabled);
         alignBoxSetEnabled(enabled);
         copypasteBoxSetEnabled(enabled);
+        optionsBoxSetEnabled(enabled);
     }
 
     private static void nodeBoxSetEnabled(boolean enabled) {
@@ -356,6 +544,16 @@ public class GUIBuilder {
         paste.setEnabled(enabled);
     }
 
+    private static void optionsBoxSetEnabled(boolean enabled) {
+        nodeSizeDecrease.setEnabled(enabled);
+        nodeSizeIncrease.setEnabled(enabled);
+        if (!ConfigGUI.isConfigWindowOpen) openConfig.setEnabled(true);
+        conConnect.setEnabled(enabled);
+        if (EXPERIMENTAL) {
+            networkInfo.setEnabled(enabled);
+        }
+    }
+
     public static void  updateButtons() {
         moveNode.setSelected(false);
         createRegularConnection.setSelected(false);
@@ -382,7 +580,19 @@ public class GUIBuilder {
         copy.setSelected(false);
         paste.setSelected(false);
 
+        nodeSizeDecrease.setSelected(false);
+        nodeSizeIncrease.setSelected(false);
+        if (!ConfigGUI.isConfigWindowOpen) openConfig.setSelected(false);
+        if (EXPERIMENTAL) {
+            networkInfo.setSelected(false);
+        }
+
         switch (editorState) {
+            case EDITORSTATE_NOOP:
+                isMultiSelectAllowed = false;
+                rectangleStart = null;
+                rectangleEnd = null;
+                break;
             case EDITORSTATE_MOVING:
                 moveNode.setSelected(true);
                 showInTextArea("Left click ( or area select ) and drag to move", true, false);
@@ -415,15 +625,15 @@ public class GUIBuilder {
                 removeNode.setSelected(true);
                 showInTextArea("click to delete a node, or area select to delete multiple nodes", true, false);
                 break;
-            case EDITORSTATE_CREATING_DESTINATION:
+            case EDITORSTATE_CREATE_MARKER:
                 createDestination.setSelected(true);
                 showInTextArea("click on a node to create a map marker", true, false);
                 break;
-            case EDITORSTATE_EDITING_DESTINATION:
+            case EDITORSTATE_EDIT_MARKER:
                 editDestination.setSelected(true);
                 showInTextArea("click on a marker to edit", true, false);
                 break;
-            case EDITORSTATE_DELETING_DESTINATION:
+            case EDITORSTATE_DELETE_MARKER:
                 removeDestination.setSelected(true);
                 showInTextArea("click on a node to delete it's map marker", true, false);
                 break;
@@ -457,115 +667,4 @@ public class GUIBuilder {
                 break;
         }
     }
-
-    //@SuppressWarnings("serial")
-    /*static class JRotation extends JPanel implements MouseMotionListener {
-
-        private double rotation = 0;
-        private double angle = 0;
-        private double lastAngle = 0;
-        private double lastDegree = 0;
-        private int lastrot = 0;
-        public double getRotation() {
-            return rotation;
-        }
-
-        public JRotation() {
-            setPreferredSize(new Dimension(100, 100));
-            addMouseMotionListener(this);
-        }
-
-        public static Point2D rotate(Graphics g, Point2D point, Point2D centre, double angle) {
-            int width = getMapPanel().getWidth();
-            int height = getMapPanel().getHeight();
-
-            int sizeScaled = (int) (nodeSize * zoomLevel);
-            int sizeScaledHalf = (int) (sizeScaled * 0.5);
-            double currentNodeSize = nodeSize * zoomLevel * 0.5;
-            Point2D result = new Point2D.Double();
-            AffineTransform rotation = new AffineTransform();
-            //angle = ADUtils.normalizeAngle(angle);
-            double angleInRadians = Math.toRadians(angle);
-            rotation.rotate(angle, centre.getX(), centre.getY());
-            rotation.transform(new Point2D.Double(point.getX(), point.getY()), result);
-            g.drawImage(nodeImage, (int) (result.getX() - (nodeImage.getWidth() / 4)), (int) (result.getY() - (nodeImage.getWidth() / 4)), nodeImage.getWidth() / 2, nodeImage.getHeight() / 2, null);
-            //  g.drawImage(nodeImage,(int) (point.getX() - (getMapPanel().sizeScaledHalf / 2 )), (int) (point.getY() - (sizeScaledHalf / 2 )), sizeScaledHalf, sizeScaledHalf, null);
-            return result;
-
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D)g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            //g2.setPaint(Color.white);
-            //g2.fillRect(0, 0, getWidth(), getHeight());
-            g2.drawImage(rotateRing, 0, 0, rotateRing.getWidth(), rotateRing.getHeight(), null);
-            rotate(g2, new Point2D.Double(50, 7), new Point2D.Double(getPreferredSize().getWidth() / 2, getPreferredSize().getHeight() / 2), angle);
-            //g2.rotate(-rotation);0
-
-            //g2.setPaint(Color.black);
-            //AffineTransform t = g2.getTransform();
-            //g2.translate(getWidth()/2, getHeight()/2);
-            //g2.rotate(Math.toDegrees(rotation));
-
-            //g2.drawLine(0, 0, 0, -40);
-            //g2.drawImage(nodeImage, -7, -50, nodeImage.getWidth() / 2, nodeImage.getHeight() / 2, null);
-            //g2.setTransform(t);
-        }
-
-        @Override
-        public void mouseDragged(MouseEvent e) {
-            double step = 0;
-            int x = e.getX();
-            int y = e.getY();
-            int midX = getWidth() / 2;
-            int midY = getHeight() / 2;
-
-            angle = Math.atan2(midY - y, midX - x) - PI / 2;
-            if (angle < 0) // between -PI/2 and 0
-                angle += 2*PI;
-
-            step = Math.toDegrees(angle) - lastAngle;
-            CopyPasteManager.rotateSelected(step);
-            lastAngle = Math.toDegrees(angle);
-
-            mapPanel.repaint();
-        }
-
-        @Override
-        public void mouseMoved(MouseEvent e) {
-
-        }
-
-        public static float LerpDegrees(float start, float end, float amount)
-        {
-            float difference = Math.abs(end - start);
-            if (difference > 180)
-            {
-                // We need to add on to one of the values.
-                if (end > start)
-                {
-                    // We'll add it on to start...
-                    start += 360;
-                }
-                else
-                {
-                    // Add it on to end.
-                    end += 360;
-                }
-            }
-
-            // Interpolate it.
-            float value = (start + ((end - start) * amount));
-
-            // Wrap it..
-            float rangeZero = 360;
-
-            if (value >= 0 && value <= 360)
-                return value;
-
-            return (value % rangeZero);
-        }
-    }*/
 }

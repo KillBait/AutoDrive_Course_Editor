@@ -1,38 +1,51 @@
 package AutoDriveEditor.RoadNetwork;
 
 import java.util.LinkedList;
+import java.util.ListIterator;
+import java.util.UUID;
 
-import static AutoDriveEditor.GUI.MenuBuilder.*;
-import static AutoDriveEditor.Utils.LoggerUtils.*;
+import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogUndoRedo;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public class RoadMap {
 
-    public String roadMapName;
+    public String mapName;
     public static LinkedList<MapNode> mapNodes;
-    public static LinkedList<MapMarker> mapMarkers;
+    public static UUID uuid;
+    //public static LinkedList<MapMarker> mapMarkers;
 
     public RoadMap() {
-        mapMarkers = new LinkedList<>();
+        //mapMarkers = new LinkedList<>();
         mapNodes = new LinkedList<>();
-        this.roadMapName = null;
+        this.mapName = null;
 
-    }
+        // generate a unique random UUID, we can use this to compare and detect when
+        // a different config has been loaded.
 
-    public void addMapMarker(MapMarker mapMarker) {
-        mapMarkers.add(mapMarker);
+        // The UUID is used by the undo/redo system to detect if the current function
+        // it is trying to complete an operation on a config that is no longer loaded
+        // into the editor. A Dialog box will display explaining why the error occurred.
+
+        uuid = UUID.randomUUID();
     }
 
     public void insertMapNode(MapNode toAdd, LinkedList<MapNode> otherNodesInList, LinkedList<MapNode> otherNodesOutList) {
 
         // starting at the index of where we need to insert the node
         // increment the ID's of all nodes to the right of the mapNodes by +1
-        // so when we insert the node all the id's match their index
+        // so when we insert the node, all the id's match their index
 
-        LinkedList<MapNode> nodes = mapNodes;
+        /*LinkedList<MapNode> nodes = mapNodes;
         if (bDebugLogUndoRedo) LOG.info("## insertMapNode() ## bumping all ID's of mapNodes index {} -> {} by +1", toAdd.id - 1, nodes.size() - 1);
         for (int i = toAdd.id - 1; i <= nodes.size() - 1; i++) {
             MapNode mapNode = nodes.get(i);
             mapNode.id++;
+        }*/
+
+        ListIterator<MapNode> roadMap = mapNodes.listIterator(toAdd.id - 1);
+        while (roadMap.hasNext()) {
+            MapNode node = roadMap.next();
+            node.id++;
         }
 
         // insert the MapNode into the list
@@ -40,32 +53,23 @@ public class RoadMap {
         if (bDebugLogUndoRedo) LOG.info("## insertMapNode() ## inserting index {} ( ID {} ) into mapNodes", toAdd.id - 1, toAdd.id );
         mapNodes.add(toAdd.id -1 , toAdd);
 
-        //now we need to restore all the connections to/from it
-
-        // restore all the outgoing connections
+        //now we need to restore all the connections that went from/to it
 
         if (otherNodesInList != null) {
-            for (MapNode inNode : otherNodesInList) {
-                if (!inNode.incoming.contains(toAdd)) inNode.incoming.add(toAdd);
+            for (MapNode otherInNode : otherNodesInList) {
+                if (!otherInNode.incoming.contains(toAdd)) otherInNode.incoming.add(toAdd);
             }
         }
 
         if (otherNodesOutList != null) {
-            for (MapNode outNode : otherNodesOutList) {
-                if (!outNode.outgoing.contains(toAdd)) outNode.outgoing.add(toAdd);
+            for (MapNode otherOutNode : otherNodesOutList) {
+                if (!otherOutNode.outgoing.contains(toAdd)) otherOutNode.outgoing.add(toAdd);
             }
         }
     }
 
     public static void removeMapNode(MapNode toDelete) {
-        boolean deleted = false;
-        /*if (mapNodes.contains(toDelete)) {*/
-            mapNodes.remove(toDelete);
-            //deleted = true;
-        /*}*/
-
-        LinkedList<MapNode> nodes = mapNodes;
-        for (MapNode mapNode : nodes) {
+        for (MapNode mapNode : mapNodes) {
             mapNode.outgoing.remove(toDelete);
             mapNode.incoming.remove(toDelete);
             if (mapNode.id > toDelete.id) {
@@ -73,60 +77,14 @@ public class RoadMap {
             }
         }
 
-        LinkedList<MapMarker> mapMarkersToDelete = new LinkedList<>();
-        for (MapMarker mapMarker : mapMarkers) {
-            if (mapMarker.mapNode == toDelete) {
-
-                mapMarkersToDelete.add(mapMarker);
-            }
-        }
-        for (MapMarker mapMarker : mapMarkersToDelete) {
-            removeMapMarker(mapMarker);
-            mapMarkers.remove(mapMarker);
-        }
-    }
-
-    public static void removeMapMarker(MapMarker mapMarker) {
-        LinkedList<MapMarker> mapMarkersToKeep = new LinkedList<>();
-        for (MapMarker marker : mapMarkers) {
-            if (marker.mapNode.id != mapMarker.mapNode.id) {
-                mapMarkersToKeep.add(marker);
-            }
-        }
-        mapMarkers = mapMarkersToKeep;
+        mapNodes.remove(toDelete);
     }
 
     public static boolean isDual(MapNode start, MapNode target) {
-        LinkedList<MapNode> nodes = start.outgoing;
-        for (MapNode outgoing : nodes) {
-            if (outgoing == target) {
-                LinkedList<MapNode> mapNodeLinkedList = target.outgoing;
-                for (MapNode outgoingTarget : mapNodeLinkedList) {
-                    if (outgoingTarget == start) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
+        return start.outgoing.contains(target) && target.outgoing.contains(start);
     }
 
     public static boolean isReverse(MapNode start, MapNode target) {
-        LinkedList<MapNode> startNodes = target.incoming;
-        if (startNodes.size() >0) {
-            for (MapNode incoming : startNodes) {
-                if (incoming.id == start.id) {
-                    return false;
-                }
-            }
-        }
-        LinkedList<MapNode> outNodes = start.outgoing;
-        for (MapNode outgoing : outNodes) {
-            if (outgoing.id == target.id) {
-                return true;
-            }
-        }
-        return false;
+        return start.outgoing.contains(target) && !target.incoming.contains(start);
     }
 }

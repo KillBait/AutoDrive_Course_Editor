@@ -10,6 +10,7 @@ import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
+import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogCurveInfo;
 import static AutoDriveEditor.Listeners.MouseListener.prevMousePosX;
 import static AutoDriveEditor.Listeners.MouseListener.prevMousePosY;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
@@ -25,9 +26,9 @@ public class CubicCurve {
     private MapNode curveEndNode;
     private MapNode controlPoint1;
     private MapNode controlPoint2;
-    private Point2D.Double virtualControlPoint1;
-    private Point2D.Double virtualControlPoint2;
-    private double movementScaler = 1;
+    private final Point2D.Double virtualControlPoint1;
+    private final Point2D.Double virtualControlPoint2;
+    //private final double movementScaler;
 
     private int numInterpolationPoints;
     private int nodeType;
@@ -47,16 +48,9 @@ public class CubicCurve {
         this.isReversePath = GUIBuilder.curvePathReverse.isSelected();
         this.isDualPath = GUIBuilder.curvePathDual.isSelected();
         this.nodeType = GUIBuilder.curvePathRegular.isSelected() ? NODE_FLAG_STANDARD : NODE_FLAG_SUBPRIO;
-        this.movementScaler = controlPointMoveScaler;
+        //this.movementScaler = controlPointMoveScaler;
         this.updateCurve();
         GUIBuilder.curvePanel.setVisible(true);
-    }
-
-    public void setNumInterpolationPoints(int points) {
-        this.numInterpolationPoints = points;
-        if (this.curveStartNode != null && this.curveEndNode !=null) {
-            getInterpolationPointsForCurve(this.curveStartNode,this.curveEndNode);
-        }
     }
 
     private void getInterpolationPointsForCurve (MapNode startNode, MapNode endNode) {
@@ -133,7 +127,7 @@ public class CubicCurve {
 
         canAutoSave = true;
 
-        if (DEBUG) LOG.info("CubicCurve created {} nodes", mergeNodesList.size() - 2 );
+        if (bDebugLogCurveInfo) LOG.info("CubicCurve created {} nodes", mergeNodesList.size() - 2 );
     }
 
     public static void connectNodes(LinkedList<MapNode> mergeNodesList, boolean reversePath, boolean dualPath)  {
@@ -159,14 +153,10 @@ public class CubicCurve {
         if (quadCurve == null) GUIBuilder.curvePanel.setVisible(false);
     }
 
-    public Boolean isCurveValid() {
-        return this.curveNodesList != null && this.controlPoint1 !=null && this.controlPoint2 != null && this.curveNodesList.size() > 2;
-    }
-
     public void updateVirtualControlPoint1(double diffX, double diffY) {
         if (editorState == GUIBuilder.EDITORSTATE_CUBICBEZIER) {
-            this.virtualControlPoint1.x += diffX * movementScaler;
-            this.virtualControlPoint1.y += diffY * movementScaler;
+            this.virtualControlPoint1.x += diffX * controlPointMoveScaler;
+            this.virtualControlPoint1.y += diffY * controlPointMoveScaler;
         } else {
             this.virtualControlPoint1.x += diffX;
             this.virtualControlPoint1.y += diffY;
@@ -177,8 +167,8 @@ public class CubicCurve {
 
     public void updateVirtualControlPoint2(double diffX, double diffY) {
         if (editorState == GUIBuilder.EDITORSTATE_CUBICBEZIER) {
-            this.virtualControlPoint2.x += diffX * movementScaler;
-            this.virtualControlPoint2.y += diffY * movementScaler;
+            this.virtualControlPoint2.x += diffX * controlPointMoveScaler;
+            this.virtualControlPoint2.y += diffY * controlPointMoveScaler;
         } else {
             this.virtualControlPoint2.x += diffX;
             this.virtualControlPoint2.y += diffY;
@@ -244,16 +234,20 @@ public class CubicCurve {
 
     public boolean isDualPath() { return isDualPath; }
 
-    public Boolean isControlNode(MapNode node) {
-        return node == this.controlPoint1 || node == this.controlPoint2;
+    public Boolean isCurveAnchorPoint(MapNode node) { return node == this.curveStartNode || node == this.curveEndNode; }
+
+    public Boolean isCurveValid() {
+        return this.curveNodesList != null && this.controlPoint1 !=null && this.controlPoint2 != null && this.curveNodesList.size() > 2;
     }
 
     // getters
 
     public int getNodeType() { return this.nodeType; }
 
+    @SuppressWarnings("unused")
     public int getNumInterpolationPoints() { return this.numInterpolationPoints; }
 
+    @SuppressWarnings("unused")
     public LinkedList<MapNode> getCurveNodes() { return this.curveNodesList; }
 
     public MapNode getCurveStartNode() { return this.curveStartNode; }
@@ -288,6 +282,13 @@ public class CubicCurve {
                 MapNode tempNode = curveNodesList.get(j);
                 tempNode.flag = 0;
             }
+        }
+    }
+
+    public void setNumInterpolationPoints(int points) {
+        this.numInterpolationPoints = points;
+        if (this.curveStartNode != null && this.curveEndNode !=null) {
+            getInterpolationPointsForCurve(this.curveStartNode,this.curveEndNode);
         }
     }
 

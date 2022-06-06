@@ -1,5 +1,8 @@
 package AutoDriveEditor.XMLConfig;
 
+import AutoDriveEditor.Managers.ChangeManager;
+import AutoDriveEditor.RoadNetwork.MapNode;
+import AutoDriveEditor.RoadNetwork.RoadMap;
 import com.vdurmont.semver4j.Semver;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -23,21 +26,17 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
-
-import AutoDriveEditor.RoadNetwork.MapMarker;
-import AutoDriveEditor.RoadNetwork.MapNode;
-import AutoDriveEditor.RoadNetwork.RoadMap;
+import java.util.LinkedList;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
-import static AutoDriveEditor.GUI.MenuBuilder.saveRoutesXML;
-import static AutoDriveEditor.Locale.LocaleManager.*;
+import static AutoDriveEditor.GUI.MenuBuilder.*;
+import static AutoDriveEditor.Locale.LocaleManager.localeString;
 import static AutoDriveEditor.MapPanel.MapImage.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.Utils.FileUtils.*;
-import static AutoDriveEditor.Utils.LoggerUtils.*;
-import static AutoDriveEditor.Utils.XMLUtils.*;
-import static AutoDriveEditor.XMLConfig.EditorXML.*;
+import static AutoDriveEditor.Utils.FileUtils.removeExtension;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.Utils.XMLUtils.getTextValue;
+import static AutoDriveEditor.XMLConfig.EditorXML.maxAutoSaveSlots;
 
 public class GameXML {
 
@@ -49,7 +48,7 @@ public class GameXML {
     private static boolean hasFlagTag = false; // indicates if the loaded XML file has the <flags> tag in the <waypoints> element
     public static boolean oldConfigFormat = false;
     public static int configVersion = 0;
-    public static int saveSlot = 1;
+    public static int autoSaveLastUsedSlot = 1;
 
     public static boolean loadConfigFile(File fXmlFile) {
         LOG.info("config loadFile: {}", fXmlFile.getAbsolutePath());
@@ -57,13 +56,19 @@ public class GameXML {
         try {
             RoadMap roadMap = loadXmlConfigFile(fXmlFile);
             if (roadMap != null) {
+                configType = CONFIG_SAVEGAME;
                 getMapPanel().setRoadMap(roadMap);
-                editor.setTitle(AUTODRIVE_COURSE_EDITOR_TITLE + " - " + fXmlFile.getAbsolutePath());
                 xmlConfigFile = fXmlFile;
-                loadMapImage(roadMap.roadMapName);
-                forceMapImageRedraw();
+                loadMapImage(roadMap.mapName);
                 loadHeightMap(fXmlFile, false);
+                getMapsZoomFactor(roadMap.mapName);
+                forceMapImageRedraw();
                 saveRoutesXML.setEnabled(false);
+                LOG.info("Session UUID = {}", RoadMap.uuid);
+                editor.setTitle(COURSE_EDITOR_TITLE + " - " + fXmlFile.getAbsolutePath() + " ( " + roadMap.mapName + " )");
+                // initialize a new changeManager so undo/redo system won't throw errors
+                // when we try to undo/redo something on a config that is no longer loaded
+                changeManager = new ChangeManager();
                 return true;
             } else {
                 JOptionPane.showMessageDialog(editor, localeString.getString("dialog_config_unknown"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
@@ -76,20 +81,22 @@ public class GameXML {
         }
     }
 
-    public static boolean saveConfigFile(String newName, boolean isAutoSave) {
+    public static boolean saveConfigFile(String newName, boolean isAutoSave, boolean isBackup) {
         if (isAutoSave) {
-            LOG.info("{}", localeString.getString("console_config_autosave_start"));
+            LOG.info(localeString.getString("console_config_autosave_start"));
+        } else if (isBackup) {
+            LOG.info(localeString.getString("console_config_backup_start"));
         } else {
-            LOG.info("{}", localeString.getString("console_config_save_start"));
+            LOG.info(localeString.getString("console_config_save_start"));
         }
 
         try
         {
             if (xmlConfigFile == null) return false;
-            saveXmlConfig(xmlConfigFile, newName, isAutoSave);
-            getMapPanel().setStale(false);
-            if (!isAutoSave) {
+            saveXmlConfig(xmlConfigFile, newName, isAutoSave, isBackup);
+            if (!isAutoSave || !isBackup) {
                 JOptionPane.showMessageDialog(editor, xmlConfigFile.getName() + " " + localeString.getString("dialog_save_success"), "AutoDrive", JOptionPane.INFORMATION_MESSAGE);
+                getMapPanel().setStale(false);
             }
             return true;
         } catch (Exception e) {
@@ -99,24 +106,18 @@ public class GameXML {
         }
     }
 
-    public static void saveMergeBackupConfigFile() {
-        LOG.info("{}", localeString.getString("console_config_merge_backup"));
-        String filename = removeExtension(xmlConfigFile.getAbsolutePath()) + "_mergeBackup.xml";
-        saveConfigFile(filename, true);
-
-    }
-
     public static void autoSaveGameConfigFile() {
         while (!canAutoSave) {
             try {
                 LOG.info("canAutoSave = false --- Waiting");
+                //noinspection BusyWait
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
 
-        String filename = removeExtension(xmlConfigFile.getAbsolutePath()) + "_autosave_" + saveSlot + ".xml";
+        String filename = removeExtension(xmlConfigFile.getAbsolutePath()) + "_autosave_" + autoSaveLastUsedSlot + ".xml";
         File file = new File(filename);
         try {
             if (file.exists()) {
@@ -126,10 +127,9 @@ public class GameXML {
                 if (!file.canWrite())
                     throw new IOException("File '" + file + "' cannot be written");
             }
-            saveConfigFile(filename, true);
-            //LOG.info("{}", filename);
-            saveSlot++;
-            if (saveSlot == maxAutoSaveSlots + 1 ) saveSlot = 1;
+            saveConfigFile(filename, true, false);
+            autoSaveLastUsedSlot++;
+            if (autoSaveLastUsedSlot == maxAutoSaveSlots + 1 ) autoSaveLastUsedSlot = 1;
         }
         catch(IOException ioEx) {
             ioEx.printStackTrace();
@@ -142,12 +142,13 @@ public class GameXML {
         Document doc = dBuilder.parse(fXmlFile);
         doc.getDocumentElement().normalize();
 
+        LOG.info("----------------------------");
+        LOG.info("loadXmlConfigFile Parsing {}", fXmlFile.getAbsolutePath());
+
         if (!doc.getDocumentElement().getNodeName().equals("AutoDrive")) {
-            LOG.info("Not an autodrive Config");
+            LOG.info("Not an AutoDrive Config");
             return null;
         }
-
-        LOG.info("{} :{}", localeString.getString("console_root_node"), doc.getDocumentElement().getNodeName());
 
         if (getTextValue(null, doc.getDocumentElement(), "markerID") != null) {
             JOptionPane.showConfirmDialog(editor, "" + localeString.getString("console_config_unsupported1") + "\n\n" + localeString.getString("console_config_unsupported2"), "AutoDrive", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE);
@@ -170,43 +171,13 @@ public class GameXML {
             oldConfigFormat = false;
         }
 
-        NodeList markerList = doc.getElementsByTagName("mapmarker");
-        LinkedList<MapMarker> mapMarkers = new LinkedList<>();
-
-        TreeMap<Integer, MapMarker> mapMarkerTree = new TreeMap<>();
-        for (int temp = 0; temp < markerList.getLength(); temp++) {
-            Node markerNode = markerList.item(temp);
-            if (markerNode.getNodeType() == Node.ELEMENT_NODE) {
-                Element eElement = (Element) markerNode;
-
-                NodeList idNodeList = eElement.getElementsByTagName("id");
-                NodeList nameNodeList = eElement.getElementsByTagName("name");
-                NodeList groupNodeList = eElement.getElementsByTagName("group");
-
-                for (int markerIndex = 0; markerIndex<idNodeList.getLength(); markerIndex++ ) {
-                    Node node = idNodeList.item(markerIndex).getChildNodes().item(0);
-                    String markerNodeId = node.getNodeValue();
-
-                    node = nameNodeList.item(markerIndex).getChildNodes().item(0);
-                    String markerName = node.getNodeValue();
-
-                    node = groupNodeList.item(markerIndex).getChildNodes().item(0);
-                    String markerGroup = node.getNodeValue();
-
-                    MapNode dummyNode = new MapNode((int)Double.parseDouble(markerNodeId), 0, 0, 0, 0, false, false);
-                    MapMarker mapMarker = new MapMarker(dummyNode, markerName, markerGroup);
-                    mapMarkerTree.put((int)Double.parseDouble(markerNodeId), mapMarker);
-                }
-            }
-        }
-
         NodeList nList = doc.getElementsByTagName("waypoints");
 
         LinkedList<MapNode> nodes = new LinkedList<>();
         for (int temp = 0; temp < nList.getLength(); temp++) {
-
+            LOG.info("----------------------------");
+            LOG.info("{} : {}", localeString.getString("console_root_node"), doc.getDocumentElement().getNodeName());
             Node nNode = nList.item(temp);
-
             LOG.info("Current Element :{}", nNode.getNodeName());
 
             if (nNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -217,38 +188,51 @@ public class GameXML {
                 if ( node !=null ) {
                     String idString = node.getNodeValue();
                     String[] ids = idString.split(",");
+                    LOG.info("<waypoints> key = {} ID's", ids.length);
+                    LOG.info("----------------------------");
+
 
                     nodeList = eElement.getElementsByTagName("x").item(0).getChildNodes();
                     node = nodeList.item(0);
                     String xString = node.getNodeValue();
                     String[] xValues = xString.split(",");
+                    LOG.info("{} <x> Entries", xValues.length);
 
                     nodeList = eElement.getElementsByTagName("y").item(0).getChildNodes();
                     node = nodeList.item(0);
                     String yString = node.getNodeValue();
                     String[] yValues = yString.split(",");
+                    LOG.info("{} <y> Entries", yValues.length);
 
                     nodeList = eElement.getElementsByTagName("z").item(0).getChildNodes();
                     node = nodeList.item(0);
                     String zString = node.getNodeValue();
                     String[] zValues = zString.split(",");
+                    LOG.info("{} <z> Entries", zValues.length);
 
                     nodeList = eElement.getElementsByTagName("out").item(0).getChildNodes();
                     node = nodeList.item(0);
                     String outString = node.getNodeValue();
                     String[] outValueArrays = outString.split(";");
+                    LOG.info("{} <out> Entries", outValueArrays.length);
 
                     nodeList = eElement.getElementsByTagName("incoming").item(0).getChildNodes();
                     node = nodeList.item(0);
                     String incomingString = node.getNodeValue();
                     String[] incomingValueArrays = incomingString.split(";");
+                    LOG.info("{} <in> Entries", incomingValueArrays.length);
 
                     if (eElement.getElementsByTagName("flags").item(0) != null ) {
                         nodeList = eElement.getElementsByTagName("flags").item(0).getChildNodes();
                         node = nodeList.item(0);
                         String flagsString = node.getNodeValue();
                         String[] flagsValue = flagsString.split(",");
+                        LOG.info("{} <flags> Entries", flagsValue.length);
+                        LOG.info("----------------------------");
+
                         hasFlagTag = true;
+
+                        LOG.info("starting creation of {} map nodes", ids.length);
 
                         for (int i=0; i<ids.length; i++) {
                             int id = Integer.parseInt(ids[i]);
@@ -270,6 +254,7 @@ public class GameXML {
                         }
                     } else {
                         hasFlagTag = false;
+                        LOG.info("No <flags> tag found... starting creation of {} map nodes with flag set to 0", ids.length);
                         for (int i=0; i<ids.length; i++) {
                             int id = Integer.parseInt(ids[i]);
                             double x = Double.parseDouble(xValues[i]);
@@ -280,11 +265,6 @@ public class GameXML {
                             MapNode mapNode = new MapNode(id, x, y, z, flag, false, false);
                             nodes.add(mapNode);
                         }
-                    }
-
-                    for (Map.Entry<Integer, MapMarker> entry : mapMarkerTree.entrySet())
-                    {
-                        mapMarkers.add(new MapMarker(nodes.get(entry.getKey()-1), entry.getValue().name, entry.getValue().group));
                     }
 
                     for (int i=0; i<ids.length; i++) {
@@ -306,13 +286,54 @@ public class GameXML {
                             }
                         }
                     }
+                    LOG.info("Finished creating all map nodes");
+                    LOG.info("----------------------------");
                 }
             }
         }
 
+        NodeList markerList = doc.getElementsByTagName("mapmarker");
+
+
+
+        for (int temp = 0; temp < markerList.getLength(); temp++) {
+            Node markerNode = markerList.item(temp);
+            if (markerNode.getNodeType() == Node.ELEMENT_NODE) {
+                Element eElement = (Element) markerNode;
+
+                NodeList idNodeList = eElement.getElementsByTagName("id");
+                NodeList nameNodeList = eElement.getElementsByTagName("name");
+                NodeList groupNodeList = eElement.getElementsByTagName("group");
+
+                LOG.info("Starting Creation of {} Markers", idNodeList.getLength());
+
+                for (int markerIndex = 0; markerIndex<idNodeList.getLength(); markerIndex++ ) {
+                    Node node = idNodeList.item(markerIndex).getChildNodes().item(0);
+                    String markerNodeId = node.getNodeValue();
+
+                    node = nameNodeList.item(markerIndex).getChildNodes().item(0);
+                    String markerName = node.getNodeValue();
+
+                    node = groupNodeList.item(markerIndex).getChildNodes().item(0);
+                    String markerGroup = node.getNodeValue();
+
+                    // AD 6.0.0.4 config fix for Node ID's being Long Format
+                    float num = Float.parseFloat(markerNodeId);
+                    int id = (int) num;
+
+                    // add the marker info to the node
+                    MapNode mapNode = nodes.get(id - 1);
+                    mapNode.createMapMarker(markerName, markerGroup);
+                    if (bDebugLogRouteManager) LOG.info("created index {} ( ID {} ) , name {} , group {}", id-1, id, markerName, markerGroup);
+                }
+            }
+        }
+
+        LOG.info("Finished creating all map markers");
+        LOG.info("---------------------------------");
+
         RoadMap roadMap = new RoadMap();
         RoadMap.mapNodes = nodes;
-        RoadMap.mapMarkers = mapMarkers;
 
         // check for MapName element
 
@@ -322,26 +343,27 @@ public class GameXML {
             NodeList fstNm = mapNameElement.getChildNodes();
             String mapName = (fstNm.item(0)).getNodeValue();
             LOG.info("{} : {}", localeString.getString("console_config_load"), mapName);
-            roadMap.roadMapName = mapName;
+            roadMap.mapName = mapName;
         }
         LOG.info("{}", localeString.getString("console_config_load_end"));
 
         return roadMap;
     }
 
-    private static void saveXmlConfig(File file, String newName, boolean isAutoSave) throws ParserConfigurationException, IOException, SAXException, TransformerException, XPathExpressionException {
+    private static void saveXmlConfig(File file, String newName, boolean isAutoSave, boolean isBackup) throws ParserConfigurationException, IOException, SAXException, TransformerException, XPathExpressionException {
 
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
         Document doc = docBuilder.parse(file);
         Node AutoDrive = doc.getFirstChild();
         Node waypoints = doc.getElementsByTagName("waypoints").item(0);
+        int totalMarkers = 0;
 
         // If no <flags> tag was detected on config load, create it
 
         if (!hasFlagTag) {
-            Element flagtag = doc.createElement("flags");
-            waypoints.appendChild(flagtag);
+            Element flagTag = doc.createElement("flags");
+            waypoints.appendChild(flagTag);
         }
 
 
@@ -360,6 +382,9 @@ public class GameXML {
                     if (j < (RoadMap.mapNodes.size() - 1)) {
                         ids.append(",");
                     }
+                    // check if each mapNode has a mapMarker and increment totalMarkers if it has one
+                    // NOTE: TotalMarkers is used later on in creating the map markers entries.
+                    if (mapNode.hasMapMarker()) totalMarkers++;
                 }
                 node.setTextContent(ids.toString());
             }
@@ -400,18 +425,18 @@ public class GameXML {
                 StringBuilder incomingString = new StringBuilder();
                 for (int j = 0; j < RoadMap.mapNodes.size(); j++) {
                     MapNode mapNode = RoadMap.mapNodes.get(j);
-                    StringBuilder incomingsPerNode = new StringBuilder();
+                    StringBuilder incomingPerNode = new StringBuilder();
                     for (int incomingIndex = 0; incomingIndex < mapNode.incoming.size(); incomingIndex++) {
                         MapNode incomingNode = mapNode.incoming.get(incomingIndex);
-                        incomingsPerNode.append(incomingNode.id);
+                        incomingPerNode.append(incomingNode.id);
                         if (incomingIndex < (mapNode.incoming.size() - 1)) {
-                            incomingsPerNode.append(",");
+                            incomingPerNode.append(",");
                         }
                     }
-                    if (incomingsPerNode.toString().isEmpty()) {
-                        incomingsPerNode = new StringBuilder("-1");
+                    if (incomingPerNode.toString().isEmpty()) {
+                        incomingPerNode = new StringBuilder("-1");
                     }
-                    incomingString.append(incomingsPerNode);
+                    incomingString.append(incomingPerNode);
                     if (j < (RoadMap.mapNodes.size() - 1)) {
                         incomingString.append(";");
                     }
@@ -453,9 +478,9 @@ public class GameXML {
             }
         }
 
+        // remove all the existing map markers, so we can save an upto date list
 
-
-        for (int markerIndex = 1; markerIndex < RoadMap.mapMarkers.size() + 100; markerIndex++) {
+        for (int markerIndex = 1; markerIndex < totalMarkers + 100; markerIndex++) {
             Element element = (Element) doc.getElementsByTagName("mm" + (markerIndex)).item(0);
             if (element != null) {
                 Element parent = (Element) element.getParentNode();
@@ -464,10 +489,12 @@ public class GameXML {
             }
         }
 
+        // Check if the mapmarker key exists in the XML, if it doesn't exist and totalMarkers > 1
+        // we need to create the <mapmarker> key or else we will get an exception thrown..
 
-        NodeList testwaypoints = doc.getElementsByTagName("mapmarker");
+        NodeList testWaypoints = doc.getElementsByTagName("mapmarker");
 
-        if (RoadMap.mapMarkers.size() > 0 && testwaypoints.getLength() == 0 ) {
+        if (totalMarkers > 0 && testWaypoints.getLength() == 0 ) {
             LOG.info("{}", localeString.getString("console_markers_new"));
             Element test = doc.createElement("mapmarker");
             AutoDrive.appendChild(test);
@@ -476,25 +503,27 @@ public class GameXML {
         NodeList markerList = doc.getElementsByTagName("mapmarker");
         Node markerNode = markerList.item(0);
         int mapMarkerCount = 1;
-        for (MapMarker mapMarker : RoadMap.mapMarkers) {
-            Element newMapMarker = doc.createElement("mm" + mapMarkerCount);
+        for (MapNode mapNode : RoadMap.mapNodes) {
+            if (mapNode.hasMapMarker()) {
+                Element newMarkerElement = doc.createElement("mm" + mapMarkerCount);
 
-            Element markerID = doc.createElement("id");
-            markerID.appendChild(doc.createTextNode("" + mapMarker.mapNode.id));
-            newMapMarker.appendChild(markerID);
+                Element markerID = doc.createElement("id");
+                markerID.appendChild(doc.createTextNode("" + mapNode.id));
+                newMarkerElement.appendChild(markerID);
 
-            Element markerName = doc.createElement("name");
-            markerName.appendChild(doc.createTextNode(mapMarker.name));
-            newMapMarker.appendChild(markerName);
+                Element markerName = doc.createElement("name");
+                markerName.appendChild(doc.createTextNode(mapNode.getMarkerName()));
+                newMarkerElement.appendChild(markerName);
 
-            Element markerGroup = doc.createElement("group");
-            markerGroup.appendChild(doc.createTextNode(mapMarker.group));
-            newMapMarker.appendChild(markerGroup);
+                Element markerGroup = doc.createElement("group");
+                markerGroup.appendChild(doc.createTextNode(mapNode.getMarkerGroup()));
+                newMarkerElement.appendChild(markerGroup);
 
-            markerNode.appendChild(newMapMarker);
-            mapMarkerCount += 1;
+                markerNode.appendChild(newMarkerElement);
+                mapMarkerCount += 1;
+            }
+
         }
-
 
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
@@ -532,11 +561,11 @@ public class GameXML {
         transformer.transform(source, result);
 
         if (isAutoSave) {
-            LOG.info("{}", localeString.getString("console_config_autosave_end"));
+            LOG.info(localeString.getString("console_config_autosave_end"));
+        } else if (isBackup) {
+            LOG.info(localeString.getString("console_config_backup_end"));
         } else {
-            LOG.info("{}", localeString.getString("console_config_save_end"));
+            LOG.info(localeString.getString("console_config_save_end"));
         }
-
-
     }
 }

@@ -1,23 +1,27 @@
 package AutoDriveEditor.Managers;
 
-import javax.swing.*;
-
 import AutoDriveEditor.AutoDriveEditor;
-import AutoDriveEditor.Utils.GUIUtils;
 import AutoDriveEditor.GUI.MenuBuilder;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
+import AutoDriveEditor.Utils.GUIUtils;
 
+import javax.swing.*;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutionException;
 
-import static AutoDriveEditor.GUI.MenuBuilder.*;
-import static AutoDriveEditor.Locale.LocaleManager.*;
+import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogMerge;
+import static AutoDriveEditor.GUI.MenuBuilder.bDebugProfile;
+import static AutoDriveEditor.Locale.LocaleManager.localeString;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.RoadNetwork.MapNode.*;
-import static AutoDriveEditor.RoadNetwork.RoadMap.*;
-import static AutoDriveEditor.Utils.LoggerUtils.*;
+import static AutoDriveEditor.RoadNetwork.MapNode.NODE_WARNING_OVERLAP;
+import static AutoDriveEditor.RoadNetwork.RoadMap.mapNodes;
+import static AutoDriveEditor.RoadNetwork.RoadMap.removeMapNode;
+import static AutoDriveEditor.Utils.FileUtils.removeExtension;
+import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.GameXML.*;
+import static AutoDriveEditor.XMLConfig.RouteManagerXML.saveRouteManagerXML;
 
 
 public class ScanManager {
@@ -34,10 +38,14 @@ public class ScanManager {
         searchDistance = distance;
         for (MapNode node : RoadMap.mapNodes) {
             node.clearWarning();
-            //node.hasWarning = false;
-            //node.warningType = NODE_WARNING_NONE;
             node.warningNodes.clear();
         }
+
+        String backString = "Starting Background Thread to scan for Overlapping Nodes --> Search Distance " + searchDistance + " meters";
+        showInTextArea(backString, true, true);
+        //LOG.info("Starting Background Thread to scan for Overlapping Nodes --> Search Distance {}m", searchDistance);
+        //LOG.info(" ## Distance to search around node = {} meters ##", searchDistance);
+
         ScanNetworkWorker scanThread = new ScanNetworkWorker(searchDistance);
         scanThread.execute();
         if (getResult) {
@@ -54,45 +62,44 @@ public class ScanManager {
     public static class ScanNetworkWorker extends SwingWorker<Integer, Void> {
 
         public double scanArea;
-        public int count = 0;
+        public long timer;
 
         public ScanNetworkWorker(double distance) {
             this.scanArea = distance;
         }
 
         @Override
-        protected Integer doInBackground() throws Exception {
-            long timer = 0;
-            LOG.info("Starting Background Scan for Overlapping Nodes");
-            LOG.info(" ## Distance to search around node = {} meters ##", searchDistance);
+        protected Integer doInBackground() {
+            int count = 0;
+            Thread.currentThread().setName("Scan Network Thread");
+            LOG.info("Starting Background Scan");
             timer = System.currentTimeMillis();
 
             for (MapNode node : RoadMap.mapNodes) {
                 int result = checkAreaForNodeOverlap(node);
                 if (result > 0) count += 1;
             }
-
-
-
-            String text = "Roadmap nodes = " + mapNodes.size() + " --- Found " + count + " nodes overlapping --- Time Taken " +
-                    (float) (System.currentTimeMillis() - timer) / 1000 + " seconds" ;
-            // TODO Enable showInTextArea before release
-            //GUIUtils.showInTextArea(text, true, true);
-            getMapPanel().repaint();
+            LOG.info("Finished Background Scan");
             return count;
         }
 
         @Override
         protected void done() {
             networkScanned = true;
+            try {
+                if (bDebugProfile) {
+                    int count = get();
+                    String text = "Checked " + mapNodes.size() + " Roadmap nodes --- Found " + count + " nodes overlapping --- Time Taken " +
+                            (float) (System.currentTimeMillis() - timer) / 1000 + " seconds" ;
+                    showInTextArea(text, true, true);
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+
+            getMapPanel().repaint();
             MenuBuilder.fixNodesEnabled(true);
         }
-    }
-
-
-
-    private static void scanNetwork() {
-
     }
 
     public static int checkAreaForNodeOverlap(MapNode node) {
@@ -138,12 +145,8 @@ public class ScanManager {
 
     public static void checkNodeOverlap(MapNode node) {
         if (checkAreaForNodeOverlap(node) == 0 ) {
-            //LOG.info("Node clear");
-
             for (MapNode mapNode : node.warningNodes) {
-                //LOG.info("removing {} from {} warning list",node.id, mapNode.id);
                 mapNode.warningNodes.remove(node);
-                //mapNode.hasWarning = mapNode.warningNodes.size() != 0;
                 if (mapNode.warningNodes.size() != 0) {
                     mapNode.hasWarning = true;
                     mapNode.warningType = NODE_WARNING_OVERLAP;
@@ -173,7 +176,7 @@ public class ScanManager {
 
                 LOG.info("Running merge nodes");
                 for (MapNode mapNode : RoadMap.mapNodes) {
-                    if (mapNode.hasWarning && !mapNode.scheduleDelete) {
+                    if (mapNode.hasWarning && !mapNode.scheduledToBeDeleted) {
 
                         if (bDebugLogMerge) LOG.info("Merging overlapping nodes into ID {}", mapNode.id);
 
@@ -227,16 +230,16 @@ public class ScanManager {
                             }
 
                             if (bDebugLogMerge) LOG.info("stored Connections - Deleting node {}", overlapNode.id);
-                            overlapNode.scheduleDelete = true;
+                            overlapNode.scheduledToBeDeleted = true;
                             deleteNodeList.add(overlapNode);
                         }
                         if (bDebugLogMerge) LOG.info("Adding all connections to mapNode {}", mapNode.id);
 
                         for (MapNode node : mapNode.incoming) {
-                            if (!mergedIncoming.contains(node) && !node.scheduleDelete) mergedIncoming.add(node);
+                            if (!mergedIncoming.contains(node) && !node.scheduledToBeDeleted) mergedIncoming.add(node);
                         }
                         for (MapNode node : mapNode.outgoing) {
-                            if (!mergedOutgoing.contains(node) && !node.scheduleDelete) mergedOutgoing.add(node);
+                            if (!mergedOutgoing.contains(node) && !node.scheduledToBeDeleted) mergedOutgoing.add(node);
                         }
                         mapNode.incoming.clear();
                         mapNode.outgoing.clear();
@@ -248,7 +251,7 @@ public class ScanManager {
                     }
                 }
                 String text = "Merging nodes completed - Removing " + deleteNodeList.size() + " nodes";
-                GUIUtils.showInTextArea(text, true, true);
+                showInTextArea(text, true, true);
                 for (MapNode nodeToDelete : deleteNodeList) {
                     removeMapNode(nodeToDelete);
                 }
@@ -259,7 +262,7 @@ public class ScanManager {
                         mergedNode.warningNodes.clear();
                         getMapPanel().repaint();
                     } else {
-                        LOG.info("mapnode is still overlapping");
+                        LOG.info("mapNode is still overlapping");
                     }
                 }
 
@@ -271,5 +274,17 @@ public class ScanManager {
                 canAutoSave = true;
             }
         }
+    }
+
+    public static void saveMergeBackupConfigFile() {
+        LOG.info("{}", localeString.getString("console_config_merge_backup"));
+        String filename = removeExtension(xmlConfigFile.getAbsolutePath()) + "_mergeBackup.xml";
+        if (configType == CONFIG_SAVEGAME) {
+            saveConfigFile(filename, false, true);
+        } else if (configType == CONFIG_ROUTEMANAGER) {
+            saveRouteManagerXML(filename, false, true);
+        }
+
+
     }
 }

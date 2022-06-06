@@ -11,6 +11,9 @@ public class XMLUtils {
     public static void setTextValue(String tag, Document doc, String textNode, Element element) {
         Element e;
         e = doc.createElement(tag);
+        if (textNode == null) {
+            textNode = "";
+        }
         e.appendChild(doc.createTextNode(textNode));
         element.appendChild(e);
     }

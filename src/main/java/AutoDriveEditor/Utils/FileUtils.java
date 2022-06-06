@@ -1,5 +1,7 @@
 package AutoDriveEditor.Utils;
 
+import AutoDriveEditor.AutoDriveEditor;
+
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
@@ -9,10 +11,9 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import AutoDriveEditor.AutoDriveEditor;
+import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogFileIO;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
-import static AutoDriveEditor.GUI.MenuBuilder.*;
-import static AutoDriveEditor.Utils.LoggerUtils.*;
 
 public class FileUtils {
 
@@ -80,7 +81,7 @@ public class FileUtils {
             FileOutputStream output = new FileOutputStream(file);
 
             byte[] buffer = new byte[4096];
-            int n = 0;
+            int n;
             while (-1 != (n = input.read(buffer))) {
                 output.write(buffer, 0, n);
             }

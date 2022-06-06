@@ -10,11 +10,17 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
+import static AutoDriveEditor.AutoDriveEditor.DEBUG;
+import static AutoDriveEditor.AutoDriveEditor.editor;
+import static AutoDriveEditor.GUI.ConfigGUI.createConfigGUI;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
 import static AutoDriveEditor.GUI.GUIImages.*;
+import static AutoDriveEditor.Locale.LocaleManager.localeString;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_STANDARD;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.XMLConfig.EditorXML.bContinuousConnections;
+import static AutoDriveEditor.XMLConfig.EditorXML.nodeSize;
 
 
 public class EditorListener implements ActionListener, MouseListener {
@@ -26,79 +32,79 @@ public class EditorListener implements ActionListener, MouseListener {
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        LOG.info("Editor ActionCommand: {}", e.getActionCommand());
+        if (DEBUG) LOG.info("Editor ActionCommand: {}", e.getActionCommand());
 
         switch (e.getActionCommand()) {
             case BUTTON_MOVE_NODES:
                 editorState = EDITORSTATE_MOVING;
-                MapPanel.getMapPanel().isMultiSelectAllowed = true;
+                isMultiSelectAllowed = true;
                 break;
             case BUTTON_CONNECT_NODES:
                 editorState = EDITORSTATE_CONNECTING;
                 connectionType = CONNECTION_STANDARD;
-                MapPanel.getMapPanel().isMultiSelectAllowed = false;
+                isMultiSelectAllowed = false;
                 break;
             case BUTTON_CREATE_PRIMARY_NODE:
                 editorState = EDITORSTATE_CREATE_PRIMARY_NODE;
-                MapPanel.getMapPanel().isMultiSelectAllowed = false;
+                isMultiSelectAllowed = false;
                 break;
             case BUTTON_CREATE_DUAL_CONNECTION:
                 editorState = EDITORSTATE_CONNECTING;
                 connectionType = CONNECTION_DUAL;
-                MapPanel.getMapPanel().isMultiSelectAllowed = false;
+                isMultiSelectAllowed = false;
                 break;
             case BUTTON_CHANGE_NODE_PRIORITY:
                 editorState = EDITORSTATE_CHANGE_NODE_PRIORITY;
-                MapPanel.getMapPanel().isMultiSelectAllowed = true;
+                isMultiSelectAllowed = true;
                 break;
             case BUTTON_CREATE_SUBPRIO_NODE:
                 editorState = EDITORSTATE_CREATE_SUBPRIO_NODE;
-                MapPanel.getMapPanel().isMultiSelectAllowed = false;
+                isMultiSelectAllowed = false;
                 break;
             case BUTTON_CREATE_REVERSE_CONNECTION:
                 editorState = EDITORSTATE_CONNECTING;
                 connectionType = CONNECTION_REVERSE;
-                MapPanel.getMapPanel().isMultiSelectAllowed = false;
+                isMultiSelectAllowed = false;
                 break;
             case BUTTON_REMOVE_NODES:
                 editorState = EDITORSTATE_DELETE_NODES;
-                MapPanel.getMapPanel().isMultiSelectAllowed = true;
+                isMultiSelectAllowed = true;
                 break;
             case BUTTON_CREATE_DESTINATIONS:
-                editorState = EDITORSTATE_CREATING_DESTINATION;
-                MapPanel.getMapPanel().isMultiSelectAllowed = false;
+                editorState = EDITORSTATE_CREATE_MARKER;
+                isMultiSelectAllowed = false;
                 break;
             case BUTTON_EDIT_DESTINATIONS_GROUPS:
-                editorState = EDITORSTATE_EDITING_DESTINATION;
-                MapPanel.getMapPanel().isMultiSelectAllowed = false;
+                editorState = EDITORSTATE_EDIT_MARKER;
+                isMultiSelectAllowed = false;
                 break;
             case BUTTON_DELETE_DESTINATIONS:
-                editorState = EDITORSTATE_DELETING_DESTINATION;
-                MapPanel.getMapPanel().isMultiSelectAllowed = false;
+                editorState = EDITORSTATE_DELETE_MARKER;
+                isMultiSelectAllowed = false;
                 break;
             case BUTTON_ALIGN_HORIZONTAL:
                 editorState = EDITORSTATE_ALIGN_HORIZONTAL;
-                MapPanel.getMapPanel().isMultiSelectAllowed = true;
+                isMultiSelectAllowed = true;
                 break;
             case BUTTON_ALIGN_VERTICAL:
                 editorState = EDITORSTATE_ALIGN_VERTICAL;
-                MapPanel.getMapPanel().isMultiSelectAllowed = true;
+                isMultiSelectAllowed = true;
                 break;
             case BUTTON_ALIGN_DEPTH:
                 editorState = EDITORSTATE_ALIGN_DEPTH;
-                MapPanel.getMapPanel().isMultiSelectAllowed = true;
+                isMultiSelectAllowed = true;
                 break;
             case BUTTON_ALIGN_EDIT_NODE:
                 editorState = EDITORSTATE_ALIGN_EDIT_NODE;
-                MapPanel.getMapPanel().isMultiSelectAllowed = false;
+                isMultiSelectAllowed = false;
                 break;
             case BUTTON_CREATE_QUADRATICBEZIER:
                 editorState = EDITORSTATE_QUADRATICBEZIER;
-                MapPanel.getMapPanel().isMultiSelectAllowed = false;
+                isMultiSelectAllowed = false;
                 break;
             case BUTTON_CREATE_CUBICBEZIER:
                 editorState = EDITORSTATE_CUBICBEZIER;
-                MapPanel.getMapPanel().isMultiSelectAllowed = false;
+                isMultiSelectAllowed = false;
                 break;
             case BUTTON_COMMIT_CURVE:
                 MapPanel.getMapPanel().confirmCurve();
@@ -108,19 +114,42 @@ public class EditorListener implements ActionListener, MouseListener {
                 break;
             case BUTTON_COPYPASTE_SELECT:
                 editorState = EDITORSTATE_CNP_SELECT;
-                MapPanel.getMapPanel().isMultiSelectAllowed = true;
+                isMultiSelectAllowed = true;
                 break;
             case BUTTON_COPYPASTE_CUT:
-                MapPanel.getMapPanel().isMultiSelectAllowed = false;
+                isMultiSelectAllowed = false;
                 cutSelected();
                 break;
             case BUTTON_COPYPASTE_COPY:
-                MapPanel.getMapPanel().isMultiSelectAllowed = false;
+                isMultiSelectAllowed = false;
                 copySelected();
                 break;
             case BUTTON_COPYPASTE_PASTE:
-                MapPanel.getMapPanel().isMultiSelectAllowed = false;
-                pasteSelected(false);
+                isMultiSelectAllowed = false;
+                pasteSelected();
+                break;
+            case BUTTON_OPTIONS_OPEN_CONFIG:
+                createConfigGUI(editor);
+                break;
+            case BUTTON_OPTIONS_NODE_SIZE_INCREASE:
+                nodeSize += 0.10;
+                mapPanel.repaint();
+                break;
+            case BUTTON_OPTIONS_NODE_SIZE_DECREASE:
+                if (nodeSize >= 0.11) {
+                    nodeSize -= 0.10;
+                    mapPanel.repaint();
+                }
+                break;
+            case BUTTON_OPTIONS_NETWORK_INFO:
+                break;
+            case BUTTON_OPTIONS_CON_CONNECT:
+                bContinuousConnections = !bContinuousConnections;
+                if (bContinuousConnections) {
+                    conConnect.setToolTipText(localeString.getString("options_con_connect_enabled_tooltip"));
+                } else {
+                    conConnect.setToolTipText(localeString.getString("options_con_connect_disabled_tooltip"));
+                }
                 break;
         }
         updateButtons();
@@ -163,21 +192,19 @@ public class EditorListener implements ActionListener, MouseListener {
         }
     }
 
-    @Override
-    public void mousePressed(MouseEvent e) {
-    }
+    // need to implement these, but are not used
 
     @Override
-    public void mouseReleased(MouseEvent e) {
-    }
+    public void mousePressed(MouseEvent e) {}
 
     @Override
-    public void mouseEntered(MouseEvent e) {
-    }
+    public void mouseReleased(MouseEvent e) {}
 
     @Override
-    public void mouseExited(MouseEvent e) {
-    }
+    public void mouseEntered(MouseEvent e) {}
+
+    @Override
+    public void mouseExited(MouseEvent e) {}
 }
 
 

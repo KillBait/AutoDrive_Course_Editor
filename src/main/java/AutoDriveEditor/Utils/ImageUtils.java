@@ -17,7 +17,6 @@ public class ImageUtils {
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice gd = ge.getDefaultScreenDevice();
         GraphicsConfiguration gc = gd.getDefaultConfiguration();
-        //Graphics2D g = (Graphics2D) image.getGraphics();
         return gc.createCompatibleImage( width, height, transparency);
     }
 
