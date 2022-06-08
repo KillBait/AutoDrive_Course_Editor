@@ -9,7 +9,7 @@ import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public class RoadMap {
 
-    public String mapName;
+    public static String mapName;
     public static LinkedList<MapNode> mapNodes;
     public static UUID uuid;
     //public static LinkedList<MapMarker> mapMarkers;
@@ -17,7 +17,7 @@ public class RoadMap {
     public RoadMap() {
         //mapMarkers = new LinkedList<>();
         mapNodes = new LinkedList<>();
-        this.mapName = null;
+        mapName = null;
 
         // generate a unique random UUID, we can use this to compare and detect when
         // a different config has been loaded.

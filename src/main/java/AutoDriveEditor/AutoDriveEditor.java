@@ -8,6 +8,7 @@ import AutoDriveEditor.Listeners.EditorListener;
 import AutoDriveEditor.Locale.LocaleManager;
 import AutoDriveEditor.Managers.ChangeManager;
 import AutoDriveEditor.Managers.VersionManager;
+import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import javax.swing.*;
 import java.awt.*;
@@ -26,7 +27,7 @@ import static AutoDriveEditor.XMLConfig.GameXML.xmlConfigFile;
 
 public class AutoDriveEditor extends JFrame {
 
-    public static final String COURSE_EDITOR_VERSION = "1.0.0";
+    public static final String COURSE_EDITOR_VERSION = "1.0.1";
     public static final String COURSE_EDITOR_NAME = "AutoDrive Course Editor";
     public static final String COURSE_EDITOR_TITLE = COURSE_EDITOR_NAME + " " + COURSE_EDITOR_VERSION;
     public static final String COURSE_EDITOR_BUILD_INFO = "Java 13 SDK + IntelliJ IDEA 2022.1.2 Community Edition";
@@ -177,6 +178,9 @@ public class AutoDriveEditor extends JFrame {
         sb.append(COURSE_EDITOR_TITLE);
         if (xmlConfigFile != null) {
             sb.append(" - ").append(xmlConfigFile.getAbsolutePath()).append(getMapPanel().isStale() ? " *" : "");
+        }
+        if (RoadMap.mapName != null) {
+            sb.append(" ( ").append(RoadMap.mapName).append(" )");
         }
         return sb.toString();
     }

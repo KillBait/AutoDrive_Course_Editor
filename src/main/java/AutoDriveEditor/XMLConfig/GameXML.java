@@ -94,7 +94,7 @@ public class GameXML {
         {
             if (xmlConfigFile == null) return false;
             saveXmlConfig(xmlConfigFile, newName, isAutoSave, isBackup);
-            if (!isAutoSave || !isBackup) {
+            if (!isAutoSave && !isBackup) {
                 JOptionPane.showMessageDialog(editor, xmlConfigFile.getName() + " " + localeString.getString("dialog_save_success"), "AutoDrive", JOptionPane.INFORMATION_MESSAGE);
                 getMapPanel().setStale(false);
             }
@@ -553,7 +553,7 @@ public class GameXML {
             File newFile = new File(newName);
             LOG.info("Saving config as {}",newName);
             result = new StreamResult(newFile);
-            if (!isAutoSave) {
+            if (!isAutoSave && !isBackup) {
                 xmlConfigFile = newFile;
                 editor.setTitle(createTitle());
             }

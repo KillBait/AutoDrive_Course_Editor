@@ -4,7 +4,6 @@ import AutoDriveEditor.AutoDriveEditor;
 import AutoDriveEditor.GUI.MenuBuilder;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
-import AutoDriveEditor.Utils.GUIUtils;
 
 import javax.swing.*;
 import java.util.LinkedList;
@@ -71,7 +70,7 @@ public class ScanManager {
         @Override
         protected Integer doInBackground() {
             int count = 0;
-            Thread.currentThread().setName("Scan Network Thread");
+            Thread.currentThread().setName("Network Scan Thread");
             LOG.info("Starting Background Scan");
             timer = System.currentTimeMillis();
 

@@ -40,12 +40,11 @@ public class VersionManager {
             LOG.info("Update file not found");
         } catch (IOException e) {
             e.printStackTrace();
-
         }
 
         if (in != null) {
-            DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
             try {
+                DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
                 DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
                 Document doc = docBuilder.parse(in);
                 Element e = doc.getDocumentElement();
@@ -71,6 +70,8 @@ public class VersionManager {
             } catch (ParserConfigurationException | IOException | SAXException e) {
                 e.printStackTrace();
             }
+        } else {
+            LOG.info("## Update check failed ## Unable to connect to GitHub Repository");
         }
     }
 
@@ -102,6 +103,5 @@ public class VersionManager {
         ep.setEditable(false);
         ep.setBackground(label.getBackground());
         return ep;
-
     }
 }
