@@ -14,8 +14,8 @@ import java.io.IOException;
 
 import static AutoDriveEditor.AutoDriveEditor.editor;
 import static AutoDriveEditor.Locale.LocaleManager.localeString;
-import static AutoDriveEditor.MapPanel.MapImage.image;
 import static AutoDriveEditor.MapPanel.MapImage.setImage;
+import static AutoDriveEditor.MapPanel.MapPanel.forceMapImageRedraw;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public class ImportManager {
@@ -23,7 +23,7 @@ public class ImportManager {
     public static final int FS19_IMAGE = 0;
     public static final int FS22_IMAGE = 1;
 
-    public static Boolean importFromFS19(String filename) {
+    public static Boolean  importFromFS19(String filename) {
         boolean success = createBufferImageFromDDS(filename, FS19_IMAGE);
         if (!success) return false;
         MapPanel.isUsingImportedImage = true;
@@ -41,7 +41,8 @@ public class ImportManager {
 
     public static boolean createBufferImageFromDDS(String filename, int gameImage) {
         byte [] buffer;
-        LOG.info("Creating BufferImage from {}", filename );
+        BufferedImage image;
+        LOG.info("Reading DDS File {}", filename );
 
         // load the DDS file into a buffer
         try {
@@ -61,21 +62,21 @@ public class ImportManager {
             int [] pixels = DDSReader.read(buffer, DDSReader.ARGB, 0);
             int width = DDSReader.getWidth(buffer);
             int height = DDSReader.getHeight(buffer);
-            BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             image.setRGB(0, 0, width, height, pixels, 0, width);
-            LOG.info("Image size {} , {}", image.getWidth(), image.getHeight());
+            LOG.info("DDS Image size {} , {}", image.getWidth(), image.getHeight());
         } catch (OutOfMemoryError memoryError) {
             JOptionPane.showMessageDialog(editor, localeString.getString("dialog_ddsreader_outofmemory"), localeString.getString("dialog_ddsreader_outofmemory_title"), JOptionPane.ERROR_MESSAGE);
             return false;
         }
-
-        LOG.info("DDSReader - Finished Decoding DDS");
 
         // Scale the BufferImage to a size the editor can use ( 2048 x 2048 )
 
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice gd = ge.getDefaultScreenDevice();
         GraphicsConfiguration gc = gd.getDefaultConfiguration();
+
+        LOG.info("Creating usable image from Decoded DDS");
 
         BufferedImage scaledImage = gc.createCompatibleImage( 2048, 2048, Transparency.OPAQUE);
         Graphics2D g = (Graphics2D) scaledImage.getGraphics();
@@ -100,7 +101,7 @@ public class ImportManager {
         // set the converted and resized image as the map image
 
         setImage(scaledImage, false);
-        MapPanel.forceMapImageRedraw();
+        forceMapImageRedraw();
         MapPanel.isUsingImportedImage = true;
         return true;
     }

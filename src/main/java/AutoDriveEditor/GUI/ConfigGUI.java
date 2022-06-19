@@ -7,7 +7,7 @@ import java.awt.event.*;
 
 import static AutoDriveEditor.AutoDriveEditor.EXPERIMENTAL;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
-import static AutoDriveEditor.GUI.GUIImages.tractorImage;
+import static AutoDriveEditor.GUI.GUIImages.getTractorImage;
 import static AutoDriveEditor.Locale.LocaleManager.localeString;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.GUIUtils.makeBasicButton;
@@ -37,7 +37,6 @@ public class ConfigGUI extends JFrame {
 
     public static void showConfigGUI(Component comp) {
         if (configGUI != null) configGUI.dispatchEvent(new WindowEvent(configGUI, WindowEvent.WINDOW_CLOSING));
-        //configListener = new ConfigListener();
         configGUI = new ConfigGUI();
         configGUI.addWindowListener(new WindowAdapter() {
             @Override
@@ -50,7 +49,7 @@ public class ConfigGUI extends JFrame {
         });
         configGUI.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         configGUI.setTitle(localeString.getString("panel_config_gui_title"));
-        configGUI.setIconImage(tractorImage);
+        configGUI.setIconImage(getTractorImage());
         configGUI.setResizable(false);
         configGUI.pack();
         configGUI.setLocationRelativeTo(comp);

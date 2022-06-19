@@ -10,6 +10,7 @@ import java.io.File;
 import java.util.LinkedList;
 
 import static AutoDriveEditor.AutoDriveEditor.editor;
+import static AutoDriveEditor.GUI.GUIImages.getTractorImage;
 import static AutoDriveEditor.GUI.GUIImages.tractorImage;
 import static AutoDriveEditor.Locale.LocaleManager.localeString;
 import static AutoDriveEditor.MapPanel.MapPanel.getMapPanel;
@@ -142,7 +143,7 @@ public class RoutesGUI extends JFrame {
         routesGUI = new RoutesGUI(routesFile);
         routesGUI.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         routesGUI.setTitle(localeString.getString("panel_routes_gui_title"));
-        routesGUI.setIconImage(tractorImage);
+        routesGUI.setIconImage(getTractorImage());
         routesGUI.pack();
         routesGUI.setLocationRelativeTo(comp);
         routesGUI.setVisible(true);

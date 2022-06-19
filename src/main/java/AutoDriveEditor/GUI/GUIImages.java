@@ -22,6 +22,7 @@ public class GUIImages {
     public static BufferedImage negativeHeightWarningImage;
 
     public static ImageIcon markerIcon;
+    public static ImageIcon updateIcon;
     public static ImageIcon regularConnectionIcon;
     public static ImageIcon regularConnectionSelectedIcon;
     public static ImageIcon regularConnectionSubPrioIcon;
@@ -42,6 +43,8 @@ public class GUIImages {
         tractorImage = loadImage("editor/tractor.png");
         // Marker Icon for Destination dialogs
         markerIcon = getImageIcon("editor/marker.png");
+        // Update Icon for update dialog
+        updateIcon = getImageIcon("editor/update.png");
         // node images for MapPanel
         nodeImage = loadImage("editor/nodes/node.png");
         overlapWarningImage = loadImage("editor/nodes/node_warning.png");
@@ -77,5 +80,9 @@ public class GUIImages {
 
     public static ImageIcon getMarkerIcon() {
         return markerIcon;
+    }
+    public static ImageIcon getUpdateIcon() {return updateIcon;}
+    public static BufferedImage getTractorImage() {
+        return tractorImage;
     }
 }

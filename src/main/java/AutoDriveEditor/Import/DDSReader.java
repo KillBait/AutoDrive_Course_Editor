@@ -216,6 +216,7 @@ public class DDSReader {
     }
 
     private static int [] decodeDXT1(int width, int height, int offset, byte [] buffer, Order order) {
+        LOG.info("DDSReader - Decoding DXT1");
         int [] pixels = new int[width*height];
         int index = offset;
         int w = (width+3)/4;
@@ -248,7 +249,7 @@ public class DDSReader {
     }
 
     private static int [] decodeDXT3(int width, int height, int offset, byte [] buffer, Order order) {
-        LOG.info("DDSReader - Decoding DDS ( DXT3 )");
+        LOG.info("DDSReader - Decoding DXT3");
         int index = offset;
         int w = (width+3)/4;
         int h = (height+3)/4;
@@ -292,7 +293,7 @@ public class DDSReader {
     }
 
     private static int [] decodeDXT5(int width, int height, int offset, byte [] buffer, Order order) {
-        LOG.info("DDSReader - Decoding DDS ( DXT5 )");
+        LOG.info("DDSReader - Decoding DXT5");
         int index = offset;
         int w = (width+3)/4;
         int h = (height+3)/4;

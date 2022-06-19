@@ -16,8 +16,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Objects;
 
-import static AutoDriveEditor.GUI.GUIImages.loadIcons;
-import static AutoDriveEditor.GUI.GUIImages.tractorImage;
+import static AutoDriveEditor.GUI.GUIImages.*;
 import static AutoDriveEditor.Locale.LocaleManager.localeString;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
@@ -27,7 +26,7 @@ import static AutoDriveEditor.XMLConfig.GameXML.xmlConfigFile;
 
 public class AutoDriveEditor extends JFrame {
 
-    public static final String COURSE_EDITOR_VERSION = "1.0.1";
+    public static final String COURSE_EDITOR_VERSION = "1.0.2";
     public static final String COURSE_EDITOR_NAME = "AutoDrive Course Editor";
     public static final String COURSE_EDITOR_TITLE = COURSE_EDITOR_NAME + " " + COURSE_EDITOR_VERSION;
     public static final String COURSE_EDITOR_BUILD_INFO = "Java 13 SDK + IntelliJ IDEA 2022.1.2 Community Edition";
@@ -54,7 +53,7 @@ public class AutoDriveEditor extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent we) {
-                if (!DEBUG) { VersionManager.updateCheck(); }
+                VersionManager.updateCheck();
             }
             @Override
             public void windowClosing(WindowEvent e) {
@@ -125,7 +124,7 @@ public class AutoDriveEditor extends JFrame {
 
         MenuBuilder.editMenuEnabled(false);
         GUIBuilder.updateGUIButtons(false);
-        setIconImage(tractorImage);
+        setIconImage(getTractorImage());
         pack();
         if (noSavedWindowPosition) {
             LOG.info("Invalid saved window Location/Size");

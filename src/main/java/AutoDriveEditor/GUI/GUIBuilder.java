@@ -393,7 +393,11 @@ public class GUIBuilder {
         alignPanel.setMaximumSize(new Dimension(80, (int)alignPanel.getPreferredSize().getHeight()));
         editPanel.setLayout(new GridLayout(2,2,8,8));
         editPanel.setMaximumSize(new Dimension(80, (int) editPanel.getPreferredSize().getHeight()));
-        optionsPanel.setLayout(new GridLayout(2,2,8,8));
+        if (EXPERIMENTAL) {
+            optionsPanel.setLayout(new GridLayout(3,2,8,8));
+        } else {
+            optionsPanel.setLayout(new GridLayout(2,2,8,8));
+        }
         optionsPanel.setMaximumSize(new Dimension(80, (int) optionsPanel.getPreferredSize().getHeight()));
         testPanel.setLayout(new GridLayout(2,2,8,8));
     }
