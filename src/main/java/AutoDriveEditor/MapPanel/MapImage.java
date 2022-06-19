@@ -153,7 +153,7 @@ public class MapImage {
                 if (bUseOnlineMapImages) {
                     String fullPath;
                     if (location != null) {
-                        String gitPath = "https://github.com/KillBait/AutoDriveEditor_MapImages/raw/master/mapImages/" + mapName + "/" + mapName + ".png";
+                        String gitPath = "https://raw.githubusercontent.com/KillBait/AutoDrive_MapImages/master/mapImages/" + mapName + "/" + mapName + ".png";
                         showInTextArea(localeString.getString("mapimage_github_check") + " " + mapName + ".png", true, false);
                         LOG.info("Checking GitHub repository for {}",gitPath);
                         URL gitUrl = null;
@@ -211,8 +211,8 @@ public class MapImage {
         }
 
         GUIBuilder.updateGUIButtons(true);
-        //getMapsZoomFactor(mapName);
-        //getMapPanel().repaint();
+        getMapsZoomFactor(mapName);
+        getMapPanel().repaint();
 
         MenuBuilder.mapMenuEnabled(true);
     }
@@ -241,11 +241,11 @@ public class MapImage {
             } catch (IOException e1) {
                 //try default location
                 LOG.info("failed to load heightMap from config location {}", heightMapPath);
-                if (roadMap.mapName != null) {
+                if (RoadMap.mapName != null) {
                     if (location != null) {
-                        heightMapPath = location + "mapImages/" + roadMap.mapName + "/" + roadMap.mapName + "_HeightMap.png";
+                        heightMapPath = location + "mapImages/" + RoadMap.mapName + "/" + RoadMap.mapName + "_HeightMap.png";
                     } else {
-                        heightMapPath = "./mapImages/" + roadMap.mapName + "/" + roadMap.mapName + "_HeightMap.png";
+                        heightMapPath = "./mapImages/" + RoadMap.mapName + "/" + RoadMap.mapName + "_HeightMap.png";
                     }
 
                     try {
@@ -262,8 +262,8 @@ public class MapImage {
                         if (bUseOnlineMapImages) {
                             String fullPath;
                             if (location != null) {
-                                String gitPath = "https://github.com/KillBait/AutoDrive_MapImages/raw/main/mapImages/" + roadMap.mapName + "/" + roadMap.mapName + "_HeightMap.png";
-                                showInTextArea(localeString.getString("mapimage_github_check") + " " + roadMap.mapName + "_HeightMap.png", true, false);
+                                String gitPath = "https://raw.githubusercontent.com/KillBait/AutoDrive_MapImages/master/mapImages/" + RoadMap.mapName + "/" + RoadMap.mapName + "_HeightMap.png";
+                                showInTextArea(localeString.getString("mapimage_github_check") + " " + RoadMap.mapName + "_HeightMap.png", true, false);
                                 LOG.info("Checking GitHub repository for {}",gitPath);
                                 URL gitUrl = null;
                                 try {
@@ -272,7 +272,7 @@ public class MapImage {
                                     ex.printStackTrace();
                                 }
 
-                                fullPath = location + "mapImages/" + roadMap.mapName + "/" + roadMap.mapName + "_HeightMap.png";
+                                fullPath = location + "mapImages/" + RoadMap.mapName + "/" + RoadMap.mapName + "_HeightMap.png";
                                 File file = new File(fullPath);
 
 
@@ -284,11 +284,11 @@ public class MapImage {
                                 if (loadImage != null) {
                                     try {
                                         heightImage = ImageIO.read(loadImage);
-                                        showInTextArea(roadMap.mapName + "_HeightMap.png " + localeString.getString("mapimage_github_repo_download"), false, false);
+                                        showInTextArea(RoadMap.mapName + "_HeightMap.png " + localeString.getString("mapimage_github_repo_download"), false, false);
                                         bHeightMapFound = true;
                                     } catch (IOException ex) {
                                         ex.printStackTrace();
-                                        showInTextArea(roadMap.mapName + "_HeightMap.png " + localeString.getString("mapimage_github_repo_not_found"), false, false);
+                                        showInTextArea(RoadMap.mapName + "_HeightMap.png " + localeString.getString("mapimage_github_repo_not_found"), false, false);
                                     }
 
                                 }
@@ -426,7 +426,7 @@ public class MapImage {
                         message = localeString.getString("dialog_mapimage_incorrect_size");
                     }
                     LOG.info(message);
-                    JOptionPane.showConfirmDialog(AutoDriveEditor.editor, message, "AutoDriveEditor", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showConfirmDialog(editor, message, "AutoDriveEditor", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
                     return;
                 }
             }

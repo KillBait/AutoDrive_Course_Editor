@@ -26,7 +26,7 @@ import static AutoDriveEditor.XMLConfig.GameXML.xmlConfigFile;
 
 public class AutoDriveEditor extends JFrame {
 
-    public static final String COURSE_EDITOR_VERSION = "1.0.2";
+    public static final String COURSE_EDITOR_VERSION = "1.0.3";
     public static final String COURSE_EDITOR_NAME = "AutoDrive Course Editor";
     public static final String COURSE_EDITOR_TITLE = COURSE_EDITOR_NAME + " " + COURSE_EDITOR_VERSION;
     public static final String COURSE_EDITOR_BUILD_INFO = "Java 13 SDK + IntelliJ IDEA 2022.1.2 Community Edition";

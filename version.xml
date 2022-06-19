@@ -1,20 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <AutoDriveEditor>
-    <latest_version>1.0.2</latest_version>
+    <latest_version>1.0.3</latest_version>
     <version_notes><![CDATA[<html>
         <head>
             <title>Version Notes</title>
         </head>
         <body>
-            <h3 style="font-family:verdana;">Update to v1.0.2</h2>
-            <p>Changes</p>
-            <ul>
-                <li>Reworked version update window, it now displays the updates release notes</li>
-                      - It is active, but you wont see it until the next update is released :-D
-            </ul>
+            <h3 style="font-family:verdana;">Update to v1.0.3</h2>
             <p>Bug Fixes</p>
             <ul>
-                <li>Fixed importing DDS files not working</li>
+                <li>Fixed downloading of map images and heightmaps from GitHub repository</li>
             </ul>
             <p>Visit the Release Page <a href="https://github.com/KillBait/AutoDrive_Course_Editor/releases">Here</a>.</p>
         </body>

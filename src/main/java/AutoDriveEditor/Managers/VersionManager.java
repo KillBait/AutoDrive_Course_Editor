@@ -37,13 +37,12 @@ public class VersionManager {
         try {
             url = new URL("https://github.com/KillBait/AutoDrive_Course_Editor/raw/master/version.xml");
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-            HttpURLConnection.setFollowRedirects(false);
+            HttpURLConnection.setFollowRedirects(true);
             urlConnection.setConnectTimeout(5*1000);
             urlConnection.setRequestMethod("GET");
             urlConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)");
             urlConnection.connect();
             in = urlConnection.getInputStream();
-
         } catch (FileNotFoundException e) {
             LOG.info("Update file not found");
         } catch (IOException e) {
@@ -51,12 +50,13 @@ public class VersionManager {
             e.printStackTrace();
         }
 
-
         try {
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
             Document doc = docBuilder.parse(in);
             Element e = doc.getDocumentElement();
+            if (in != null) in.close();
+
 
             String remoteVersion = getTextValue(null, e, "latest_version");
             String updateHTML = getTextValue(null, e, "version_notes");
