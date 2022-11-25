@@ -1,18 +1,10 @@
 package AutoDriveEditor.Locale;
 
-import javax.swing.text.DateFormatter;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -22,7 +14,6 @@ public class LocaleManager {
 
     public static ResourceBundle localeString;
     public static Locale locale;
-
     private static ResourceBundle getLocale(){
 
         String localePath;
@@ -105,5 +96,15 @@ public class LocaleManager {
     public static void setLocale() {
         localeString = getLocale();
         locale = Locale.getDefault();
+    }
+
+    public static String getLocaleString(String key) {
+        try {
+            return localeString.getString(key);
+        } catch (Exception e) {
+            LOG.info("Localization error - unable to locate key '{}'", key);
+            return key;
+        }
+
     }
 }

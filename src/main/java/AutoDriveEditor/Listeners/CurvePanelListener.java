@@ -1,21 +1,46 @@
 package AutoDriveEditor.Listeners;
 
+import AutoDriveEditor.GUI.Buttons.CurveBaseButton;
+import AutoDriveEditor.GUI.GUIBuilder;
+
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
-import AutoDriveEditor.GUI.GUIBuilder;
-import AutoDriveEditor.MapPanel.MapPanel;
-
 import static AutoDriveEditor.AutoDriveEditor.DEBUG;
+import static AutoDriveEditor.AutoDriveEditor.buttonManager;
+import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.cubicCurve;
+import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.isCubicCurveCreated;
+import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.isQuadCurveCreated;
+import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
-import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.RoadNetwork.MapNode.*;
+import static AutoDriveEditor.MapPanel.MapPanel.getMapPanel;
+import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_STANDARD;
+import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_SUBPRIO;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
-public class CurvePanelListener implements ItemListener, ChangeListener {
+public class CurvePanelListener implements ActionListener, ItemListener, ChangeListener {
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (DEBUG) LOG.info("CurvePanelListener ActionCommand: {}", e.getActionCommand());
+        try {
+            CurveBaseButton button = (CurveBaseButton) buttonManager.getCurrentButton();
+            switch (e.getActionCommand()) {
+                case BUTTON_COMMIT_CURVE:
+                    button.commitCurve();
+                    break;
+                case BUTTON_CANCEL_CURVE:
+                    button.cancelCurve();
+                    break;
+            }
+        } catch (Exception ignored) {}
+
+    }
 
     @Override
     public void itemStateChanged(ItemEvent e) {
@@ -74,12 +99,12 @@ public class CurvePanelListener implements ItemListener, ChangeListener {
         JSlider source = (JSlider) e.getSource();
         if (source.getValueIsAdjusting()) {
             int value = source.getValue();
-            if (MapPanel.quadCurve != null) {
-                MapPanel.quadCurve.setNumInterpolationPoints(value + 1);
-                MapPanel.getMapPanel().repaint();
+            if (quadCurve != null) {
+                quadCurve.setNumInterpolationPoints(value + 1);
+                getMapPanel().repaint();
             } else if (cubicCurve != null) {
-                MapPanel.cubicCurve.setNumInterpolationPoints(value + 1);
-                MapPanel.getMapPanel().repaint();
+                cubicCurve.setNumInterpolationPoints(value + 1);
+                getMapPanel().repaint();
             }
         }
     }

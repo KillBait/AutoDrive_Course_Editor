@@ -10,8 +10,7 @@ import java.util.LinkedList;
 import java.util.concurrent.ExecutionException;
 
 import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogMerge;
-import static AutoDriveEditor.GUI.MenuBuilder.bDebugProfile;
-import static AutoDriveEditor.Locale.LocaleManager.localeString;
+import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.RoadNetwork.MapNode.NODE_WARNING_OVERLAP;
 import static AutoDriveEditor.RoadNetwork.RoadMap.mapNodes;
@@ -19,7 +18,8 @@ import static AutoDriveEditor.RoadNetwork.RoadMap.removeMapNode;
 import static AutoDriveEditor.Utils.FileUtils.removeExtension;
 import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
-import static AutoDriveEditor.XMLConfig.GameXML.*;
+import static AutoDriveEditor.XMLConfig.GameXML.saveConfigFile;
+import static AutoDriveEditor.XMLConfig.GameXML.xmlConfigFile;
 import static AutoDriveEditor.XMLConfig.RouteManagerXML.saveRouteManagerXML;
 
 
@@ -42,8 +42,6 @@ public class ScanManager {
 
         String backString = "Starting Background Thread to scan for Overlapping Nodes --> Search Distance " + searchDistance + " meters";
         showInTextArea(backString, true, true);
-        //LOG.info("Starting Background Thread to scan for Overlapping Nodes --> Search Distance {}m", searchDistance);
-        //LOG.info(" ## Distance to search around node = {} meters ##", searchDistance);
 
         ScanNetworkWorker scanThread = new ScanNetworkWorker(searchDistance);
         scanThread.execute();
@@ -86,12 +84,10 @@ public class ScanManager {
         protected void done() {
             networkScanned = true;
             try {
-                if (bDebugProfile) {
-                    int count = get();
-                    String text = "Checked " + mapNodes.size() + " Roadmap nodes --- Found " + count + " nodes overlapping --- Time Taken " +
-                            (float) (System.currentTimeMillis() - timer) / 1000 + " seconds" ;
-                    showInTextArea(text, true, true);
-                }
+                int count = get();
+                String text = "## Background Scan Complete ## Checked " + mapNodes.size() + " Roadmap nodes --- Found " + count + " nodes overlapping --- Time Taken " +
+                        (float) (System.currentTimeMillis() - timer) / 1000 + " seconds" ;
+                showInTextArea(text, true, true);
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
@@ -116,6 +112,9 @@ public class ScanManager {
             double areaY = (node.y + searchAreaHalf) - worldStartY;
             double areaZ = (node.z + searchAreaHalf) - worldStartZ;
 
+            node.hasWarning = false;
+            node.warningNodes.clear();
+
             for (MapNode mapNode : RoadMap.mapNodes) {
                 if (mapNode != node) {
                     if (worldStartX < mapNode.x + searchDistance && (worldStartX + areaX) > mapNode.x - searchDistance &&
@@ -137,7 +136,6 @@ public class ScanManager {
                     }
                 }
             }
-
         }
         return result;
     }
@@ -161,7 +159,7 @@ public class ScanManager {
     }
 
     public static void  mergeOverlappingNodes() {
-        int response = JOptionPane.showConfirmDialog(AutoDriveEditor.editor, localeString.getString("dialog_merge_confirm"), "AutoDrive Editor", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        int response = JOptionPane.showConfirmDialog(AutoDriveEditor.editor, getLocaleString("dialog_merge_confirm"), "AutoDrive Editor", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
         if (response == JOptionPane.YES_OPTION) {
             if (!networkScanned) {
                 LOG.info("need to run network scan first");
@@ -276,7 +274,7 @@ public class ScanManager {
     }
 
     public static void saveMergeBackupConfigFile() {
-        LOG.info("{}", localeString.getString("console_config_merge_backup"));
+        LOG.info("{}", getLocaleString("console_config_merge_backup"));
         String filename = removeExtension(xmlConfigFile.getAbsolutePath()) + "_mergeBackup.xml";
         if (configType == CONFIG_SAVEGAME) {
             saveConfigFile(filename, false, true);

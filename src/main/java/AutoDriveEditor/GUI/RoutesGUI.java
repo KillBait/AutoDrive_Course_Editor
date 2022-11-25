@@ -1,5 +1,6 @@
 package AutoDriveEditor.GUI;
 
+import AutoDriveEditor.MapPanel.MapPanel;
 import AutoDriveEditor.XMLConfig.RouteManagerXML;
 
 import javax.swing.*;
@@ -11,9 +12,7 @@ import java.util.LinkedList;
 
 import static AutoDriveEditor.AutoDriveEditor.editor;
 import static AutoDriveEditor.GUI.GUIImages.getTractorImage;
-import static AutoDriveEditor.GUI.GUIImages.tractorImage;
-import static AutoDriveEditor.Locale.LocaleManager.localeString;
-import static AutoDriveEditor.MapPanel.MapPanel.getMapPanel;
+import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.Utils.GUIUtils.makeBasicButton;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.GameXML.saveConfigFile;
@@ -45,7 +44,6 @@ public class RoutesGUI extends JFrame {
         JPanel gui = new JPanel(new BorderLayout(5, 5));
         gui.setBorder(new TitledBorder("Routes"));
 
-        //labels = new JPanel(new GridLayout(0, 1, 1, 1));
         JPanel labels = new JPanel();
         labels.setLayout(new BoxLayout(labels, BoxLayout.PAGE_AXIS));
 
@@ -64,8 +62,8 @@ public class RoutesGUI extends JFrame {
         loadButton.addActionListener(e -> {
             String routeFile = routesFile.getParentFile() + "\\routes\\" + fileName;
             LOG.info("Full path = {} - {}", routeFile, mapName);
-            if (getMapPanel().isStale()) {
-                int response = JOptionPane.showConfirmDialog(editor, localeString.getString("dialog_exit_unsaved"), "AutoDrive", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (MapPanel.isStale()) {
+                int response = JOptionPane.showConfirmDialog(editor, getLocaleString("dialog_exit_unsaved"), "AutoDrive", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                 if (response == JOptionPane.YES_OPTION) {
                     saveConfigFile(null, false, false);
                 }
@@ -142,7 +140,7 @@ public class RoutesGUI extends JFrame {
         if (routesGUI != null) routesGUI.dispatchEvent(new WindowEvent(routesGUI, WindowEvent.WINDOW_CLOSING));
         routesGUI = new RoutesGUI(routesFile);
         routesGUI.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        routesGUI.setTitle(localeString.getString("panel_routes_gui_title"));
+        routesGUI.setTitle(getLocaleString("panel_routes_gui_title"));
         routesGUI.setIconImage(getTractorImage());
         routesGUI.pack();
         routesGUI.setLocationRelativeTo(comp);

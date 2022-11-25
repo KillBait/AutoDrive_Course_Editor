@@ -7,29 +7,32 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
+import static AutoDriveEditor.AutoDriveEditor.buttonManager;
+
 public class MouseListener implements java.awt.event.MouseListener, MouseMotionListener, MouseWheelListener {
 
-    private final MapPanel mapPanel;
+    private final MapPanel previewPanel;
     public static int currentMouseX;
     public static int currentMouseY;
     public static int prevMousePosX;
     public static int prevMousePosY;
 
     public MouseListener(MapPanel mapPanel) {
-        this.mapPanel = mapPanel;
+        this.previewPanel = mapPanel;
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
         storeCurrentMousePos(e.getX(), e.getY());
+        buttonManager.mouseClicked(e);
         if (e.getButton() == MouseEvent.BUTTON1) {
-            mapPanel.mouseButton1Clicked(e.getX(), e.getY());
+            previewPanel.mouseButton1Clicked(e.getX(), e.getY());
         }
         if (e.getButton() == MouseEvent.BUTTON2) {
-            mapPanel.mouseButton2Clicked(e.getX(), e.getY());
+            previewPanel.mouseButton2Clicked(e.getX(), e.getY());
         }
         if (e.getButton() == MouseEvent.BUTTON3) {
-            mapPanel.mouseButton3Clicked(e.getX(), e.getY());
+            previewPanel.mouseButton3Clicked(e.getX(), e.getY());
         }
         storePreviousMousePos(e.getX(), e.getY());
 
@@ -38,14 +41,15 @@ public class MouseListener implements java.awt.event.MouseListener, MouseMotionL
     @Override
     public void mousePressed(MouseEvent e) {
         storeCurrentMousePos(e.getX(), e.getY());
+        buttonManager.mousePressed(e);
         if (e.getButton() == MouseEvent.BUTTON1) {
-            mapPanel.mouseButton1Pressed(e.getX(), e.getY());
+            previewPanel.mouseButton1Pressed(e.getX(), e.getY());
         }
         if (e.getButton() == MouseEvent.BUTTON2) {
-            mapPanel.mouseButton2Pressed(e.getX(), e.getY());
+            previewPanel.mouseButton2Pressed(e.getX(), e.getY());
         }
         if (e.getButton() == MouseEvent.BUTTON3) {
-            mapPanel.mouseButton3Pressed(e.getX(), e.getY());
+            previewPanel.mouseButton3Pressed(e.getX(), e.getY());
         }
         storePreviousMousePos(e.getX(), e.getY());
     }
@@ -53,43 +57,45 @@ public class MouseListener implements java.awt.event.MouseListener, MouseMotionL
     @Override
     public void mouseReleased(MouseEvent e) {
         storeCurrentMousePos(e.getX(), e.getY());
+        buttonManager.mouseReleased(e);
         if (e.getButton() == MouseEvent.BUTTON1) {
-            mapPanel.mouseButton1Released(e.getX(), e.getY());
+            previewPanel.mouseButton1Released(e.getX(), e.getY());
         }
         if (e.getButton() == MouseEvent.BUTTON2) {
-            mapPanel.mouseButton2Released();
+            previewPanel.mouseButton2Released();
         }
         if (e.getButton() == MouseEvent.BUTTON3) {
-            mapPanel.mouseButton3Released(e.getX(), e.getY());
+            previewPanel.mouseButton3Released(e.getX(), e.getY());
         }
         storePreviousMousePos(e.getX(), e.getY());
     }
 
     @Override
-    public void mouseEntered(MouseEvent e) {
-    }
+    public void mouseEntered(MouseEvent e) {}
 
     @Override
-    public void mouseExited(MouseEvent e) {
-    }
+    public void mouseExited(MouseEvent e) {}
 
     @Override
     public void mouseDragged(MouseEvent e) {
         storeCurrentMousePos(e.getX(), e.getY());
-        mapPanel.mouseDragged(e.getX(), e.getY());
+        buttonManager.mouseDragged(e);
+        previewPanel.mouseDragged(e.getX(), e.getY());
         storePreviousMousePos(e.getX(), e.getY());
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
         storeCurrentMousePos(e.getX(), e.getY());
-        mapPanel.mouseMoved(e.getX(), e.getY());
+        buttonManager.mouseMoved(e);
+        previewPanel.mouseMoved(e.getX(), e.getY());
         storePreviousMousePos(e.getX(), e.getY());
     }
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        mapPanel.increaseZoomLevelBy(e.getWheelRotation());
+        previewPanel.increaseZoomLevelBy(e.getWheelRotation());
+        buttonManager.mouseWheelMoved(e);
     }
 
 

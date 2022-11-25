@@ -1,7 +1,8 @@
 package AutoDriveEditor.Managers;
 
+import AutoDriveEditor.GUI.Buttons.CopyPaste.PasteSelectionButton;
+import AutoDriveEditor.GUI.Buttons.Nodes.DeleteNodeButton.DeleteNodeChanger;
 import AutoDriveEditor.GUI.MenuBuilder;
-import AutoDriveEditor.MapPanel.MapPanel;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
 
@@ -11,6 +12,7 @@ import java.util.LinkedList;
 
 import static AutoDriveEditor.AutoDriveEditor.changeManager;
 import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogCopyPasteInfo;
+import static AutoDriveEditor.Managers.MultiSelectManager.*;
 import static AutoDriveEditor.MapPanel.MapImage.image;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
@@ -42,7 +44,6 @@ public class CopyPasteManager {
     }
 
     public CopyPasteManager() {
-
         this.nodeCache = new LinkedList<>();
     }
 
@@ -51,17 +52,17 @@ public class CopyPasteManager {
         for (MapNode node : nodesToCopy) {
             addToDeleteList(node);
         }
-        changeManager.addChangeable( new ChangeManager.DeleteNodeChanger(deleteNodeList));
+        changeManager.addChangeable( new DeleteNodeChanger(deleteNodeList));
         CopySelection(nodesToCopy);
-        MapPanel.getMapPanel().removeDeleteListNodes();
+        getMapPanel().removeDeleteListNodes();
         clearMultiSelection();
     }
 
     public void CopySelection(LinkedList<MapNode> nodesToCopy) {
         LinkedList<MapNode> tempCache;
-        //get the centre point of the selected nodes
+        //get the centre point of the setSelected nodes
         if (nodesToCopy.size() > 0) {
-            // rebuild the selected nodes and there connections to a new arrayList
+            // rebuild the setSelected nodes and there connections to a new arrayList
             tempCache = createNewMapNodesFromList(nodesToCopy);
             // create a cached LinkedList, so we can paste this in as many times as needed
             nodeCache = createNewMapNodesFromList(tempCache);
@@ -97,13 +98,13 @@ public class CopyPasteManager {
         }
 
         // iterate through the list and remake the connections using the new nodes
+
         for (MapNode originalListNode : list) {
             MapNode sourceNode = null;
 
             for (NodeTransform workBufferNode : tempWorkBuffer) {
                 if (workBufferNode.originalNode == originalListNode) {
                     sourceNode = workBufferNode.newNode;
-                    //if (DEBUG) LOG.info("SourceNode = {}", sourceNode.id);
                     break;
                 }
             }
@@ -116,7 +117,6 @@ public class CopyPasteManager {
                         if (workBufferNode.originalNode == originalIncomingNode) {
                             destNode = workBufferNode.newNode;
                             sourceNode.incoming.add(destNode);
-                            //if (DEBUG) LOG.info("{} incoming from {}", sourceNode.id, destNode.id);
                             break;
                         }
                     }
@@ -128,7 +128,6 @@ public class CopyPasteManager {
                         if (workNode.originalNode == originalOutgoingNode) {
                             destNode = workNode.newNode;
                             sourceNode.outgoing.add(destNode);
-                            //if (DEBUG) LOG.info("{} outgoing to {}", sourceNode.id, destNode.id);
                         }
                     }
                 }
@@ -149,8 +148,6 @@ public class CopyPasteManager {
         if ((roadMap == null) || (image == null)) {
             return;
         }
-
-
 
         if (!inOriginalLocation) {
             selectionCentre = screenPosToWorldPos(getMapPanel().getWidth() / 2, getMapPanel().getHeight() / 2);
@@ -187,9 +184,9 @@ public class CopyPasteManager {
 
         isMultipleSelected = true;
 
-        changeManager.addChangeable( new ChangeManager.PasteSelectionChanger(newNodes) );
-        MapPanel.getMapPanel().setStale(true);
-        MapPanel.getMapPanel().repaint();
+        changeManager.addChangeable( new PasteSelectionButton.PasteSelectionChanger(newNodes) );
+        setStale(true);
+        getMapPanel().repaint();
     }
 
     public static void rotateSelected(double angle) {
@@ -201,7 +198,7 @@ public class CopyPasteManager {
             }
         }
         canAutoSave = true;
-        MapPanel.getMapPanel().repaint();
+        getMapPanel().repaint();
         getSelectionBounds(multiSelectList, WORLD_COORDINATES);
     }
 
@@ -247,7 +244,7 @@ public class CopyPasteManager {
         double centreY = bottomRightY - ( rectSizeY / 2 );
 
         if (coordType == WORLD_COORDINATES) {
-            //if (DEBUG) LOG.info("## WORLD_COORDINATES ## Rectangle start = {} , {} : end = {} , {} : size = {} , {} : Centre = {} , {}", topLeftX, topLeftY, bottomRightX, bottomRightY, rectSizeX, rectSizeY, centreX, centreY);
+            if (bDebugLogCopyPasteInfo) LOG.info("## WORLD_COORDINATES ## Rectangle start = {} , {} : end = {} , {} : size = {} , {} : Centre = {} , {}", topLeftX, topLeftY, bottomRightX, bottomRightY, rectSizeX, rectSizeY, centreX, centreY);
             return new selectionAreaInfo( new Point2D.Double(topLeftX, topLeftY) ,
                     new Point2D.Double(bottomRightX, bottomRightY),
                     new Point2D.Double(rectSizeX, rectSizeY),
@@ -299,5 +296,4 @@ public class CopyPasteManager {
         }
 
     }
-
 }

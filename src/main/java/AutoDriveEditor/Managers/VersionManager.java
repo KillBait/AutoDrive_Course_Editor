@@ -19,16 +19,16 @@ import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import static AutoDriveEditor.AutoDriveEditor.*;
+import static AutoDriveEditor.AutoDriveEditor.COURSE_EDITOR_VERSION;
+import static AutoDriveEditor.AutoDriveEditor.editor;
 import static AutoDriveEditor.GUI.GUIImages.getUpdateIcon;
-import static AutoDriveEditor.Locale.LocaleManager.localeString;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.Utils.XMLUtils.getTextValue;
 import static AutoDriveEditor.XMLConfig.EditorXML.bShowUpdateMessage;
 
 public class VersionManager {
 
-    public static void  updateCheck() {
+    public static void updateCheck() {
 
         InputStream in = null;
         URL url;
@@ -63,7 +63,7 @@ public class VersionManager {
             Semver localSem = new Semver(COURSE_EDITOR_VERSION);
             if (localSem.isLowerThan(remoteVersion)) {
                 if (bShowUpdateMessage) {
-                    LOG.info("Update is available... Current version {} is lower than remote version {}", COURSE_EDITOR_VERSION, remoteVersion);
+                    LOG.info("Update is available... remote version {} is higher than local version {}", remoteVersion, COURSE_EDITOR_VERSION);
                     JTextPane textPane = new JTextPane();
                     textPane.setContentType("text/html");
                     textPane.setText(updateHTML);
@@ -106,11 +106,11 @@ public class VersionManager {
                 }
                 bShowUpdateMessage = false;
             } else if (localSem.isEqualTo(remoteVersion)){
-                LOG.info("No update available... Remote version {} matches current version", remoteVersion);
+                LOG.info("No update available... Remote version {} matches local version", remoteVersion);
                 bShowUpdateMessage = true;
             } else {
                 // yes.... this is a "Back To The Future" reference.. :-P
-                LOG.info("Wait a minute, Doc. Are you telling me you built a time machine... current version {} is higher than remote version {}", COURSE_EDITOR_VERSION, remoteVersion);
+                LOG.info("Wait a minute, Doc. Are you telling me you built a time machine... local version {} is higher than remote version {}", COURSE_EDITOR_VERSION, remoteVersion);
             }
         } catch (ParserConfigurationException | IOException | SAXException e) {
             e.printStackTrace();

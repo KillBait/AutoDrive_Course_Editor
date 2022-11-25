@@ -1,6 +1,5 @@
 package AutoDriveEditor.XMLConfig;
 
-import AutoDriveEditor.MapPanel.MapPanel;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.MarkerGroup;
 import AutoDriveEditor.RoadNetwork.RoadMap;
@@ -27,7 +26,7 @@ import java.util.Objects;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
-import static AutoDriveEditor.Locale.LocaleManager.localeString;
+import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.Managers.ScanManager.scanNetworkForOverlapNodes;
 import static AutoDriveEditor.MapPanel.MapImage.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
@@ -71,47 +70,47 @@ public class RouteManagerXML {
                         for (Route route : routeList) {
                             if (Objects.equals(route.fileName, fileName)) {
                                 LOG.info("setting roadMapName to {}", route.map);
-                                roadMap.mapName = route.map;
+                                RoadMap.mapName = route.map;
                             }
                         }
                     }
                 } else {
-                    roadMap.mapName = mapName;
+                    RoadMap.mapName = mapName;
                 }
-                if (bDebugLogRouteManager) LOG.info("map = {}", roadMap.mapName);
-                loadMapImage(roadMap.mapName);
+                if (bDebugLogRouteManager) LOG.info("map = {}", RoadMap.mapName);
+                loadMapImage(RoadMap.mapName);
                 loadHeightMap(fXmlFile, false);
-                getMapsZoomFactor(mapName);
+                checkStoredMapInfoFor(mapName);
                 forceMapImageRedraw();
                 saveRoutesXML.setEnabled(true);
                 saveConfigMenuItem.setEnabled(false);
                 saveConfigAsMenuItem.setEnabled(false);
-                if (roadMap.mapName != null ) {
-                    editor.setTitle(COURSE_EDITOR_TITLE + " - " + fXmlFile.getAbsolutePath() + " ( " + roadMap.mapName + " )");
+                if (RoadMap.mapName != null ) {
+                    editor.setTitle(COURSE_EDITOR_TITLE + " - " + fXmlFile.getAbsolutePath() + " ( " + RoadMap.mapName + " )");
                 } else {
                     editor.setTitle(COURSE_EDITOR_TITLE + " - " + fXmlFile.getAbsolutePath());
                 }
                 scanNetworkForOverlapNodes();
-                MapPanel.getMapPanel().setStale(false);
+                setStale(false);
                 return true;
             } else {
-                JOptionPane.showMessageDialog(editor, localeString.getString("dialog_config_route_unknown"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(editor, getLocaleString("dialog_config_route_unknown"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
-            JOptionPane.showMessageDialog(editor, localeString.getString("dialog_config_load_route_failed"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(editor, getLocaleString("dialog_config_load_route_failed"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
             return false;
         }
     }
 
     public static void saveRouteManagerXML(String newName, boolean isAutoSave, boolean isBackup) {
         if (isAutoSave) {
-            LOG.info(localeString.getString("console_config_autosave_start"));
+            LOG.info(getLocaleString("console_config_autosave_start"));
         } else if (isBackup) {
-            LOG.info(localeString.getString("console_config_backup_start"));
+            LOG.info(getLocaleString("console_config_backup_start"));
         } else {
-            LOG.info(localeString.getString("console_config_save_start"));
+            LOG.info(getLocaleString("console_config_save_start"));
         }
 
         try
@@ -119,12 +118,12 @@ public class RouteManagerXML {
             if (xmlConfigFile == null) return;
             saveRouteXML(xmlConfigFile, newName, isAutoSave, isBackup);
             if (!isAutoSave || !isBackup) {
-                JOptionPane.showMessageDialog(editor, xmlConfigFile.getName() + " " + localeString.getString("dialog_save_success"), "AutoDrive", JOptionPane.INFORMATION_MESSAGE);
-                getMapPanel().setStale(false);
+                JOptionPane.showMessageDialog(editor, xmlConfigFile.getName() + " " + getLocaleString("dialog_save_success"), "AutoDrive", JOptionPane.INFORMATION_MESSAGE);
+                setStale(false);
             }
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
-            JOptionPane.showMessageDialog(editor, localeString.getString("dialog_save_fail"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(editor, getLocaleString("dialog_save_fail"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -178,7 +177,7 @@ public class RouteManagerXML {
 
         for (int temp = 0; temp < waypointsList.getLength(); temp++) {
             LOG.info("----------------------------");
-            LOG.info("{} : {}", localeString.getString("console_root_node"), doc.getDocumentElement().getNodeName());
+            LOG.info("{} : {}", getLocaleString("console_root_node"), doc.getDocumentElement().getNodeName());
             Node nNode = waypointsList.item(temp);
             LOG.info("Current Element :{}", nNode.getNodeName());
             if (nNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -229,9 +228,9 @@ public class RouteManagerXML {
 
                     for (int i=0; i<wayPointIDs; i++) {
                         int id = i+1;
-                        double x = Double.parseDouble(xValues[i]);
-                        double y = Double.parseDouble(yValues[i]);
-                        double z = Double.parseDouble(zValues[i]);
+                        long x = Long.parseLong(xValues[i]);
+                        long y = Long.parseLong(yValues[i]);
+                        long z = Long.parseLong(zValues[i]);
                         int flag = Integer.parseInt(flagsValue[i]);
                         MapNode mapNode = new MapNode(id, x, y, z, flag, false, false);
                         nodes.add(mapNode);
@@ -482,11 +481,11 @@ public class RouteManagerXML {
         transformer.transform(source, result);
 
         if (isAutoSave) {
-            LOG.info(localeString.getString("console_config_autosave_end"));
+            LOG.info(getLocaleString("console_config_autosave_end"));
         } else if (isBackup) {
-            LOG.info(localeString.getString("console_config_backup_end"));
+            LOG.info(getLocaleString("console_config_backup_end"));
         } else {
-            LOG.info(localeString.getString("console_config_save_end"));
+            LOG.info(getLocaleString("console_config_save_end"));
         }
     }
 

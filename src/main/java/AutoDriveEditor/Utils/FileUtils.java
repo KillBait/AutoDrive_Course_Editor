@@ -55,7 +55,7 @@ public class FileUtils {
                     return file; // if yes, return as-is
                 }
             }
-            // if not, append the first extension from the selected filter
+            // if not, append the first extension from the setSelected filter
             file = new File(file.toString() + '.' + extension[0]);
         }
         return file;
@@ -103,10 +103,12 @@ public class FileUtils {
         return path.substring(0, path.lastIndexOf("\\") + 1);
     }
 
+    @SuppressWarnings("unused")
     public static String removeFilenameFromPath(File file) {
         return file.getAbsolutePath().substring(0, file.getAbsolutePath().lastIndexOf("\\") + 1);
     }
 
+    @SuppressWarnings("unused")
     public static String getParent(File file) {
         if (file.exists()) {
             return file.getParentFile().getAbsolutePath();

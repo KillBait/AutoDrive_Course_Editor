@@ -13,7 +13,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import static AutoDriveEditor.AutoDriveEditor.editor;
-import static AutoDriveEditor.Locale.LocaleManager.localeString;
+import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.MapPanel.MapImage.setImage;
 import static AutoDriveEditor.MapPanel.MapPanel.forceMapImageRedraw;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
@@ -45,6 +45,7 @@ public class ImportManager {
         LOG.info("Reading DDS File {}", filename );
 
         // load the DDS file into a buffer
+
         try {
             FileInputStream fis = new FileInputStream(filename);
             buffer = new byte[fis.available()];
@@ -66,7 +67,7 @@ public class ImportManager {
             image.setRGB(0, 0, width, height, pixels, 0, width);
             LOG.info("DDS Image size {} , {}", image.getWidth(), image.getHeight());
         } catch (OutOfMemoryError memoryError) {
-            JOptionPane.showMessageDialog(editor, localeString.getString("dialog_ddsreader_outofmemory"), localeString.getString("dialog_ddsreader_outofmemory_title"), JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(editor, getLocaleString("dialog_ddsreader_outofmemory"), getLocaleString("dialog_ddsreader_outofmemory_title"), JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
@@ -98,7 +99,7 @@ public class ImportManager {
         }
         g.dispose();
 
-        // set the converted and resized image as the map image
+        // set the converted/resized image as the current map image
 
         setImage(scaledImage, false);
         forceMapImageRedraw();
@@ -129,6 +130,4 @@ public class ImportManager {
             return false;
         }
     }
-
-
 }

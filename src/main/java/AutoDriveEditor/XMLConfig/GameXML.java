@@ -1,5 +1,6 @@
 package AutoDriveEditor.XMLConfig;
 
+import AutoDriveEditor.GUI.MenuBuilder;
 import AutoDriveEditor.Managers.ChangeManager;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
@@ -30,7 +31,7 @@ import java.util.LinkedList;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
-import static AutoDriveEditor.Locale.LocaleManager.localeString;
+import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.MapPanel.MapImage.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.FileUtils.removeExtension;
@@ -46,7 +47,7 @@ public class GameXML {
     public static File xmlConfigFile;
     public static String lastLoadLocation;
     private static boolean hasFlagTag = false; // indicates if the loaded XML file has the <flags> tag in the <waypoints> element
-    public static boolean oldConfigFormat = false;
+    public static boolean canEditConfig = false;
     public static int configVersion = 0;
     public static int autoSaveLastUsedSlot = 1;
 
@@ -59,35 +60,35 @@ public class GameXML {
                 configType = CONFIG_SAVEGAME;
                 getMapPanel().setRoadMap(roadMap);
                 xmlConfigFile = fXmlFile;
-                loadMapImage(roadMap.mapName);
+                loadMapImage(RoadMap.mapName);
                 loadHeightMap(fXmlFile, false);
-                getMapsZoomFactor(roadMap.mapName);
+                checkStoredMapInfoFor(RoadMap.mapName);
                 forceMapImageRedraw();
                 saveRoutesXML.setEnabled(false);
                 LOG.info("Session UUID = {}", RoadMap.uuid);
-                editor.setTitle(COURSE_EDITOR_TITLE + " - " + fXmlFile.getAbsolutePath() + " ( " + roadMap.mapName + " )");
+                editor.setTitle(COURSE_EDITOR_TITLE + " - " + fXmlFile.getAbsolutePath() + " ( " + RoadMap.mapName + " )");
                 // initialize a new changeManager so undo/redo system won't throw errors
                 // when we try to undo/redo something on a config that is no longer loaded
                 changeManager = new ChangeManager();
                 return true;
             } else {
-                JOptionPane.showMessageDialog(editor, localeString.getString("dialog_config_unknown"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(editor, getLocaleString("dialog_config_unknown"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
-            JOptionPane.showMessageDialog(editor, localeString.getString("dialog_config_load_failed"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(editor, getLocaleString("dialog_config_load_failed"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
             return false;
         }
     }
 
     public static boolean saveConfigFile(String newName, boolean isAutoSave, boolean isBackup) {
         if (isAutoSave) {
-            LOG.info(localeString.getString("console_config_autosave_start"));
+            LOG.info(getLocaleString("console_config_autosave_start"));
         } else if (isBackup) {
-            LOG.info(localeString.getString("console_config_backup_start"));
+            LOG.info(getLocaleString("console_config_backup_start"));
         } else {
-            LOG.info(localeString.getString("console_config_save_start"));
+            LOG.info(getLocaleString("console_config_save_start"));
         }
 
         try
@@ -95,13 +96,13 @@ public class GameXML {
             if (xmlConfigFile == null) return false;
             saveXmlConfig(xmlConfigFile, newName, isAutoSave, isBackup);
             if (!isAutoSave && !isBackup) {
-                JOptionPane.showMessageDialog(editor, xmlConfigFile.getName() + " " + localeString.getString("dialog_save_success"), "AutoDrive", JOptionPane.INFORMATION_MESSAGE);
-                getMapPanel().setStale(false);
+                JOptionPane.showMessageDialog(editor, xmlConfigFile.getName() + " " + getLocaleString("dialog_save_success"), "AutoDrive", JOptionPane.INFORMATION_MESSAGE);
+                setStale(false);
             }
             return true;
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
-            JOptionPane.showMessageDialog(editor, localeString.getString("dialog_save_fail"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(editor, getLocaleString("dialog_save_fail"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
             return false;
         }
     }
@@ -151,14 +152,13 @@ public class GameXML {
         }
 
         if (getTextValue(null, doc.getDocumentElement(), "markerID") != null) {
-            JOptionPane.showConfirmDialog(editor, "" + localeString.getString("console_config_unsupported1") + "\n\n" + localeString.getString("console_config_unsupported2"), "AutoDrive", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE);
-            LOG.info("## {}",localeString.getString("console_config_unsupported1"));
-            LOG.info("## {}",localeString.getString("console_config_unsupported2"));
-            oldConfigFormat = true;
+            JOptionPane.showConfirmDialog(editor, "" + getLocaleString("console_config_unsupported1") + "\n\n" + getLocaleString("console_config_unsupported2"), "AutoDrive", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE);
+            LOG.info("## {}",getLocaleString("console_config_unsupported1"));
+            LOG.info("## {}",getLocaleString("console_config_unsupported2"));
+            canEditConfig = false;
         } else {
             String version = getTextValue(null, doc.getDocumentElement(), "version");
             Semver configSemver = new Semver(version);
-            //version = "1.1.1.6";//Semver configSemver = new Semver(version);
 
             if (configSemver.getMajor() == 1 ) {
                 LOG.info("FS19 Config detected");
@@ -167,8 +167,8 @@ public class GameXML {
                 LOG.info("FS22 Config detected");
                 configVersion = FS22_CONFIG;
             }
-            LOG.info("{} '{}'", localeString.getString("console_config_version"), version);
-            oldConfigFormat = false;
+            LOG.info("{} '{}'", getLocaleString("console_config_version"), version);
+            canEditConfig = true;
         }
 
         NodeList nList = doc.getElementsByTagName("waypoints");
@@ -176,7 +176,7 @@ public class GameXML {
         LinkedList<MapNode> nodes = new LinkedList<>();
         for (int temp = 0; temp < nList.getLength(); temp++) {
             LOG.info("----------------------------");
-            LOG.info("{} : {}", localeString.getString("console_root_node"), doc.getDocumentElement().getNodeName());
+            LOG.info("{} : {}", getLocaleString("console_root_node"), doc.getDocumentElement().getNodeName());
             Node nNode = nList.item(temp);
             LOG.info("Current Element :{}", nNode.getNodeName());
 
@@ -324,7 +324,7 @@ public class GameXML {
                     // add the marker info to the node
                     MapNode mapNode = nodes.get(id - 1);
                     mapNode.createMapMarker(markerName, markerGroup);
-                    if (bDebugLogRouteManager) LOG.info("created index {} ( ID {} ) , name {} , group {}", id-1, id, markerName, markerGroup);
+                    if (bDebugLogConfigInfo) LOG.info("created marker - index {} ( ID {} ) , name {} , group {}", id-1, id, markerName, markerGroup);
                 }
             }
         }
@@ -342,10 +342,14 @@ public class GameXML {
         if ( mapNameElement != null) {
             NodeList fstNm = mapNameElement.getChildNodes();
             String mapName = (fstNm.item(0)).getNodeValue();
-            LOG.info("{} : {}", localeString.getString("console_config_load"), mapName);
-            roadMap.mapName = mapName;
+            LOG.info("{} : {}", getLocaleString("console_config_load"), mapName);
+            RoadMap.mapName = mapName;
         }
-        LOG.info("{}", localeString.getString("console_config_load_end"));
+        LOG.info("{}", getLocaleString("console_config_load_end"));
+
+        // if we got this far, no XML errors occurred, enable all the buttons to allow editing
+
+       enableConfigEdit(canEditConfig);
 
         return roadMap;
     }
@@ -495,7 +499,7 @@ public class GameXML {
         NodeList testWaypoints = doc.getElementsByTagName("mapmarker");
 
         if (totalMarkers > 0 && testWaypoints.getLength() == 0 ) {
-            LOG.info("{}", localeString.getString("console_markers_new"));
+            LOG.info("{}", getLocaleString("console_markers_new"));
             Element test = doc.createElement("mapmarker");
             AutoDrive.appendChild(test);
         }
@@ -561,11 +565,17 @@ public class GameXML {
         transformer.transform(source, result);
 
         if (isAutoSave) {
-            LOG.info(localeString.getString("console_config_autosave_end"));
+            LOG.info(getLocaleString("console_config_autosave_end"));
         } else if (isBackup) {
-            LOG.info(localeString.getString("console_config_backup_end"));
+            LOG.info(getLocaleString("console_config_backup_end"));
         } else {
-            LOG.info(localeString.getString("console_config_save_end"));
+            LOG.info(getLocaleString("console_config_save_end"));
         }
+    }
+
+    public static void enableConfigEdit(boolean enable) {
+        MenuBuilder.saveMenuEnabled(enable);
+        MenuBuilder.editMenuEnabled(enable);
+        buttonManager.enableAllButtons(enable);
     }
 }

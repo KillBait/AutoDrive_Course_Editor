@@ -1,23 +1,23 @@
 package AutoDriveEditor.Listeners;
 
 import AutoDriveEditor.Managers.CopyPasteManager;
-import AutoDriveEditor.MapPanel.MapPanel;
+import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
+import static AutoDriveEditor.GUI.Buttons.CopyPasteBaseButton.*;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.GUI.RoutesGUI.createRoutesGUI;
-import static AutoDriveEditor.Locale.LocaleManager.localeString;
+import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.Managers.ImportManager.*;
 import static AutoDriveEditor.Managers.ScanManager.mergeOverlappingNodes;
 import static AutoDriveEditor.Managers.ScanManager.scanNetworkForOverlapNodes;
@@ -43,13 +43,13 @@ public class MenuListener implements ActionListener, ItemListener {
 
         switch (e.getActionCommand()) {
             case MENU_LOAD_CONFIG:
-                if (getMapPanel().isStale()) {
-                    int response = JOptionPane.showConfirmDialog(editor, localeString.getString("dialog_exit_unsaved"), "AutoDrive", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (isStale()) {
+                    int response = JOptionPane.showConfirmDialog(editor, getLocaleString("dialog_exit_unsaved"), getLocaleString("AutoDrive"), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                     if (response == JOptionPane.YES_OPTION) {
                         saveConfigFile(null, false, false);
                     }
                 }
-                fc.setDialogTitle(localeString.getString("dialog_load_config_xml_title"));
+                fc.setDialogTitle(getLocaleString("dialog_load_config_xml_title"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fc.setFileFilter(new FileFilter() {
                     @Override
@@ -69,13 +69,12 @@ public class MenuListener implements ActionListener, ItemListener {
                 if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
                     canAutoSave = false;
                     lastLoadLocation = fc.getCurrentDirectory().getAbsolutePath();
-                    getMapPanel().confirmCurve();
                     File fileName = fc.getSelectedFile();
                     if (loadConfigFile(fileName)) {
                         forceMapImageRedraw();
                         isUsingImportedImage = false;
                         saveImageEnabled(false);
-                        getMapPanel().setStale(false);
+                        setStale(false);
                         scanNetworkForOverlapNodes();
                         bShowHeightMap = false;
                         showHeightMapMenuItem.setSelected(false);
@@ -88,7 +87,7 @@ public class MenuListener implements ActionListener, ItemListener {
                 break;
             case MENU_SAVE_SAVEAS:
                 if (xmlConfigFile == null) break;
-                fc.setDialogTitle(localeString.getString("dialog_save_destination"));
+                fc.setDialogTitle(getLocaleString("dialog_save_destination"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fc.setFileFilter(new FileFilter() {
                     @Override
@@ -108,12 +107,12 @@ public class MenuListener implements ActionListener, ItemListener {
 
                 if (fc.showSaveDialog(editor) == JFileChooser.APPROVE_OPTION) {
                     lastLoadLocation = fc.getCurrentDirectory().getAbsolutePath();
-                    LOG.info("{} {}", localeString.getString("console_config_save_as"), getSelectedFileWithExtension(fc));
+                    LOG.info("{} {}", getLocaleString("console_config_save_as"), getSelectedFileWithExtension(fc));
                     saveConfigFile(getSelectedFileWithExtension(fc).toString(), false, false);
                 }
                 break;
             case MENU_LOAD_ROUTES_MANAGER_CONFIG:
-                fc.setDialogTitle(localeString.getString("dialog_load_routemanager_config_title"));
+                fc.setDialogTitle(getLocaleString("dialog_load_routemanager_config_title"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fc.setFileFilter(new FileFilter() {
                     @Override
@@ -142,13 +141,13 @@ public class MenuListener implements ActionListener, ItemListener {
                 }
                 break;
             case MENU_LOAD_ROUTES_MANAGER_XML:
-                if (getMapPanel().isStale()) {
-                    int response = JOptionPane.showConfirmDialog(editor, localeString.getString("dialog_exit_unsaved"), "AutoDrive", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (isStale()) {
+                    int response = JOptionPane.showConfirmDialog(editor, getLocaleString("dialog_exit_unsaved"), "AutoDrive", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                     if (response == JOptionPane.YES_OPTION) {
                         saveConfigFile(null, false, false);
                     }
                 }
-                fc.setDialogTitle(localeString.getString("dialog_load_route_xml_title"));
+                fc.setDialogTitle(getLocaleString("dialog_load_route_xml_title"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fc.setFileFilter(new FileFilter() {
                     @Override
@@ -168,12 +167,11 @@ public class MenuListener implements ActionListener, ItemListener {
                 if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
                     canAutoSave = false;
                     lastLoadLocation = fc.getCurrentDirectory().getAbsolutePath();
-                    getMapPanel().confirmCurve();
                     File fileName = fc.getSelectedFile();
                     if (loadRouteManagerXML(fileName, false, null)) {
                         isUsingImportedImage = false;
                         saveImageEnabled(false);
-                        getMapPanel().setStale(false);
+                        setStale(false);
                         canAutoSave = true;
                     }
                 }
@@ -184,12 +182,8 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_EXIT:
                 editor.dispatchEvent(new WindowEvent(editor, WindowEvent.WINDOW_CLOSING));
                 break;
-            case MENU_EDIT_CUT:
-            case MENU_EDIT_COPY:
-            case MENU_EDIT_PASTE:
-                break;
             case MENU_LOAD_IMAGE:
-                fc.setDialogTitle(localeString.getString("dialog_load_image_title"));
+                fc.setDialogTitle(getLocaleString("dialog_load_image_title"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fc.setFileFilter(new FileFilter() {
                     @Override
@@ -207,7 +201,7 @@ public class MenuListener implements ActionListener, ItemListener {
                 });
 
                 if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
-                    LOG.info("Manual loading of map image selected");
+                    LOG.info("Manual loading of map image setSelected");
                     File fileName;
                     try {
                         fileName = fc.getSelectedFile();
@@ -225,8 +219,8 @@ public class MenuListener implements ActionListener, ItemListener {
                 break;
             case MENU_SAVE_IMAGE:
                 String currentSavePath;
-                if (!oldConfigFormat) {
-                    currentSavePath = getCurrentLocation() + "mapImages/" + roadMap.mapName + "/" + roadMap.mapName + ".png";
+                if (canEditConfig) {
+                    currentSavePath = getCurrentLocation() + "mapImages/" + RoadMap.mapName + "/" + RoadMap.mapName + ".png";
                 } else {
                     currentSavePath = getCurrentLocation() + "mapImages/unknown.png";
                 }
@@ -251,7 +245,7 @@ public class MenuListener implements ActionListener, ItemListener {
                     ioException.printStackTrace();
                 }
 
-                fc.setDialogTitle(localeString.getString("dialog_save_mapimage"));
+                fc.setDialogTitle(getLocaleString("dialog_save_mapimage"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fc.setFileFilter(new FileFilter() {
                     @Override
@@ -272,7 +266,7 @@ public class MenuListener implements ActionListener, ItemListener {
                 if (fc.showSaveDialog(editor) == JFileChooser.APPROVE_OPTION) {
                     File saveImageFile = getSelectedFileWithExtension(fc);
                     if (saveImageFile.exists()) {
-                        int response = JOptionPane.showConfirmDialog(editor, localeString.getString("dialog_overwrite"), "File already exists " + roadMap.mapName + ".png", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                        int response = JOptionPane.showConfirmDialog(editor, getLocaleString("dialog_overwrite"), "File already exists " + RoadMap.mapName + ".png", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                         if (response == JOptionPane.NO_OPTION) {
                             showInTextArea("Cancelled saving of converted image", true, true);
                             break;
@@ -291,7 +285,7 @@ public class MenuListener implements ActionListener, ItemListener {
                 }
                 break;
             case MENU_IMPORT_FS19_DDS:
-                fc.setDialogTitle(localeString.getString("dialog_import_FS19_dds_image_title"));
+                fc.setDialogTitle(getLocaleString("dialog_import_FS19_dds_image_title"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fc.setFileFilter(new FileFilter() {
                     @Override
@@ -326,7 +320,7 @@ public class MenuListener implements ActionListener, ItemListener {
                 }
                 break;
             case MENU_IMPORT_FS22_DDS:
-                fc.setDialogTitle(localeString.getString("dialog_import_FS22_dds_image_title"));
+                fc.setDialogTitle(getLocaleString("dialog_import_FS22_dds_image_title"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fc.setFileFilter(new FileFilter() {
                     @Override
@@ -361,7 +355,7 @@ public class MenuListener implements ActionListener, ItemListener {
                 }
                 break;
             case MENU_HEIGHTMAP_LOAD:
-                fc.setDialogTitle(localeString.getString("dialog_heightmap_load_title"));
+                fc.setDialogTitle(getLocaleString("dialog_heightmap_load_title"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fc.setFileFilter(new FileFilter() {
                     @Override
@@ -384,8 +378,8 @@ public class MenuListener implements ActionListener, ItemListener {
                 break;
             case MENU_HEIGHTMAP_SAVE:
                 String currentExportPath;
-                if (!oldConfigFormat) {
-                    currentExportPath = getCurrentLocation() + "mapImages/" + roadMap.mapName + "/" + roadMap.mapName + "_HeightMap.png";
+                if (canEditConfig) {
+                    currentExportPath = getCurrentLocation() + "mapImages/" + RoadMap.mapName + "/" + RoadMap.mapName + "_HeightMap.png";
                 } else {
                     currentExportPath = getCurrentLocation() + "mapImages/unknown_HeightMap.png";
                 }
@@ -410,7 +404,7 @@ public class MenuListener implements ActionListener, ItemListener {
                     ioException.printStackTrace();
                 }
 
-                fc.setDialogTitle(localeString.getString("dialog_heightmap_export_title"));
+                fc.setDialogTitle(getLocaleString("dialog_heightmap_export_title"));
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fc.setFileFilter(new FileFilter() {
                     @Override
@@ -431,13 +425,13 @@ public class MenuListener implements ActionListener, ItemListener {
                 if (fc.showSaveDialog(editor) == JFileChooser.APPROVE_OPTION) {
                     File saveImageFile = getSelectedFileWithExtension(fc);
                     if (saveImageFile.exists()) {
-                        int response = JOptionPane.showConfirmDialog(editor, localeString.getString("dialog_overwrite"), "File already exists " + roadMap.mapName + ".png", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                        int response = JOptionPane.showConfirmDialog(editor, getLocaleString("dialog_overwrite"), "File already exists " + RoadMap.mapName + ".png", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                         if (response == JOptionPane.NO_OPTION) {
                             showInTextArea("Cancelled export of default heightmap", true, true);
                             break;
                         }
                     }
-                    LOG.info("{} {}", localeString.getString("console_heightmap_export_default"), saveImageFile);
+                    LOG.info("{} {}", getLocaleString("console_heightmap_export_default"), saveImageFile);
                     if (exportImageToDisk(heightMapImage, getSelectedFileWithExtension(fc).toString())) {
                         heightMapLoadedLabel.setForeground(new Color(0,100,0));
                         heightMapLoadedLabel.setText("Loaded");
@@ -446,81 +440,79 @@ public class MenuListener implements ActionListener, ItemListener {
                 }
                 break;
             case MENU_ZOOM_2km:  // 2km
-                updateMapZoomFactor(1);
+                updateMapScaleTo(1);
                 break;
             case MENU_ZOOM_4km:  // 4km
-                updateMapZoomFactor(2);
+                updateMapScaleTo(2);
                 break;
             case MENU_ZOOM_6km:  // 6km
-                updateMapZoomFactor(3);
+                updateMapScaleTo(3);
                 break;
             case MENU_ZOOM_8km: // 8km
-                updateMapZoomFactor(4);
+                updateMapScaleTo(4);
                 break;
             case MENU_ZOOM_10km: // 10km
-                updateMapZoomFactor(5);
+                updateMapScaleTo(5);
                 break;
             case MENU_ZOOM_12km: // 12km
-                updateMapZoomFactor(6);
+                updateMapScaleTo(6);
                 break;
             case MENU_ZOOM_14km: // 14km
-                updateMapZoomFactor(7);
+                updateMapScaleTo(7);
                 break;
             case MENU_ZOOM_16km: // 16km
-                updateMapZoomFactor(8);
+                updateMapScaleTo(8);
                 break;
             case MENU_ZOOM_18km: // 18km
-                updateMapZoomFactor(9);
+                updateMapScaleTo(9);
                 break;
             case MENU_ZOOM_20km: // 20km
-                updateMapZoomFactor(10);
+                updateMapScaleTo(10);
                 break;
             case MENU_ZOOM_22km: // 22km
-                updateMapZoomFactor(11);
+                updateMapScaleTo(11);
                 break;
             case MENU_ZOOM_24km: // 24km
-                updateMapZoomFactor(12);
+                updateMapScaleTo(12);
                 break;
             case MENU_ZOOM_26km: // 26km
-                updateMapZoomFactor(13);
+                updateMapScaleTo(13);
                 break;
             case MENU_ZOOM_28km: // 28km
-                updateMapZoomFactor(14);
+                updateMapScaleTo(14);
                 break;
             case MENU_ZOOM_30km: // 30km
-                updateMapZoomFactor(15);
+                updateMapScaleTo(15);
                 break;
             case MENU_ZOOM_32km: // 32km
-                updateMapZoomFactor(16);
+                updateMapScaleTo(16);
                 break;
             case MENU_ZOOM_34km: // 34km
-                updateMapZoomFactor(17);
+                updateMapScaleTo(17);
                 break;
             case MENU_ZOOM_36km: // 36km
-                updateMapZoomFactor(18);
+                updateMapScaleTo(18);
                 break;
             case MENU_ZOOM_38km: // 38km
-                updateMapZoomFactor(19);
+                updateMapScaleTo(19);
                 break;
             case MENU_ZOOM_40km: // 40km
-                updateMapZoomFactor(20);
+                updateMapScaleTo(20);
                 break;
             case MENU_ZOOM_42km: // 42km
-                updateMapZoomFactor(21);
+                updateMapScaleTo(21);
                 break;
             case MENU_ZOOM_44km: // 44km
-                updateMapZoomFactor(22);
+                updateMapScaleTo(22);
                 break;
             case MENU_ZOOM_46km: // 46km
-                updateMapZoomFactor(23);
+                updateMapScaleTo(23);
                 break;
             case MENU_EDIT_UNDO:
                 changeManager.undo();
-                enableMultiSelect();
                 break;
             case MENU_EDIT_REDO:
                 changeManager.redo();
-                enableMultiSelect();
                 break;
             case MENU_GRID_SET:
                 getMapPanel().showGridSettingDialog();
@@ -552,27 +544,20 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_SCAN_MERGE:
                 mergeOverlappingNodes();
                 break;
-            case BUTTON_COPYPASTE_CUT:
+            case MENU_EDIT_CUT:
                 cutSelected();
                 break;
-            case BUTTON_COPYPASTE_COPY:
+            case MENU_EDIT_COPY:
                 copySelected();
                 break;
-            case BUTTON_COPYPASTE_PASTE:
+            case MENU_EDIT_PASTE:
                 pasteSelected();
                 break;
-            case BUTTON_COPYPASTE_PASTE_ORIGINAL:
+            case MENU_EDIT_PASTE_ORIGIN:
                 pasteSelectedInOriginalLocation();
                 break;
             case MENU_DEBUG_MOVETO_NODE:
-                if (hoveredNode != null) {
-                    Point2D target = worldPosToScreenPos(hoveredNode.x, hoveredNode.z);
-                    double x = (getMapPanel().getWidth() >> 1) - target.getX();
-                    double y = (getMapPanel().getHeight() >> 1) - target.getY();
-                    getMapPanel().moveMapBy((int)x,(int)y);
-                } else {
-                    centreNode();
-                }
+                centreNodeDialog();
                 break;
         }
 
@@ -591,11 +576,10 @@ public class MenuListener implements ActionListener, ItemListener {
                     setImage(mapImage, false);
                 }
                 forceMapImageRedraw();
-                //MapPanel.getMapPanel().repaint();
                 break;
             case MENU_GRID_SHOW:
                 bShowGrid = menuItem.isSelected();
-                MapPanel.getMapPanel().repaint();
+                getMapPanel().repaint();
                 break;
             case MENU_GRID_SNAP:
                 bGridSnap = menuItem.isSelected();
@@ -636,8 +620,11 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_DEBUG_TEST:
                 bDebugTest = menuItem.isSelected();
                 break;
-            case MENU_DEBUG_LOG_CURVEINFO:
+            case MENU_DEBUG_LOG_CURVES:
                 bDebugLogCurveInfo = menuItem.isSelected();
+                break;
+            case MENU_DEBUG_LOG_LINEARLINE:
+                bDebugLogLinearlineInfo = menuItem.isSelected();
                 break;
             case MENU_DEBUG_LOG_MARKERS:
                 bDebugLogMarkerInfo = menuItem.isSelected();
@@ -667,20 +654,5 @@ public class MenuListener implements ActionListener, ItemListener {
         String linkText = "<br><br>Visit AutoDrive Editor HomePage</b>";
         JEditorPane editorLink = createHyperLink(mainText,linkText, "https://github.com/KillBait/AutoDrive_Course_Editor");
         JOptionPane.showMessageDialog(editor, editorLink, "About AutoDrive Editor", JOptionPane.PLAIN_MESSAGE);
-    }
-
-    public static void enableMultiSelect() {
-        switch (editorState) {
-            case EDITORSTATE_MOVING:
-            case EDITORSTATE_CHANGE_NODE_PRIORITY:
-            case EDITORSTATE_DELETE_NODES:
-            case EDITORSTATE_DELETE_MARKER:
-            case EDITORSTATE_ALIGN_HORIZONTAL:
-            case EDITORSTATE_ALIGN_VERTICAL:
-            case EDITORSTATE_CNP_SELECT:
-                isMultiSelectAllowed = true;
-                return;
-        }
-        isMultiSelectAllowed = false;
     }
 }

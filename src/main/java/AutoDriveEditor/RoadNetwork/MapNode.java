@@ -2,12 +2,15 @@ package AutoDriveEditor.RoadNetwork;
 
 import java.util.LinkedList;
 
+import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogMarkerInfo;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.Utils.MathUtils.roundUpDoubleToDecimalPlaces;
+
 @SuppressWarnings("unused")
 public class MapNode {
 
     public static final int NODE_FLAG_STANDARD = 0;
     public static final int NODE_FLAG_SUBPRIO = 1;
-
     public static final int NODE_FLAG_TEMPORARY = 98;
     public static final int NODE_FLAG_CONTROL_POINT = 99;
     public static final int NODE_WARNING_NONE = 0;
@@ -31,10 +34,13 @@ public class MapNode {
     public boolean scheduledToBeDeleted;
 
     public MapNode(int id, double x, double y, double z, int flag, boolean isSelected, boolean isControlNode) {
+
+        // Autodrive mod created
+
         this.id = id;
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        this.x = roundUpDoubleToDecimalPlaces(x, 3);
+        this.y = roundUpDoubleToDecimalPlaces(y, 3);
+        this.z = roundUpDoubleToDecimalPlaces(z, 3);
         this.incoming = new LinkedList<>();
         this.outgoing = new LinkedList<>();
         this.flag = flag;
@@ -51,10 +57,12 @@ public class MapNode {
     }
 
     public void createMapMarker(String newName, String newGroup) {
+        if (bDebugLogMarkerInfo) LOG.info("Creating Map Marker for Node ID {} ( Name = {}, Group = {} )", this.id, newName, newGroup);
         this.mapMarker = new MapMarker(newName, newGroup);
     }
 
     public void removeMapMarker() {
+        if (bDebugLogMarkerInfo) LOG.info("Removing Map Marker from Node ID {}", this.id);
         this.mapMarker = null;
     }
 
@@ -120,5 +128,4 @@ public class MapNode {
             this.group = group;
         }
     }
-
 }

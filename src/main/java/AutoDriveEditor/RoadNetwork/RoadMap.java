@@ -12,10 +12,8 @@ public class RoadMap {
     public static String mapName;
     public static LinkedList<MapNode> mapNodes;
     public static UUID uuid;
-    //public static LinkedList<MapMarker> mapMarkers;
 
     public RoadMap() {
-        //mapMarkers = new LinkedList<>();
         mapNodes = new LinkedList<>();
         mapName = null;
 
@@ -34,13 +32,6 @@ public class RoadMap {
         // starting at the index of where we need to insert the node
         // increment the ID's of all nodes to the right of the mapNodes by +1
         // so when we insert the node, all the id's match their index
-
-        /*LinkedList<MapNode> nodes = mapNodes;
-        if (bDebugLogUndoRedo) LOG.info("## insertMapNode() ## bumping all ID's of mapNodes index {} -> {} by +1", toAdd.id - 1, nodes.size() - 1);
-        for (int i = toAdd.id - 1; i <= nodes.size() - 1; i++) {
-            MapNode mapNode = nodes.get(i);
-            mapNode.id++;
-        }*/
 
         ListIterator<MapNode> roadMap = mapNodes.listIterator(toAdd.id - 1);
         while (roadMap.hasNext()) {
@@ -81,7 +72,7 @@ public class RoadMap {
     }
 
     public static boolean isDual(MapNode start, MapNode target) {
-        return start.outgoing.contains(target) && target.outgoing.contains(start);
+        return start.outgoing.contains(target) && target.incoming.contains(start) && target.outgoing.contains(start) && start.incoming.contains(target);
     }
 
     public static boolean isReverse(MapNode start, MapNode target) {

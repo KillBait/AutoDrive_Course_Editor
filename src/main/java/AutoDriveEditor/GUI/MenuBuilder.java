@@ -8,7 +8,6 @@ import java.awt.event.KeyEvent;
 
 import static AutoDriveEditor.AutoDriveEditor.DEBUG;
 import static AutoDriveEditor.AutoDriveEditor.EXPERIMENTAL;
-import static AutoDriveEditor.GUI.GUIBuilder.*;
 import static AutoDriveEditor.Utils.GUIUtils.*;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
@@ -30,6 +29,8 @@ public class MenuBuilder {
     public static final String MENU_EDIT_CUT = "Cut";
     public static final String MENU_EDIT_COPY = "Copy";
     public static final String MENU_EDIT_PASTE = "Paste";
+    public static final String MENU_EDIT_PASTE_ORIGIN = "Paste Origin";
+
     public static final String MENU_ZOOM_2km = "2km";
     public static final String MENU_ZOOM_4km = "4km";
     public static final String MENU_ZOOM_6km = "6km";
@@ -84,15 +85,13 @@ public class MenuBuilder {
     public static final String MENU_DEBUG_LOG_MERGE = "LOG MERGE";
     public static final String MENU_DEBUG_LOG_ROUTEMANAGER = "LOG ROUTEMANAGER";
     public static final String MENU_DEBUG_LOG_HEIGHTMAP = "LOG HEIGHTMAP";
-    public static final String MENU_DEBUG_LOG_CURVEINFO = "LOG CURVE";
+    public static final String MENU_DEBUG_LOG_CURVES = "LOG CURVE";
+    public static final String MENU_DEBUG_LOG_LINEARLINE = "LOG LINEARLINE";
     public static final String MENU_DEBUG_LOG_MARKERS = "LOG MARKERS";
     public static final String MENU_DEBUG_LOG_RENDER = "LOG RENDER";
     public static final String MENU_DEBUG_LOG_GUI = "LOG GUI";
     public static final String MENU_DEBUG_LOG_CONFIG = "LOG CONFIG";
     public static final String MENU_DEBUG_LOG_COPYPASTE = "LOG COPYPASTE";
-
-
-
 
     public static int InputEvent_NONE = 0;
     public static int KeyEvent_NONE = 0;
@@ -173,6 +172,7 @@ public class MenuBuilder {
     public static boolean bDebugLogRouteManager;
     public static boolean bDebugLogHeightMapInfo;
     public static boolean bDebugLogCurveInfo;
+    public static boolean bDebugLogLinearlineInfo;
     public static boolean bDebugLogMarkerInfo;
     public static boolean bDebugLogRenderInfo;
     public static boolean bDebugLogGUIInfo;
@@ -180,6 +180,7 @@ public class MenuBuilder {
     public static boolean bDebugLogConfigInfo;
 
     public static void createMenu() {
+
         //JMenuItem menuItem;
 
         menuBar = new JMenuBar();
@@ -208,10 +209,10 @@ public class MenuBuilder {
 
         undoMenuItem = makeMenuItem("menu_edit_undo",  "menu_edit_undo_accstring", KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK, editMenu, menuListener, MENU_EDIT_UNDO, false );
         redoMenuItem = makeMenuItem("menu_edit_redo",  "menu_edit_redo_accstring", KeyEvent.VK_Z, InputEvent.SHIFT_DOWN_MASK, editMenu, menuListener, MENU_EDIT_REDO, false );
-        cutMenuItem = makeMenuItem("menu_edit_cut",  "menu_edit_cut_accstring", KeyEvent.VK_X, InputEvent.CTRL_DOWN_MASK, editMenu, menuListener, BUTTON_COPYPASTE_CUT, false );
-        copyMenuItem = makeMenuItem("menu_edit_copy",  "menu_edit_copy_accstring", KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK, editMenu, menuListener, BUTTON_COPYPASTE_COPY, false );
-        pasteMenuItem = makeMenuItem("menu_edit_paste",  "menu_edit_paste_accstring", KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK, editMenu, menuListener, BUTTON_COPYPASTE_PASTE, false );
-        pasteOriginalLocationMenuItem = makeMenuItem("menu_edit_paste_original_location",  "menu_edit_paste_original_location_accstring", KeyEvent.VK_V, InputEvent.SHIFT_DOWN_MASK, editMenu, menuListener, BUTTON_COPYPASTE_PASTE_ORIGINAL, false );
+        cutMenuItem = makeMenuItem("menu_edit_cut",  "menu_edit_cut_accstring", KeyEvent.VK_X, InputEvent.CTRL_DOWN_MASK, editMenu, menuListener, MENU_EDIT_CUT, false );
+        copyMenuItem = makeMenuItem("menu_edit_copy",  "menu_edit_copy_accstring", KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK, editMenu, menuListener, MENU_EDIT_COPY, false );
+        pasteMenuItem = makeMenuItem("menu_edit_paste",  "menu_edit_paste_accstring", KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK, editMenu, menuListener, MENU_EDIT_PASTE, false );
+        pasteOriginalLocationMenuItem = makeMenuItem("menu_edit_paste_original_location",  "menu_edit_paste_original_location_accstring", KeyEvent.VK_V, InputEvent.SHIFT_DOWN_MASK, editMenu, menuListener, MENU_EDIT_PASTE_ORIGIN, false );
 
         // Create the Map Menu and it's scale sub menu
 
@@ -292,7 +293,7 @@ public class MenuBuilder {
 
         debugMenu = makeMenu("menu_debug", KeyEvent.VK_D, "menu_debug_accstring", menuBar);
         debugMenu.setVisible(DEBUG);
-        makeMenuItem("menu_debug_movetonode", "menu_debug_movetonode_accstring", KeyEvent.VK_F, InputEvent_NONE, debugMenu, menuListener, MENU_DEBUG_MOVETO_NODE, true);
+        makeMenuItem("menu_debug_movetonode", "menu_debug_movetonode_accstring", debugMenu, menuListener, MENU_DEBUG_MOVETO_NODE, true);
         debugMenu.addSeparator();
         makeCheckBoxMenuItem("menu_debug_showID", "menu_debug_showID_accstring", KeyEvent.VK_6, InputEvent.ALT_DOWN_MASK, bDebugShowID, debugMenu, menuListener, MENU_DEBUG_SHOWID, true);
         makeCheckBoxMenuItem("menu_debug_shownodelocationinfo", "menu_debug_shownodelocationinfo_accstring", KeyEvent.VK_7, InputEvent.ALT_DOWN_MASK, bDebugShowSelectedLocation, debugMenu, menuListener, MENU_DEBUG_SELECTED_LOCATION, true);
@@ -309,7 +310,8 @@ public class MenuBuilder {
         makeCheckBoxMenuItem("menu_debug_log_routemanager", "menu_debug_log_routemanager_accstring", bDebugLogRouteManager, debugMenu, menuListener, MENU_DEBUG_LOG_ROUTEMANAGER, true);
         makeCheckBoxMenuItem("menu_debug_log_config", "menu_debug_log_config_accstring", bDebugLogConfigInfo, debugMenu, menuListener, MENU_DEBUG_LOG_CONFIG, true);
         makeCheckBoxMenuItem("menu_debug_log_heightmap_info", "menu_debug_log_heightmap_info_accstring", bDebugLogHeightMapInfo, debugMenu, menuListener, MENU_DEBUG_LOG_HEIGHTMAP, true);
-        makeCheckBoxMenuItem("menu_debug_log_curve_info", "menu_debug_log_curve_info_accstring", bDebugLogCurveInfo, debugMenu, menuListener, MENU_DEBUG_LOG_CURVEINFO, true);
+        makeCheckBoxMenuItem("menu_debug_log_curve_info", "menu_debug_log_curve_info_accstring", bDebugLogCurveInfo, debugMenu, menuListener, MENU_DEBUG_LOG_CURVES, true);
+        makeCheckBoxMenuItem("menu_debug_log_linearline_info", "menu_debug_log_linearline_info_accstring", bDebugLogLinearlineInfo, debugMenu, menuListener, MENU_DEBUG_LOG_LINEARLINE, true);
         makeCheckBoxMenuItem("menu_debug_log_marker_info", "menu_debug_log_marker_info_accstring", bDebugLogMarkerInfo, debugMenu, menuListener, MENU_DEBUG_LOG_MARKERS, true);
         makeCheckBoxMenuItem("menu_debug_log_render_info", "menu_debug_log_render_info_accstring", bDebugLogRenderInfo, debugMenu, menuListener, MENU_DEBUG_LOG_RENDER, true);
         makeCheckBoxMenuItem("menu_debug_log_gui_info", "menu_debug_log_gui_info_accstring", bDebugLogGUIInfo, debugMenu, menuListener, MENU_DEBUG_LOG_GUI, true);
