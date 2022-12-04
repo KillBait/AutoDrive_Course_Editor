@@ -11,6 +11,7 @@ import static AutoDriveEditor.AutoDriveEditor.EXPERIMENTAL;
 import static AutoDriveEditor.Utils.GUIUtils.*;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
+
 public class MenuBuilder {
 
     public static final String MENU_LOAD_CONFIG = "Load Config";
@@ -70,6 +71,7 @@ public class MenuBuilder {
     public static final String MENU_SCAN_OVERLAP="Scan Overlap";
     public static final String MENU_SCAN_MERGE="Merge Overlap";
     public static final String MENU_ABOUT = "About";
+    public static final String MENU_VERSION_HISTORY = "Versoion History";
     public static final String MENU_DEBUG_ENABLE = "Enable Debug";
 
     public static final String MENU_DEBUG_MOVETO_NODE = "DEBUG MOVETO NODE";
@@ -288,6 +290,7 @@ public class MenuBuilder {
 
         helpMenu = makeMenu("menu_help", KeyEvent.VK_H, "menu_help_accstring", menuBar);
         makeMenuItem("menu_help_about", "menu_help_about_accstring", KeyEvent.VK_H, InputEvent.ALT_DOWN_MASK, helpMenu, menuListener, MENU_ABOUT, true);
+        makeMenuItem("menu_help_history", "menu_help_history_accstring", helpMenu, menuListener, MENU_VERSION_HISTORY, true);
         makeCheckBoxMenuItem("menu_help_debug", "menu_help_debug_accstring", bDebugEnable, helpMenu, menuListener, MENU_DEBUG_ENABLE, true);
 
 

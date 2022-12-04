@@ -4,6 +4,7 @@ import AutoDriveEditor.GUI.MenuBuilder;
 import AutoDriveEditor.Managers.ChangeManager;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
+import AutoDriveEditor.Utils.Classes.ModifiedProgressMonitor;
 import com.vdurmont.semver4j.Semver;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -27,11 +28,14 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.concurrent.ExecutionException;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
+import static AutoDriveEditor.Managers.ScanManager.scanNetworkForOverlapNodes;
 import static AutoDriveEditor.MapPanel.MapImage.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.FileUtils.removeExtension;
@@ -51,12 +55,14 @@ public class GameXML {
     public static int configVersion = 0;
     public static int autoSaveLastUsedSlot = 1;
 
+    private static ModifiedProgressMonitor progressMonitor;
+
     public static boolean loadConfigFile(File fXmlFile) {
         LOG.info("config loadFile: {}", fXmlFile.getAbsolutePath());
 
         try {
             RoadMap roadMap = loadXmlConfigFile(fXmlFile);
-            if (roadMap != null) {
+            /*if (roadMap != null) {
                 configType = CONFIG_SAVEGAME;
                 getMapPanel().setRoadMap(roadMap);
                 xmlConfigFile = fXmlFile;
@@ -74,12 +80,13 @@ public class GameXML {
             } else {
                 JOptionPane.showMessageDialog(editor, getLocaleString("dialog_config_unknown"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
                 return false;
-            }
+            }*/
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
             JOptionPane.showMessageDialog(editor, getLocaleString("dialog_config_load_failed"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
             return false;
         }
+        return true;
     }
 
     public static boolean saveConfigFile(String newName, boolean isAutoSave, boolean isBackup) {
@@ -137,8 +144,34 @@ public class GameXML {
         }
     }
 
-    private static RoadMap loadXmlConfigFile(File fXmlFile) throws ParserConfigurationException, IOException, SAXException {
-        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    private static RoadMap loadXmlConfigFile(File fXmlFile) throws ParserConfigurationException, IOException, SAXException, ExecutionException, InterruptedException {
+
+
+        progressMonitor = new ModifiedProgressMonitor(editor, "Parsing XML Config", "Creating Outgoing connections - Completed %d%%.\n", 0, 100);
+        progressMonitor.setSize(350,105);
+        progressMonitor.setProgress(0);
+        progressMonitor.setMinimum(0);
+        progressMonitor.setMaximum(100);
+        progressMonitor.setMillisToDecideToPopup(0);
+        LoadMXLTask task = new LoadMXLTask(fXmlFile);
+        task.addPropertyChangeListener(evt -> {
+            if ("progress".equals(evt.getPropertyName())) {
+                int progress = (Integer) evt.getNewValue();
+                progressMonitor.setProgress(progress);
+                String message = String.format("Completed %d%%.\n", progress);
+                progressMonitor.setNote(message);
+                if (progressMonitor.isCanceled() || task.isDone()) {
+                    if (progressMonitor.isCanceled()) {
+                        task.cancel(true);
+                    }
+                }
+            }
+
+        });
+
+        task.execute();
+
+        /*DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
         Document doc = dBuilder.parse(fXmlFile);
         doc.getDocumentElement().normalize();
@@ -294,8 +327,6 @@ public class GameXML {
 
         NodeList markerList = doc.getElementsByTagName("mapmarker");
 
-
-
         for (int temp = 0; temp < markerList.getLength(); temp++) {
             Node markerNode = markerList.item(temp);
             if (markerNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -349,9 +380,17 @@ public class GameXML {
 
         // if we got this far, no XML errors occurred, enable all the buttons to allow editing
 
-       enableConfigEdit(canEditConfig);
+       enableConfigEdit(canEditConfig);*/
+        
+        /*try {
+            while (!task.isDone()) {
+                Thread.sleep(100);
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }*/
 
-        return roadMap;
+        return null;
     }
 
     private static void saveXmlConfig(File file, String newName, boolean isAutoSave, boolean isBackup) throws ParserConfigurationException, IOException, SAXException, TransformerException, XPathExpressionException {
@@ -577,5 +616,322 @@ public class GameXML {
         MenuBuilder.saveMenuEnabled(enable);
         MenuBuilder.editMenuEnabled(enable);
         buttonManager.enableAllButtons(enable);
+    }
+
+    static class LoadMXLTask extends SwingWorker<RoadMap, Void> {
+
+        Document doc;
+        File configFile;
+
+        public LoadMXLTask(File fXmlFile) throws ParserConfigurationException, IOException, SAXException {
+            configFile = fXmlFile;
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = null;
+            dBuilder = dbFactory.newDocumentBuilder();
+            doc = dBuilder.parse(fXmlFile);
+            doc.getDocumentElement().normalize();
+
+            LOG.info("----------------------------");
+            LOG.info("loadXmlConfigFile Parsing {}", fXmlFile.getAbsolutePath());
+
+            if (!doc.getDocumentElement().getNodeName().equals("AutoDrive")) {
+                LOG.info("Not an AutoDrive Config");
+                return;
+            }
+
+            if (getTextValue(null, doc.getDocumentElement(), "markerID") != null) {
+                JOptionPane.showConfirmDialog(editor, "" + getLocaleString("console_config_unsupported1") + "\n\n" + getLocaleString("console_config_unsupported2"), "AutoDrive", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE);
+                LOG.info("## {}",getLocaleString("console_config_unsupported1"));
+                LOG.info("## {}",getLocaleString("console_config_unsupported2"));
+                canEditConfig = false;
+            } else {
+                String version = getTextValue(null, doc.getDocumentElement(), "version");
+                Semver configSemver = new Semver(version);
+
+                if (configSemver.getMajor() == 1 ) {
+                    LOG.info("FS19 Config detected");
+                    configVersion = FS19_CONFIG;
+                } else if (configSemver.getMajor() == 2) {
+                    LOG.info("FS22 Config detected");
+                    configVersion = FS22_CONFIG;
+                }
+                LOG.info("{} '{}'", getLocaleString("console_config_version"), version);
+                canEditConfig = true;
+            }
+        }
+
+        @Override
+        public RoadMap doInBackground() {
+            String message;
+
+            setProgress(0);
+            NodeList nList = doc.getElementsByTagName("waypoints");
+
+            LinkedList<MapNode> nodes = new LinkedList<>();
+            for (int temp = 0; temp < nList.getLength(); temp++) {
+                LOG.info("----------------------------");
+                LOG.info("{} : {}", getLocaleString("console_root_node"), doc.getDocumentElement().getNodeName());
+                Node nNode = nList.item(temp);
+                LOG.info("Current Element :{}", nNode.getNodeName());
+
+                if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element eElement = (Element) nNode;
+
+                    NodeList nodeList = eElement.getElementsByTagName("id").item(0).getChildNodes();
+                    Node node = nodeList.item(0);
+                    if ( node !=null ) {
+                        String idString = node.getNodeValue();
+                        String[] ids = idString.split(",");
+                        LOG.info("<waypoints> key = {} ID's", ids.length);
+                        LOG.info("----------------------------");
+
+
+                        nodeList = eElement.getElementsByTagName("x").item(0).getChildNodes();
+                        node = nodeList.item(0);
+                        String xString = node.getNodeValue();
+                        String[] xValues = xString.split(",");
+                        LOG.info("{} <x> Entries", xValues.length);
+
+                        nodeList = eElement.getElementsByTagName("y").item(0).getChildNodes();
+                        node = nodeList.item(0);
+                        String yString = node.getNodeValue();
+                        String[] yValues = yString.split(",");
+                        LOG.info("{} <y> Entries", yValues.length);
+
+                        nodeList = eElement.getElementsByTagName("z").item(0).getChildNodes();
+                        node = nodeList.item(0);
+                        String zString = node.getNodeValue();
+                        String[] zValues = zString.split(",");
+                        LOG.info("{} <z> Entries", zValues.length);
+
+                        nodeList = eElement.getElementsByTagName("out").item(0).getChildNodes();
+                        node = nodeList.item(0);
+                        String outString = node.getNodeValue();
+                        String[] outValueArrays = outString.split(";");
+                        LOG.info("{} <out> Entries", outValueArrays.length);
+
+                        nodeList = eElement.getElementsByTagName("incoming").item(0).getChildNodes();
+                        node = nodeList.item(0);
+                        String incomingString = node.getNodeValue();
+                        String[] incomingValueArrays = incomingString.split(";");
+                        LOG.info("{} <in> Entries", incomingValueArrays.length);
+
+                        String[] flagsValue = new String[ids.length];
+
+                        if (eElement.getElementsByTagName("flags").item(0) != null ) {
+                            nodeList = eElement.getElementsByTagName("flags").item(0).getChildNodes();
+                            node = nodeList.item(0);
+                            String flagsString = node.getNodeValue();
+                            flagsValue = flagsString.split(",");
+                            LOG.info("{} <flags> Entries", flagsValue.length);
+                            hasFlagTag = true;
+                        } else {
+                            LOG.info("No <flags> Entries found, setting all to regular connections");
+                            Arrays.fill(flagsValue, "0");
+                            hasFlagTag = false;
+                        }
+                        LOG.info("----------------------------");
+
+                        for (int i=0; i<ids.length; i++) {
+                            int id = Integer.parseInt(ids[i]);
+                            double x = Double.parseDouble(xValues[i]);
+                            double y = Double.parseDouble(yValues[i]);
+                            double z = Double.parseDouble(zValues[i]);
+                            int flag = Integer.parseInt(flagsValue[i]);
+
+                            // is this a FS22 AutoDrive config
+                            if (configVersion == FS22_CONFIG) {
+                                // check if a nodes flag values is equal 2 or 4, this means it was autogenerated by AutoDrive from the map splines
+                                if (flag == 2 || flag == 4) {
+                                    // reset the flag to 0, the editor will just see it as a CONNECTION_REGULAR in checks
+                                    flag = 0;
+                                }
+                            }
+
+                            MapNode mapNode = new MapNode(id, x, y, z, flag, false, false);
+                            nodes.add(mapNode);
+                            int percent = (int) ((double)100 / ids.length) * i;
+                            setProgress(percent);
+                            message = String.format("Creating MapNodes - Completed %d%%.\n", percent);
+                            progressMonitor.setNote(message);
+                        }
+
+
+
+
+                        /*if (eElement.getElementsByTagName("flags").item(0) != null ) {
+                            nodeList = eElement.getElementsByTagName("flags").item(0).getChildNodes();
+                            node = nodeList.item(0);
+                            String flagsString = node.getNodeValue();
+                            String[] flagsValue = flagsString.split(",");
+                            LOG.info("{} <flags> Entries", flagsValue.length);
+
+
+                            hasFlagTag = true;
+
+                            LOG.info("starting creation of {} map nodes", ids.length);
+
+                            for (int i=0; i<ids.length; i++) {
+                                int id = Integer.parseInt(ids[i]);
+                                double x = Double.parseDouble(xValues[i]);
+                                double y = Double.parseDouble(yValues[i]);
+                                double z = Double.parseDouble(zValues[i]);
+                                int flag = Integer.parseInt(flagsValue[i]);
+                                // is this a FS22 AutoDrive config
+                                if (configVersion == FS22_CONFIG) {
+                                    // check if a nodes flag values is equal 2 or 4, this means it was autogenerated by AutoDrive from the map splines
+                                    if (flag == 2 || flag == 4) {
+                                        // reset the flag to 0, the editor will just see it as a CONNECTION_REGULAR in checks
+                                        flag = 0;
+                                    }
+                                }
+
+                                MapNode mapNode = new MapNode(id, x, y, z, flag, false, false);
+                                nodes.add(mapNode);
+                                int
+                                setProgress((int) ((double)100 / ids.length) * i);
+                                message = String.format("Creating MapNodes - Completed %d%%.\n", (int) res);
+                                progressMonitor.setNote(message);
+                            }
+                        } else {
+                            hasFlagTag = false;
+                            LOG.info("No <flags> tag found... starting creation of {} map nodes with flag set to 0", ids.length);
+                            for (int i=0; i<ids.length; i++) {
+                                int id = Integer.parseInt(ids[i]);
+                                double x = Double.parseDouble(xValues[i]);
+                                double y = Double.parseDouble(yValues[i]);
+                                double z = Double.parseDouble(zValues[i]);
+                                int flag = 0;
+
+                                MapNode mapNode = new MapNode(id, x, y, z, flag, false, false);
+                                nodes.add(mapNode);
+                            }
+                        }*/
+
+                        for (int i=0; i<ids.length; i++) {
+                            MapNode mapNode = nodes.get(i);
+                            String[] outNodes = outValueArrays[i].split(",");
+                            for (String outNode : outNodes) {
+                                if (Integer.parseInt(outNode) != -1) {
+                                    mapNode.outgoing.add(nodes.get(Integer.parseInt(outNode) - 1));
+                                }
+                                int res = (int) (((float)100 / ids.length) * i);
+                                setProgress(res);
+                                message = String.format("Creating Incoming Connections - Completed %d%%", (int) res);
+                                progressMonitor.setNote(message);
+                            }
+                        }
+
+                        for (int i=0; i<ids.length; i++) {
+                            MapNode mapNode = nodes.get(i);
+                            String[] incomingNodes = incomingValueArrays[i].split(",");
+                            for (String incomingNode : incomingNodes) {
+                                if (Integer.parseInt(incomingNode) != -1) {
+                                    mapNode.incoming.add(nodes.get(Integer.parseInt(incomingNode)-1));
+                                }
+                                int res = (int) ((float)100 / ids.length) * i;
+                                setProgress((int) res);
+                                message = String.format("Creating Outgoing connections - Completed %d%%.\n", (int) res);
+                                progressMonitor.setNote(message);
+                            }
+                        }
+                        LOG.info("Finished creating all map nodes");
+                        LOG.info("----------------------------");
+                    }
+                }
+            }
+
+            NodeList markerList = doc.getElementsByTagName("mapmarker");
+
+            for (int temp = 0; temp < markerList.getLength(); temp++) {
+                Node markerNode = markerList.item(temp);
+                if (markerNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element eElement = (Element) markerNode;
+
+                    NodeList idNodeList = eElement.getElementsByTagName("id");
+                    NodeList nameNodeList = eElement.getElementsByTagName("name");
+                    NodeList groupNodeList = eElement.getElementsByTagName("group");
+
+                    LOG.info("Starting Creation of {} Markers", idNodeList.getLength());
+
+                    for (int markerIndex = 0; markerIndex<idNodeList.getLength(); markerIndex++ ) {
+                        Node node = idNodeList.item(markerIndex).getChildNodes().item(0);
+                        String markerNodeId = node.getNodeValue();
+
+                        node = nameNodeList.item(markerIndex).getChildNodes().item(0);
+                        String markerName = node.getNodeValue();
+
+                        node = groupNodeList.item(markerIndex).getChildNodes().item(0);
+                        String markerGroup = node.getNodeValue();
+
+                        // AD 6.0.0.4 config fix for Node ID's being Long Format
+                        float num = Float.parseFloat(markerNodeId);
+                        int id = (int) num;
+
+                        // add the marker info to the node
+                        MapNode mapNode = nodes.get(id - 1);
+                        mapNode.createMapMarker(markerName, markerGroup);
+                        if (bDebugLogConfigInfo) LOG.info("created marker - index {} ( ID {} ) , name {} , group {}", id-1, id, markerName, markerGroup);
+                    }
+                }
+            }
+
+            LOG.info("Finished creating all map markers");
+            LOG.info("---------------------------------");
+
+            roadMap = new RoadMap();
+            RoadMap.mapNodes = nodes;
+
+            // check for MapName element
+
+            NodeList mapNameNode = doc.getElementsByTagName("MapName");
+            Element mapNameElement = (Element) mapNameNode.item(0);
+            if ( mapNameElement != null) {
+                NodeList fstNm = mapNameElement.getChildNodes();
+                String mapName = (fstNm.item(0)).getNodeValue();
+                LOG.info("{} : {}", getLocaleString("console_config_load"), mapName);
+                RoadMap.mapName = mapName;
+            }
+            LOG.info("{}", getLocaleString("console_config_load_end"));
+
+            // if we got this far, no XML errors occurred, enable all the buttons to allow editing
+
+            setProgress(100);
+            enableConfigEdit(canEditConfig);
+
+            return roadMap;
+        }
+
+        @Override
+        public void done() {
+            if (roadMap != null) {
+                configType = CONFIG_SAVEGAME;
+                //getMapPanel().setRoadMap(roadMap);
+                xmlConfigFile = configFile;
+                loadMapImage(RoadMap.mapName);
+                loadHeightMap(configFile, false);
+                checkStoredMapInfoFor(RoadMap.mapName);
+                //forceMapImageRedraw();
+                saveRoutesXML.setEnabled(false);
+                LOG.info("Session UUID = {}", RoadMap.uuid);
+                editor.setTitle(COURSE_EDITOR_TITLE + " - " + configFile.getAbsolutePath() + " ( " + RoadMap.mapName + " )");
+                // initialize a new changeManager so undo/redo system won't throw errors
+                // when we try to undo/redo something on a config that is no longer loaded
+                changeManager = new ChangeManager();
+                forceMapImageRedraw();
+                isUsingImportedImage = false;
+                saveImageEnabled(false);
+                setStale(false);
+                scanNetworkForOverlapNodes();
+                bShowHeightMap = false;
+                showHeightMapMenuItem.setSelected(false);
+                canAutoSave=true;
+                //return true;
+            } else {
+                JOptionPane.showMessageDialog(editor, getLocaleString("dialog_config_unknown"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
+                //return false;
+            }
+
+        }
     }
 }

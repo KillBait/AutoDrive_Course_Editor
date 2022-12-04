@@ -13,7 +13,7 @@ import java.util.LinkedList;
 import static AutoDriveEditor.AutoDriveEditor.changeManager;
 import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogCopyPasteInfo;
 import static AutoDriveEditor.Managers.MultiSelectManager.*;
-import static AutoDriveEditor.MapPanel.MapImage.image;
+import static AutoDriveEditor.MapPanel.MapImage.mapImage;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
@@ -145,7 +145,7 @@ public class CopyPasteManager {
         double diffX = 0;
         double diffY = 0;
 
-        if ((roadMap == null) || (image == null)) {
+        if ((roadMap == null) || (mapImage == null)) {
             return;
         }
 

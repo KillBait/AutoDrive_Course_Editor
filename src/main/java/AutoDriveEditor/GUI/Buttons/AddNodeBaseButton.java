@@ -5,14 +5,14 @@ import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import static AutoDriveEditor.AutoDriveEditor.changeManager;
-import static AutoDriveEditor.MapPanel.MapImage.image;
+import static AutoDriveEditor.MapPanel.MapImage.mapImage;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 
 public abstract class AddNodeBaseButton extends BaseButton {
 
     public static MapNode createNode(double worldX, double worldZ, int flag) {
         canAutoSave = false;
-        if ((roadMap == null) || (image == null)) {
+        if ((roadMap == null) || (mapImage == null)) {
             return null;
         }
         double heightMapY = getYValueFromHeightMap(worldX, worldZ);

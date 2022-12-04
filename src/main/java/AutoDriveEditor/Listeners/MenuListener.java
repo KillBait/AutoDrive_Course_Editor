@@ -22,6 +22,7 @@ import static AutoDriveEditor.Managers.ImportManager.*;
 import static AutoDriveEditor.Managers.ScanManager.mergeOverlappingNodes;
 import static AutoDriveEditor.Managers.ScanManager.scanNetworkForOverlapNodes;
 import static AutoDriveEditor.Managers.VersionManager.createHyperLink;
+import static AutoDriveEditor.Managers.VersionManager.showVersionHistory;
 import static AutoDriveEditor.MapPanel.MapImage.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.FileUtils.getCurrentLocation;
@@ -70,16 +71,16 @@ public class MenuListener implements ActionListener, ItemListener {
                     canAutoSave = false;
                     lastLoadLocation = fc.getCurrentDirectory().getAbsolutePath();
                     File fileName = fc.getSelectedFile();
-                    if (loadConfigFile(fileName)) {
-                        forceMapImageRedraw();
+                    loadConfigFile(fileName);
+                        /*forceMapImageRedraw();
                         isUsingImportedImage = false;
                         saveImageEnabled(false);
                         setStale(false);
                         scanNetworkForOverlapNodes();
                         bShowHeightMap = false;
                         showHeightMapMenuItem.setSelected(false);
-                        canAutoSave=true;
-                    }
+                        canAutoSave=true;*/
+
                 }
                 break;
             case MENU_SAVE_CONFIG:
@@ -272,7 +273,7 @@ public class MenuListener implements ActionListener, ItemListener {
                             break;
                         }
                     }
-                    boolean exportSuccess = exportImageToDisk(getImage(), getSelectedFileWithExtension(fc).toString());
+                    boolean exportSuccess = exportImageToDisk(getMapImage(), getSelectedFileWithExtension(fc).toString());
                     if (exportSuccess) {
                         imageLoadedLabel.setForeground(new Color(0, 100, 0));
                         imageLoadedLabel.setText("Saved");
@@ -535,6 +536,8 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_ABOUT:
                 showAbout();
                 break;
+            case MENU_VERSION_HISTORY:
+                showVersionHistory();
             case MENU_HEIGHTMAP_FIX:
                 fixNodeHeight();
                 break;

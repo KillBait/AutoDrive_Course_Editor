@@ -85,16 +85,20 @@ public class EditorXML {
 
     // Node and Connection colours
 
-    public static Color colourNodeRegular;
-    public static Color colourNodeSubprio;
-    public static Color colourConnectRegular;
-    public static Color colourConnectSubprio;
-    public static Color colourConnectDual;
-    public static Color colourConnectDualSubprio;
-    public static Color colourConnectReverse;
-    public static Color colourConnectReverseSubprio;
-    public static Color colourNodeSelected;
-    public static Color colourNodeControl;
+    public static final Color BROWN = new Color(152, 104, 50 );
+
+    public static Color colourNodeRegular = Color.RED;
+    public static Color colourNodeSubprio = Color.ORANGE;
+    public static Color colourNodeSelected = Color.WHITE;
+    public static Color colourNodeControl = Color.MAGENTA;
+    public static Color colourConnectRegular = Color.GREEN;
+    public static Color colourConnectSubprio = Color.ORANGE;
+    public static Color colourConnectDual = Color.BLUE;
+    public static Color colourConnectDualSubprio = BROWN;
+    public static Color colourConnectReverse = Color.CYAN;
+    public static Color colourConnectReverseSubprio = Color.CYAN;
+
+
 
     public static class MapInfoStore {
         public String mapName;

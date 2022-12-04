@@ -8,6 +8,7 @@ import java.awt.*;
 
 import static AutoDriveEditor.Utils.ConversionUtils.ColorToHex;
 import static AutoDriveEditor.Utils.ConversionUtils.HexToColor;
+import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public class XMLUtils {
 
@@ -89,10 +90,11 @@ public class XMLUtils {
     }
 
     public static Color getColorValue(Element doc, String tag, Color defaultColor) {
+        Color color = defaultColor;
         NodeList nl = doc.getElementsByTagName(tag);
         if (nl.getLength() > 0 && nl.item(0).hasChildNodes()) {
-            defaultColor = HexToColor(nl.item(0).getFirstChild().getNodeValue());
+            color = HexToColor(nl.item(0).getFirstChild().getNodeValue());
         }
-        return defaultColor;
+        return color;
     }
 }

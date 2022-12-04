@@ -39,8 +39,8 @@ public class MapImage {
     public static BufferedImage heightMapImage;
     public static Image backBufferImage = null;
     public static Graphics2D backBufferGraphics = null;
-    private static boolean bImageFound = false;
-    public static BufferedImage image;
+    //private static boolean bImageFound = false;
+    //public static BufferedImage image;
     public static double heightMapScale = 1;
 
     public static void loadMapImage(String mapName) {
@@ -49,6 +49,7 @@ public class MapImage {
         File file;
         String location = getCurrentLocation();
         boolean isLegacyLocation = false;
+        boolean bMapImageFound = false;
 
         if (mapName != null) {
 
@@ -62,7 +63,7 @@ public class MapImage {
                 mapPath = configPath + mapName + ".png";
                 mapImage = ImageIO.read(new File(mapPath));
                 LOG.info("Loaded mapImage from {}", mapPath);
-                bImageFound = true;
+                bMapImageFound = true;
             } catch (Exception e) {
                 try {
                     //try default location
@@ -74,7 +75,7 @@ public class MapImage {
                     }
                     mapImage = ImageIO.read(new File(mapPath));
                     LOG.info("Loaded mapImage from {}", mapPath.substring(1));
-                    bImageFound = true;
+                    bMapImageFound = true;
                 } catch (Exception e1) {
                     try {
                         // try the legacy location ( v0.80.0 and below )
@@ -88,7 +89,7 @@ public class MapImage {
                         mapImage = ImageIO.read(new File(mapPath));
                         LOG.info("Loaded mapImage from legacy location {}", mapPath);
                         isLegacyLocation = true;
-                        bImageFound = true;
+                        bMapImageFound = true;
                     } catch (Exception e2) {
                         // try the resource location from sourcecode
                         if (mapPath != null) LOG.info("failed to load map image from {}", mapPath.substring(1));
@@ -100,7 +101,7 @@ public class MapImage {
                             }
                             mapImage = ImageIO.read(new File(mapPath));
                             LOG.info("Loaded mapImage from {}", mapPath);
-                            bImageFound = true;
+                            bMapImageFound = true;
                         } catch (Exception e3) {
                             // try the same location as JAR file
                             LOG.info("failed to load map image from {}", mapPath.substring(1));
@@ -108,11 +109,11 @@ public class MapImage {
                                 mapPath = Objects.requireNonNullElse(location, "./") + mapName + ".png";
                                 heightMapImage = ImageIO.read(new File(mapPath));
                                 LOG.info("Loaded mapImage from {}", mapPath);
-                                bImageFound = true;
+                                bMapImageFound = true;
                             } catch (Exception e4) {
                                 LOG.info("failed to load map image from {}", mapPath.substring(1));
                                 loadImageMenuItem.setEnabled(true);
-                                bImageFound = false;
+                                //bMapImageFound = false;
                             }
                         }
                     }
@@ -149,7 +150,7 @@ public class MapImage {
 
             }
 
-            if (!bImageFound) {
+            if (!bMapImageFound) {
                 if (bUseOnlineMapImages) {
                     String fullPath;
                     if (location != null) {
@@ -176,17 +177,17 @@ public class MapImage {
                             try {
                                 mapImage = ImageIO.read(loadImage);
                                 showInTextArea(mapName + ".png " + getLocaleString("mapimage_github_repo_download"), true, false);
-                                bImageFound = true;
+                                bMapImageFound = true;
                             } catch (IOException ex) {
                                 ex.printStackTrace();
                                 showInTextArea(mapName + ".png " + getLocaleString("mapimage_github_repo_not_found"), true, false);
-                                bImageFound = false;
+                                //bMapImageFound = false;
                             }
 
                         }
                     } else {
                         if (bDebugLogFileIO) LOG.info("getCurrentLocation returned null");
-                        bImageFound = false;
+                        //bMapImageFound = false;
                     }
                 } else {
                     showInTextArea(getLocaleString("mapimage_github_bypass"), true, true);
@@ -194,7 +195,7 @@ public class MapImage {
             }
         }
 
-        if (bImageFound) {
+        if (bMapImageFound) {
             setImage(mapImage, false);
             imageLoadedLabel.setForeground(new Color(0,100,0));
             imageLoadedLabel.setText("Loaded");
@@ -215,9 +216,10 @@ public class MapImage {
     }
 
     public static void loadHeightMap(File path, boolean isManualLoad) {
-        BufferedImage heightImage;
+        BufferedImage heightMapImage;
         String heightMapPath;
-        boolean bHeightMapFound = false;
+        //boolean bHeightMapFound = false;
+        boolean bHeightMapImageFound = false;
 
         if (path != null) {
             if (isManualLoad) {
@@ -227,14 +229,14 @@ public class MapImage {
                 heightMapPath = pathStr.substring(0, pathStr.lastIndexOf("\\") + 1) + "terrain.heightmap.png";
             }
             LOG.info("Loading HeightMap...");
-            heightImage = null;
+            heightMapImage = null;
             String location = getCurrentLocation();
 
             try {
                 //try same location as config file
-                heightImage = ImageIO.read(new File(heightMapPath));
+                heightMapImage = ImageIO.read(new File(heightMapPath));
                 LOG.info("Loaded heightMapImage from {}", heightMapPath);
-                bHeightMapFound = true;
+                bHeightMapImageFound = true;
             } catch (IOException e1) {
                 //try default location
                 LOG.info("failed to load heightMap from config location {}", heightMapPath);
@@ -246,9 +248,9 @@ public class MapImage {
                     }
 
                     try {
-                        heightImage = ImageIO.read(new File(heightMapPath));
+                        heightMapImage = ImageIO.read(new File(heightMapPath));
                         LOG.info("Loaded heightMap from {}", heightMapPath.substring(1));
-                        bHeightMapFound = true;
+                        bHeightMapImageFound = true;
                     } catch (IOException e2) {
                         LOG.info("failed to load heightMap from default location {}", heightMapPath);
 
@@ -280,9 +282,9 @@ public class MapImage {
 
                                 if (loadImage != null) {
                                     try {
-                                        heightImage = ImageIO.read(loadImage);
+                                        heightMapImage = ImageIO.read(loadImage);
                                         showInTextArea(RoadMap.mapName + "_HeightMap.png " + getLocaleString("mapimage_github_repo_download"), false, false);
-                                        bHeightMapFound = true;
+                                        bHeightMapImageFound = true;
                                     } catch (IOException ex) {
                                         ex.printStackTrace();
                                         showInTextArea(RoadMap.mapName + "_HeightMap.png " + getLocaleString("mapimage_github_repo_not_found"), false, false);
@@ -291,7 +293,7 @@ public class MapImage {
                                 }
                             } else {
                                 if (bDebugLogFileIO) LOG.info("getCurrentLocation returned null");
-                                bImageFound = false;
+                                //bHeightMapImageFound = false;
                             }
                         } else {
                             showInTextArea(getLocaleString("mapimage_github_bypass"), true, true);
@@ -300,20 +302,20 @@ public class MapImage {
                 }
             }
 
-            if (bHeightMapFound && heightImage != null) {
-                LOG.info("HeightMap size = {} x {}", heightImage.getWidth(), heightImage.getHeight());
+            if (bHeightMapImageFound && heightMapImage != null) {
+                LOG.info("HeightMap size = {} x {}", heightMapImage.getWidth(), heightMapImage.getHeight());
                 try {
-                    heightMapImage = ImageIO.read(new File(heightMapPath));
+                    MapImage.heightMapImage = ImageIO.read(new File(heightMapPath));
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
                 if (EXPERIMENTAL) {
-                    heightMapImage = new BufferedImage(heightImage.getWidth(), heightImage.getHeight(), BufferedImage.TYPE_USHORT_565_RGB);
+                    MapImage.heightMapImage = new BufferedImage(heightMapImage.getWidth(), heightMapImage.getHeight(), BufferedImage.TYPE_USHORT_565_RGB);
                 } else {
-                    heightMapImage = getNewBufferImage(heightImage.getWidth(), heightImage.getHeight());
+                    MapImage.heightMapImage = getNewBufferImage(heightMapImage.getWidth(), heightMapImage.getHeight());
                 }
-                Graphics2D g = (Graphics2D) heightMapImage.getGraphics();
-                g.drawImage(heightImage, 0, 0, heightImage.getWidth(), heightImage.getHeight(), null);
+                Graphics2D g = (Graphics2D) MapImage.heightMapImage.getGraphics();
+                g.drawImage(heightMapImage, 0, 0, heightMapImage.getWidth(), heightMapImage.getHeight(), null);
                 g.dispose();
                 if (isManualLoad) {
                     heightMapLoadedLabel.setForeground(new Color(150,100,20));
@@ -405,8 +407,8 @@ public class MapImage {
         return bufferImage;
     }
 
-    public static BufferedImage getImage() {
-        return image;
+    public static BufferedImage getMapImage() {
+        return mapImage;
     }
 
     public static void setImage(BufferedImage loadedImage, Boolean ignoreSize) {
@@ -436,10 +438,10 @@ public class MapImage {
                 g.dispose();
             }
             // actually draw the image and dispose of the graphics context that is no longer needed
-            image = getNewBufferedImage(loadedImage.getWidth(), loadedImage.getHeight(), Transparency.OPAQUE);
+            /*image = getNewBufferedImage(loadedImage.getWidth(), loadedImage.getHeight(), Transparency.OPAQUE);
             Graphics2D g2d = (Graphics2D) image.getGraphics();
             g2d.drawImage(loadedImage, 0, 0, null);
-            g2d.dispose();
+            g2d.dispose();*/
 
             enableConfigEdit(canEditConfig);
         }

@@ -3,7 +3,7 @@ package AutoDriveEditor.Utils;
 public class TimeProfiler {
 
     private static long time;
-    private static long startTime;
+    private static long startTime = 0;
 
     public TimeProfiler() {
         time = 0;

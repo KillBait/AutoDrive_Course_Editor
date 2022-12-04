@@ -11,7 +11,7 @@ import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.cubicCurve;
 import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.isCubicCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.isQuadCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
-import static AutoDriveEditor.MapPanel.MapImage.image;
+import static AutoDriveEditor.MapPanel.MapImage.mapImage;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.Utils.MathUtils.getNormalizedRectangleFor;
@@ -25,7 +25,7 @@ public class MultiSelectManager {
     public static boolean isMultiSelectDragging;
 
     public static void startMultiSelect(int mousePosX, int mousePosY) {
-        if ( image != null ) {
+        if ( mapImage != null ) {
             rectangleStart = screenPosToWorldPos(mousePosX, mousePosY);
             LOG.info("Multi select started at world position x = {}, z = {}", rectangleStart.getX(), rectangleStart.getY());
             isMultiSelectDragging = true;
@@ -33,7 +33,7 @@ public class MultiSelectManager {
     }
 
     public static void stopMultiSelect(int mousePosX, int mousePosY) {
-        if (image != null && rectangleStart != null ) {
+        if (mapImage != null && rectangleStart != null ) {
             rectangleEnd = screenPosToWorldPos(mousePosX, mousePosY);
             LOG.info("Multi select stopped at world position x = {}, z = {}", rectangleEnd.getX(), rectangleEnd.getY());
             if (rectangleStart.getX() != rectangleEnd.getX() && rectangleStart.getY() != rectangleEnd.getY()) {
@@ -62,7 +62,7 @@ public class MultiSelectManager {
     public boolean isMultiSelectDragging() { return isMultiSelectDragging; }
 
     public static int getAllNodesInSelectedArea(Point2D rectangleStart, Point2D rectangleEnd) {
-        if ((roadMap == null) || (image == null)) {
+        if ((roadMap == null) || (mapImage == null)) {
             return 0;
         }
 

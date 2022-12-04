@@ -118,6 +118,89 @@ public class VersionManager {
 
     }
 
+    public static void showVersionHistory() {
+
+        DocumentBuilderFactory docFactory;
+        DocumentBuilder docBuilder;
+        Document doc;
+
+        try {
+            docFactory = DocumentBuilderFactory.newInstance();
+            docBuilder = docFactory.newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            LOG.error("## Parser Exception ## cannot create DocumentBuilder for showUpdateHistory()");
+            return;
+        }
+
+        try {
+            doc = docBuilder.parse("history.xml");
+        } catch (SAXException e) {
+            LOG.error("## SAX Exception ## Exception in loading history XML");
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            LOG.info("## IOException ## Could not find local history.xml, checking GitHub");
+            try {
+                URL url = new URL("https://github.com/KillBait/AutoDrive_Course_Editor/raw/master/history.xml");
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                HttpURLConnection.setFollowRedirects(true);
+                urlConnection.setConnectTimeout(5*1000);
+                urlConnection.setRequestMethod("GET");
+                urlConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)");
+                urlConnection.connect();
+                InputStream in = urlConnection.getInputStream();
+                doc = docBuilder.parse(in);
+                if (in != null) in.close();
+
+            } catch (FileNotFoundException e2) {
+                LOG.info("## FileNotFoundException ## history.xml not found on GitHub.. silent return");
+                return;
+            } catch (IOException | SAXException e2) {
+                LOG.info("## IOException## checking GitHUB for history.xml failed");
+                e.printStackTrace();
+                return;
+            }
+        }
+
+        if (doc != null) {
+            Element rootElement = doc.getDocumentElement();
+            //String remoteVersion = getTextValue(null, rootElement, "latest_version");
+            String updateHTML = getTextValue(null, rootElement, "version_history");
+            JTextPane textPane = new JTextPane();
+            textPane.setContentType("text/html");
+            textPane.setText(updateHTML);
+            textPane.setEditable(false);
+            textPane.addHyperlinkListener(e1 -> {
+                if(e1.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                    if(Desktop.isDesktopSupported()) {
+                        try {
+                            Desktop.getDesktop().browse(e1.getURL().toURI());
+                        } catch (IOException | URISyntaxException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+                }
+            });
+
+            JScrollPane scrollPane = new JScrollPane(textPane);
+            scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+            scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            scrollPane.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+            scrollPane.setPreferredSize(new Dimension(700,600));
+
+            // ScrollPane will default to the bottom of the text.
+            //
+            // This behaviour is triggered if you create the scrollbar at the top and set the text
+            // to display, as it displays the text, it moves the scrollbar position back to the bottom
+            // again:/
+
+            // A not so friendly fix is to use invokeLater() to delay setting the scrollbar position,
+            // that way it gives the JTextPane time to display the text and update the JScrollPane
+
+            javax.swing.SwingUtilities.invokeLater(() -> scrollPane.getVerticalScrollBar().setValue(0));
+            JOptionPane.showMessageDialog(editor, scrollPane, "Version History", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
     public static JEditorPane createHyperLink(String text, String linkText, String URL) {
         JLabel label = new JLabel();
         label.setHorizontalAlignment(SwingConstants.CENTER);

@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<AutoDriveEditor>
+    <version_history><![CDATA[<html>
+        <head>
+            <title>Version History</title>
+        </head>
+        <body style="font-size:14;">
+
+            <!------------------------->
+            <!-- Start version 1.0.4 -->
+            <!------------------------->
+
+            <h3 style="font-family:verdana;">Update to v1.0.4</h3>
+            <p><u>Added</u></p>
+            <ul>
+                <li>Colour tab added to config menu, changing the colours of nodes/connections is now possible.</li>
+                <li>Added functionality to Linear lines
+                  <ul style="list-style-type: none;">
+                    <li>(Configurable) Can now automatically create an end node if you do not select one.</li>
+                  </ul>
+                </li>
+            </ul>
+            <u>Changes</u>
+            <ul>
+                <li>Major rework of the GUI code
+                    <ul style="list-style-type: none;">
+                       <li>Moved all the GUI button functionality out of main code and into their own classes, fixes a</li>
+                       <li>multitude of odd behaviours with buttons and mouse clicks.</li>
+                    </ul>
+                </li>
+                <li>(Configurable) Connection arrows can now be drawn as solid or just lines.</li>
+                <li>Added keyboard shortcut "F", will centre selected node in viewport.</li>
+                <li>Added Linear Line Tab to config window.
+                    <ul>
+                        <li>Added toggle option for connections having solid arrows. (on by default)</li>
+                        <li>Added toggle option to create end node if none selected.</li>
+                        <li>Moved Linear Line Spacing option from general tab to Linear Line Tab.</li>
+                    </ul>
+                </li>
+                <li>Changed how known maps are stored in Editor.xml, old configs will be updated on next save.</li>
+                <li>Updated default en_US locale file.</li>
+                <li>Updated Log4j to v2.19.0.</li>
+            </ul>
+            <u>Bug Fixes</u>
+            <ul>
+                <li>Editor will no longer crash if a missing locale string is found, will show an error in log file.</li>
+                <li>Fixed continuous zoom in/zoom out causing the actual zoom levels to drift over time.</li>
+                <li>Fixed Linear Line preview not showing correctly if subprio was selected.</li>
+                <li>Fixed linear line end position not updating on zoom in/out.</li>
+                <li>Fixed node locations having excessive decimal places. ( now limited to three, same as AutoDrive )</li>
+                <li>Fixed multiple curve GUI issues.</li>
+                <li>Fixed in-progress curve draw order issue's.</li>
+                <li>Fixed curve control point visibility.</li>
+                <li>Fixed edge case with movement scaler not applying to curves control nodes.</li>
+                <li>Fixed issue where certain types of connections were being rendered as Dual connections in error.</li>
+                <li>Fixed inconsistent interpolation nodes Y values on new linear lines.</li>
+                <li>Fixed overlap warnings and number of overlap nodes not updating properly.</li>
+                <li>Fixed various potential null pointer exceptions.</li>
+            </ul>
+            <hr>
+
+            <!------------------------->
+            <!-- Start version 1.0.3 -->
+            <!------------------------->
+
+            <h3 style="font-family:verdana;">Update to v1.0.3</h3>
+            <p><u>Bug Fixs</u></p>
+            <ul>
+                <li>Fixed downloading of map images and heightmaps from GitHub repository.</li>
+            </ul>
+            <hr>
+
+            <!------------------------->
+            <!-- Start version 1.0.2 -->
+            <!------------------------->
+
+            <h3 style="font-family:verdana;">Update to v1.0.2</h3>
+            <p><u>Changes</u></p>
+            <ul>
+                <li>Reworked version update notification to display the updates release notes.</li>
+            </ul>
+            <b><u><i>NOTE-:</i></u></b>
+            <ul style="list-style-type: none;">
+                <li>It is active, but you won't see it until the next update is released. :)</li>
+            </ul>
+            <hr>
+
+            <!------------------------->
+            <!-- Start version 1.0.1 -->
+            <!------------------------->
+
+            <h3 style="font-family:verdana;">Update to v1.0.1</h3>
+            <p><u>Bug Fixes</u></p>
+            <ul>
+                <li>Fixed "Save Successful" dialog appearing for autosave and merge backups.</li>
+                <li>Fixed autosave and merge nodes switching the active config to the backup.</li>
+                <li>Fixed Editor titlebar not showing the map name after certain operations.</li>
+            </ul>
+            <hr>
+
+            <!------------------------->
+            <!-- Start version 1.0.0 -->
+            <!------------------------->
+
+            <h3 style="font-family:verdana;">Update to v1.0.0</h3>
+            <p><u>Added</u></p>
+            <ul>
+                <li>Added configuration window. ( finally.... )</li>
+                <li>Changed the buttonbar to JToolbar
+                    <ul>
+                        <li>You can now dock it to the left, right or top of the map panel or detach it completely.</li>
+                        <li>The toolbar position ( left/right/top ) is saved in the editor config.</li>
+                        <li>The toolbar can be detached from the editor, but this state/position is not saved on exit.</li>
+                        <li>By default the toolbar is now located on the left of the window.</li>
+                    </ul> 
+                </li>
+                <li>Added Options Panel to toolbar, it contains buttons for the follow options
+                    <ul>
+                        <li>Increase/Decrease the displayed node size.</li>
+                        <li>Opening the configuration window.</li>
+                        <li>Turning on/off the continuous connection option (left-click on the button to toggle).</li>
+                    </ul> 
+                </li>
+            </ul>
+            <u>Changes</u>
+            <ul>
+                <li>A large amount of time has been put into code changes/cleanup
+                    <ul style="list-style-type: none;">
+                        <li>The majority of bugs fixed in this release were found during the testing of unrelated features</li>
+                        <li>and there is a possibility new bugs have been introduced, please report them if you find one.</li>
+                    </ul> 
+                </li>
+                <li>Adjusted the undo function of "Delete nodes" for a massive speed increase
+                    <ul style="list-style-type: none;">
+                        <li><b>e.g.</b> restoring 12,000 nodes on v0.90 took 8.5 seconds, v1.0 takes 0.15 seconds!!.</li>
+                    </ul> 
+                </li>
+                <li>Adjusted rendering threads for a small speed increase.</li>
+                <li>Added Option to enable/disable autosaving ( enabled by default ).</li>
+                <li>Changed negative Z warning icon to red.</li>
+                <li>Removed the Option menu as it is no longer needed.</li>
+                <li>Map scale is now displayed alongside image and heightmap loaded status.</li>
+                <li>Map name is now added to editors titlebar.</li>
+                <li>Map Markers are now associated with the actual node and not kept in a separate list
+                    <ul style="list-style-type: none;">
+                        <li>Refactored the editor code to remove the use of the MapMarkers class completely,</li>
+                        <li>this should prevent map markers moving when copying/pasting and in general use and</li>
+                        <li>ensures the saved config map markers are pointing to the correct nodes.</li>
+                    </ul> 
+                </li>
+                <li>Added warning dialog for Edge case "IndexOutOfBounds" exception in "cut" nodes undo.</li>
+                <li>Added 'OutOfMemory' exception dialog for importing DDS images. ( with hint how to correct it )</li>
+                <li>The editor version number will change with V1.0 to follow the Semantic Version 2.0.0 standard
+                    <ul>
+                        <li><a href="https://www.semver.org">www.semver.org</a></li>
+                        
+                    </ul> 
+                </li>
+                <li>Updated Log4J to v2.17.2</li>
+            </ul>
+            <u>Bug Fixes</u>
+            <ul>
+                <li>Fixed AD 6.0.0.4+ configs not loading due to how the marker ID is stored.</li> 
+                <li>Fixed crash when loading the editors XML due to 'LastUsedLocation" being empty.</li>
+                <li>Fixed edge case concurrency exception in scan network thread.</li>
+                <li>Fixed crash on startup if CurveSliderDefault is greater than CurveSliderMax.</li>
+                <li>Fixed NullPointerException when trying to determine the name of a Routes XML map image.</li>
+                <li>Fixed loading a Route XML autosave file not detecting the map name.</li>
+                <li>Fixed Undo/Redo menu items not disabling when reaching start/end of queue.</li>
+                <li>Fixed "Paste In Place" incorrectly adjusting a nodes Y value.</li>
+                <li>Fixed "Paste Selection" not calculating the offset to centre of viewport correctly.</li>
+                <li>Fixed number of curve points not matching the value of interpolation points slider.</li>
+                <li>Fixed multiple node/arrow scaling issue's.</li>
+                <li>Fixed linear lines showing unneeded nodes.</li>
+                <li>Fixed numeric inputs below minimum value swapping to it's maximum value.</li>
+                <li>Fixed numeric inputs buggy negative numbers behaviour.</li>
+                <li>Fixed warning icons positions shifting on zoom.</li>
+                <li>Fixed imported images not showing correct status in info area.</li>
+                <li>Fixed multi selection box enabled when no operation selected.</li>
+                <li>Fixed merge nodes backup not working for Routemanager configs.</li>
+            </ul>
+            <u>Localization</u>
+            <ul>
+                <li>Adjust a lot of locale keys to be more descriptive.</li> 
+                <li>Removed unused/redundant strings.</li>
+            </ul>
+            <hr>
+
+            <!-------------------------->
+            <!-- Start version 0.90.0 -->
+            <!-------------------------->
+
+            <h3 style="font-family:verdana;">Update to v0.90.0</h3>
+            <p><u>Added</u></p>
+            <ul>
+                <li>Added support for larger map sizes.</li>
+                <li>Added internal support for variable size heightmaps.</li>
+                <li>Added option to export a heightmap to use as the default heightmap.</li>
+                <li>Node size can now be configured ( only through config in this version, next version preferences window)</li>
+                <li>Height Maps will be automatically downloaded and used if they are found on the MapImages GitHub.</li>
+            </ul>
+            <u>Bug Fixes</u>
+            <ul>
+                <li>Fixed connection arrows not scaling properly to node size.</li>
+                <li>Minor undocumented bug fixes</li>
+            </ul>
+            <u>Localization</u>
+            <ul>
+                <li>Adjusted some locale strings.</li>
+            </ul>
+            <hr>
+
+            <!-------------------------->
+            <!-- Start version 0.80.0 -->
+            <!-------------------------->
+
+            <h3 style="font-family:verdana;">Update to v0.80.0</h3>
+            <p><u>Added</u></p>
+            <ul>
+                <li>Added Route Manager XML loading/saving
+                    <ul style="list-style-type: none;">
+                        <li>Auto map image detection/loading is working the same way as regular configs</li>
+                        <li>but Heightmaps will have to be manually loaded, this will change in release v0.90.0</li>
+                    </ul> 
+                </li>
+            </ul>
+            <u>Changes</u>
+            <ul>
+                <li>Editor will now remember the last used autosave slot, ensures oldest save is overwritten on restart.</li>
+                <li>The editor now saves the Filechoosers last used location on exit, restores it on load.</li>
+                <li>Reverted linear line node scaling until a better system is found</li>  
+            </ul>
+            <u>Bug Fixes</u>
+            <ul>
+                <li>Fixed area select not working after menu interaction.</li>
+                <li>Minor bug fixes</li>
+            </ul> 
+            <u>Localization</u>
+            <ul>
+                <li>Removed unused locale strings.</li>
+            </ul>
+            <b><u><i>NOTE-:</i></u></b>
+            <ul>
+                <li>Route Manager loading/saving has only been tested on the FS22 version of AutoDrive</li>
+                <li>it is not recommended to use it with FS19 AutoDrive until it has been properly tested.</li>
+            </ul>
+            <hr>
+
+            <!-------------------------->
+            <!-- Start version 0.70.1 -->
+            <!-------------------------->
+
+            <h3 style="font-family:verdana;">Update to v0.70.1</h3>
+            <p><u>Added</u></p>
+            <ul>
+                <li>Added a show heightmap menu option.</li>
+            </ul>
+            <u>Changes</u>
+            <ul>
+                <li>Re-enabled heightmap loading.</li>
+                <li>Added link to GitHub page in about dialog.</li>
+            </ul>
+            <u>Bug Fixes</u>
+            <ul>
+                <li>Fixed some dialog texts not being correct.</li>
+            </ul>
+            <hr>
+
+            <!-------------------------->
+            <!-- Start version 0.70.0 -->
+            <!-------------------------->
+
+            <h3 style="font-family:verdana;">Update to v0.70.0</h3>
+            <p><u>Added</u></p>
+            <ul>
+                <li>Added Autosaving, default interval is 10 minutes, max 10 backups, see options menu to change interval
+                    <ul style="list-style-type: none;">
+                        <li>The backup file name is the same as config but with "_autosave_x" added to the end.</li>
+                    </ul>
+                </li>
+                <li>Added depth alignment option, works the same way as Horizontal/Vertical alignment.</li>
+                <li>Added button to Manually edit a nodes X/Y/Z location.</li>
+                <li>Added menu item to scan and display overlapping nodes.</li>
+                <li>Added warning icon display to nodes, indicates an issue needs looking into.</li>
+                <li>Added Paste in Place - Paste nodes into their original location, instead of centred on viewpoint.</li>
+                <li>Added a dialog on map scan to specify the range to search for overlapping nodes.</li>
+                <li>Added merge nodes menu item, a backup is saved before merging in case something goes wrong.</li>
+            </ul>
+            <u>Changes</u>
+            <ul>
+                <li>Creating a connection to a node with a negative Y location will make the node inherit the start
+                    <ul style="list-style-type: none;">
+                       <li>nodes Y level, should help to reduce nodes with invalid height's.</li>
+                    </ul>
+                </li>
+                <li>Linear lines, Quad Curves and Cubic curves will now calculate and average out any Y height of
+                    <ul style="list-style-type: none;">
+                       <li>inbetween nodes ( based on the start/end nodes y level) if no heightmap is available.</li>
+                    </ul>
+                </li>
+                <li>'Fix node height' menu option will now only change nodes that have a large difference in their
+                    <ul style="list-style-type: none;">
+                       <li>actual/desired location.</li>
+                    </ul>
+                </li>
+                <li>Overlapping node scan now runs in background on config load</li>
+                <li>Moving a node now checks if there are any overlapping in new location. ( undo/redo not supported yet)</li>
+                <li>FileChoosers now remember the last location used.</li>
+                <li>Changed how DEBUG mode is activated, can now be turned on/off from the help menu</li>
+                <li>Updated Log4J to 2 17.1</li>
+            </ul>
+            <u>Bug Fixes</u>
+            <ul>
+                <li>Fixed overlap scan information only logging to the log file
+                    <ul style="list-style-type: none;">
+                       <li>The info will now appear in the text area at the bottom of editor.</li>
+                    </ul>
+                </li>
+                <li>Fixed copy/paste buffer duplication</li>
+                <li>Fixed import of FS22 map images larger than 8192 x 8192</li>
+                <li>Fixed keyboard shortcuts for cut/copy/paste not working</li>
+                <li>Fixed adding secondary node creating a regular node :/</li>
+                <li>Fixed liner line coordinates mixup from last commit</li>
+                <li>Fixed linear line spacing not accounting for the map zoom factor</li>
+                <li>Fixed paste selection ignoring no heightmap being loaded</li>
+            </ul>
+            <hr>
+
+            <!-------------------------->
+            <!-- Start version 0.60.2 -->
+            <!-------------------------->
+
+            <h3 style="font-family:verdana;">Update to v0.60.2</h3>
+            <p><u>Fixes</u></p>
+            <ul>
+                <li>Fixed possible config corruption with "Delete Node" Undo/Redo</li>
+            </ul>
+            <b><u><i>NOTE-:</i></u></b>
+            <ul>
+                <li>Mass undo/redo of nodes ( for eg. 200+ nodes ) will take much longer now, in the order of multiple seconds</li>
+            </ul>
+            <hr>
+
+            <!-------------------------->
+            <!-- Start version 0.60.1 -->
+            <!-------------------------->
+
+            <h3 style="font-family:verdana;">Update to v0.60.1</h3>
+            <p><u>Bug Fixes</u></p>
+            <ul>
+                <li>Fixed AutoDrive version detection while loading configs.</li>
+                <li>Fixed menu item "Fix Nodes Height" being enabled when no heightmap was loaded.</li>
+                <li>Fixed QuadCurve and CubicCurve control points freaking out when grid snapping enabled.</li>
+                <li>Fixed version check using the wrong repository to check against.</li>
+            </ul>
+            <hr>
+
+            <!-------------------------->
+            <!-- Start version 0.60.0 -->
+            <!-------------------------->
+
+            <h3 style="font-family:verdana;">Update to v0.60.0</h3>
+            <ul>
+                <li>Complete refactor of codebase</li>
+                <li>Removed all map images packaged into the JAR file, resulting in huge reduction in filesize.</li>
+            </ul>
+            <u>Additions</u>
+            <ul>
+                <li>Added Update check
+                    <ul style="list-style-type: none;">
+                        <li>Editor will check github for new versions on startup and display a update message.</li>
+                    </ul>
+                </li>
+                <li>Added automatic map image downloads
+                    <ul style="list-style-type: none;">
+                       <li>If no matching mapimage can be found during the config load stage, the editor will</li>
+                       <li>connect to my other github repository <a href="https://github.com/KillBait/AutoDrive_MapImages">AutoDrive_MapImages</a> and check if an image</li>
+                       <li>is available, if so, it will download it and place it in the mapimages folder to re-use.</li>
+                    </ul>
+                </li>
+                <li>Added terrain heightmap intergration.... Some caveats apply
+                    <ul style="list-style-type: decimal;">
+                        <li style="margin-bottom: 10px;">The terrain heightmap (terrain.heightmap.png) must be in the same folder as the config your loading,<br>(this is standard for all savegame slot folders)</li>
+                        <li style="margin-bottom: 10px;">The height placement will not be exactly level with the ingame terrain, but it should be close, this<br>is due to the terrain heightmap resolution being limited to 2 meters per pixel, whereas ingame terrain<br>is at a much higher resolution. It is strongly recommended you have the node position above<br>the vehicle ingame to compensate for the difference and make sure they are visible.</li>
+                        <li style="margin-bottom: 10px;">It cannot account for meshes within the map, so nodes placed over where a bridge (for example)<br> would be will still be on the ground, you will have to manually move them ingame to the correct<br>height, i cannot correct for this issue, it's a known limitation, but better than the original solution</li>
+                        <li>If no height map was loaded, adding nodes will revert to the old behaviour of placing nodes at<br>one Y level</li>
+                    </ul>
+                </li>
+                <li>Added a menu item 'Fix Nodes Height'
+                    <ul style="list-style-type: none;">
+                        <li>Selecting this will scan all nodes and fix the height to the correct values (if a heightmap was loaded)</li>
+                    </ul>
+                </li>
+            </ul>
+            <u>Changes</u>
+            <ul>
+                <li>Changed Grid Show/Hide, Grid Snapping, Subdivision Snapping
+                    <ul>
+                       <li>They are now togglable by a single keyboard press on G, S, D respectivly.</li>
+                    </ul>
+                </li>
+                <li>Re-enabled moving multiple nodes with grid snapping enabled, it now works as intended</li>
+            </ul>
+            <hr>
+
+            <!-------------------------->
+            <!-- Start version 0.50.1 -->
+            <!-------------------------->
+
+            <h3 style="font-family:verdana;">Update to v0.50.1</h3>
+            <p><u>Bug Fixes</u></p>
+            <ul>
+                <li>Potenial fix for blank FileChooser</li>
+            </ul>
+            <hr>
+
+
+
+            <!------------------------->
+            <!---     Templates     --->
+            <!------------------------->
+
+            <!--
+
+            <h3 style="font-family:verdana;">Update to v?.??.?</h3>
+            <p><u>Added</u></p>
+            <ul>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+            </ul>
+            <u>Changes</u>
+            <ul>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+            </ul>
+            <u>Bug Fixes</u>
+            <ul>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+            </ul>
+            <u>Localization</u>
+            <ul>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+            </ul> 
+            <hr>
+
+            //-->
+ 
+        </body>
+        </html>]]>
+    </version_history>
+</AutoDriveEditor>

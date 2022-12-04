@@ -97,9 +97,6 @@ public class MapPanel extends JPanel {
     public static double preSnapX, preSnapY;
     public static CopyPasteManager cnpManager;
 
-    //public static final Color BROWN = new Color(152, 104, 50 );
-
-
     public MapPanel() {
 
         MouseListener mouseListener = new MouseListener(this);
@@ -173,7 +170,7 @@ public class MapPanel extends JPanel {
 
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor( new NameableThread(Executors.defaultThreadFactory(), "AutoSave"));
         scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(() -> {
-            if (roadMap != null && image != null) {
+            if (roadMap != null && mapImage != null) {
                 if (configType == CONFIG_SAVEGAME) {
                     autoSaveGameConfigFile();
                 } else if (configType == CONFIG_ROUTEMANAGER) {
@@ -642,7 +639,7 @@ public class MapPanel extends JPanel {
             showInTextArea("", true, false);
         }
 
-        if (image != null) {
+        if (mapImage != null) {
             backBufferGraphics.clipRect(0, 0, this.getWidth(), this.getHeight());
             backBufferGraphics.drawImage(croppedImage, 0, 0, this.getWidth(), this.getHeight(), null);
 
@@ -666,7 +663,7 @@ public class MapPanel extends JPanel {
     }
 
     private void getResizedMap() throws RasterFormatException {
-        if (image != null) {
+        if (mapImage != null) {
             widthScaled = (int) (this.getWidth() / zoomLevel);
             heightScaled = (int) (this.getHeight() / zoomLevel);
 
@@ -678,8 +675,8 @@ public class MapPanel extends JPanel {
             // to run again and recalculate all the values so when run again ResizeMap()
             // will calculate it correctly.
 
-            if ( x + widthScaled > image.getWidth() ) {
-                while ( widthScaled > image.getWidth() ) {
+            if ( x + widthScaled > mapImage.getWidth() ) {
+                while ( widthScaled > mapImage.getWidth() ) {
                     double step = -1 * (zoomLevel * 0.1);
                     if (bDebugLogZoomScale) LOG.info("widthScaled is out of bounds ( {} ) .. increasing zoomLevel by {}", widthScaled, step);
                     zoomLevel -= step;
@@ -688,8 +685,8 @@ public class MapPanel extends JPanel {
                 if (bDebugLogZoomScale) LOG.info("widthScaled is {}", widthScaled);
             }
 
-            if ( (int) y + heightScaled > image.getHeight() ) {
-                while ( heightScaled > image.getHeight() ) {
+            if ( (int) y + heightScaled > mapImage.getHeight() ) {
+                while ( heightScaled > mapImage.getHeight() ) {
                     double step = -1 * (zoomLevel * 0.1);
                     if (bDebugLogZoomScale) LOG.info("heightScaled is out of bounds ( {} ) .. increasing zoomLevel by {}", heightScaled, step);
                     zoomLevel -= step;
@@ -698,8 +695,8 @@ public class MapPanel extends JPanel {
                 if (bDebugLogZoomScale) LOG.info("heightScaled is {}", heightScaled);
             }
 
-            double calcX = (((this.getWidth() * 0.5) / zoomLevel) / image.getWidth());
-            double calcY = (((this.getHeight() * 0.5) / zoomLevel) / image.getHeight());
+            double calcX = (((this.getWidth() * 0.5) / zoomLevel) / mapImage.getWidth());
+            double calcY = (((this.getHeight() * 0.5) / zoomLevel) / mapImage.getHeight());
 
             x = Math.min(x, 1 - calcX);
             x = Math.max(x, calcX);
@@ -707,8 +704,8 @@ public class MapPanel extends JPanel {
             y = Math.max(y, calcY);
 
 
-            int centerX = (int) (x * image.getWidth());
-            int centerY = (int) (y * image.getHeight());
+            int centerX = (int) (x * mapImage.getWidth());
+            int centerY = (int) (y * mapImage.getHeight());
 
             offsetX = (centerX - (widthScaled / 2) );
             offsetY = (centerY - (heightScaled / 2));
@@ -720,7 +717,7 @@ public class MapPanel extends JPanel {
 
             if (offsetX != oldOffsetX || offsetY != oldOffsetY || widthScaled != oldWidthScaled || heightScaled != oldHeightScaled) {
                 try {
-                    croppedImage = image.getSubimage(offsetX, offsetY, widthScaled, heightScaled);
+                    croppedImage = mapImage.getSubimage(offsetX, offsetY, widthScaled, heightScaled);
                     oldOffsetX = offsetX;
                     oldOffsetY = offsetY;
                     oldWidthScaled = widthScaled;
@@ -735,11 +732,11 @@ public class MapPanel extends JPanel {
     }
 
     public void moveMapBy(int diffX, int diffY) {
-        if ((roadMap == null) || (image == null)) {
+        if ((roadMap == null) || (mapImage == null)) {
             return;
         }
-        x -= diffX / (zoomLevel * image.getWidth());
-        y -= diffY / (zoomLevel * image.getHeight());
+        x -= diffX / (zoomLevel * mapImage.getWidth());
+        y -= diffY / (zoomLevel * mapImage.getHeight());
 
         getResizedMap();
         this.repaint();
@@ -747,7 +744,7 @@ public class MapPanel extends JPanel {
 
     public void increaseZoomLevelBy(int rotations) {
 
-        if ((roadMap == null) || (image == null)) {
+        if ((roadMap == null) || (mapImage == null)) {
             return;
         }
 
@@ -757,7 +754,7 @@ public class MapPanel extends JPanel {
         /*if (((this.getWidth()/(zoomLevel - step)) > image.getWidth()) || ((this.getHeight()/(zoomLevel - step)) > image.getHeight())){
             return;
         }*/
-        if (((this.getWidth()/(zoomLevel - rotations)) > image.getWidth()) || ((this.getHeight()/(zoomLevel - rotations)) > image.getHeight())){
+        if (((this.getWidth()/(zoomLevel - rotations)) > mapImage.getWidth()) || ((this.getHeight()/(zoomLevel - rotations)) > mapImage.getHeight())){
             if (bDebugLogZoomScale) LOG.info("    Failed size check");
             return;
         }
@@ -776,7 +773,7 @@ public class MapPanel extends JPanel {
 
         MapNode selected = null;
 
-        if ((roadMap != null) && (image != null)) {
+        if ((roadMap != null) && (mapImage != null)) {
 
             Point2D outPos;
             double currentNodeSize = nodeSize * zoomLevel * 0.5;
@@ -839,8 +836,8 @@ public class MapPanel extends JPanel {
     }
 
      public static Point2D screenPosToWorldPos(int screenX, int screenY) {
-        double centerX = x * image.getWidth();
-        double centerY = y * image.getHeight();
+        double centerX = x * mapImage.getWidth();
+        double centerY = y * mapImage.getHeight();
 
         double widthScaled = ((double)getMapPanel().getWidth() / zoomLevel);
         double heightScaled = ((double)getMapPanel().getHeight() / zoomLevel);
@@ -851,8 +848,8 @@ public class MapPanel extends JPanel {
         double diffScaledX = (double)screenX / zoomLevel;
         double diffScaledY = (double)screenY / zoomLevel;
 
-        int centerPointOffsetX = (image.getWidth() / 2) * mapZoomFactor;
-        int centerPointOffsetY = (image.getHeight() / 2) * mapZoomFactor;
+        int centerPointOffsetX = (mapImage.getWidth() / 2) * mapZoomFactor;
+        int centerPointOffsetY = (mapImage.getHeight() / 2) * mapZoomFactor;
 
         double worldPosX = roundUpDoubleToDecimalPlaces(((topLeftX + diffScaledX) * mapZoomFactor) - centerPointOffsetX,3);
         double worldPosY = roundUpDoubleToDecimalPlaces(((topLeftY + diffScaledY) * mapZoomFactor) - centerPointOffsetY, 3);
@@ -870,8 +867,8 @@ public class MapPanel extends JPanel {
         double scaledX = (worldX/mapZoomFactor) * zoomLevel;
         double scaledY = (worldY/mapZoomFactor) * zoomLevel;
 
-        double centerXScaled = (x * (image.getWidth()*zoomLevel));
-        double centerYScaled = (y * (image.getHeight()*zoomLevel));
+        double centerXScaled = (x * (mapImage.getWidth()*zoomLevel));
+        double centerYScaled = (y * (mapImage.getHeight()*zoomLevel));
 
         double topLeftX = centerXScaled - (mapPanel.getWidth() / 2F);
         double topLeftY = centerYScaled - (mapPanel.getHeight()/ 2F);
@@ -934,13 +931,12 @@ public class MapPanel extends JPanel {
         }
 
         canAutoSave = true;
-
         setStale(true);
         hoveredNode = null;
         getMapPanel().repaint();
     }
 
-    public static void  batchDrawArrowBetween(Graphics g, Color colour, ArrayList<ConnectionDrawThread.DrawList> nodeList) {
+    public static void batchDrawArrowBetween(Graphics g, Color colour, ArrayList<ConnectionDrawThread.DrawList> nodeList) {
         if (nodeList.size() >0 ) {
             final double[] startX = new double[1];
             final double[] startY = new double[1];
@@ -1110,7 +1106,7 @@ public class MapPanel extends JPanel {
     //
 
     public void mouseMoved(int mousePosX, int mousePosY) {
-        if (image != null) {
+        if (mapImage != null) {
 
             if (bDebugShowHeightMapInfo) {
                 if (heightMapImage != null) {
