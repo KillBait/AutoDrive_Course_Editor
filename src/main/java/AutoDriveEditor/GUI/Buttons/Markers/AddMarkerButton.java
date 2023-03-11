@@ -6,7 +6,7 @@ import AutoDriveEditor.Managers.ChangeManager;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.MarkerGroup;
 import AutoDriveEditor.RoadNetwork.RoadMap;
-import AutoDriveEditor.XMLConfig.RouteManagerXML;
+import AutoDriveEditor.XMLConfig.RoutesXML;
 
 import javax.swing.*;
 import java.awt.event.MouseEvent;
@@ -25,7 +25,7 @@ import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
 import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
-import static AutoDriveEditor.XMLConfig.RouteManagerXML.markerGroup;
+import static AutoDriveEditor.XMLConfig.RoutesXML.markerGroup;
 
 public class AddMarkerButton extends MarkerBaseButton {
 
@@ -48,7 +48,7 @@ public class AddMarkerButton extends MarkerBaseButton {
     @Override
     public void mouseClicked(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
-            MapNode selectedNode = getNodeAt(e.getX(), e.getY());
+            MapNode selectedNode = getNodeAtScreenPosition(e.getX(), e.getY());
             if (selectedNode != null) {
                 if (selectedNode.hasMapMarker()) {
                     showInTextArea(getLocaleString("console_marker_add_exists"), true, true);
@@ -71,7 +71,7 @@ public class AddMarkerButton extends MarkerBaseButton {
         ArrayList<String> groupArray = new ArrayList<>();
 
         if (configType == CONFIG_SAVEGAME) {
-            LinkedList<MapNode> mapNodes = RoadMap.mapNodes;
+            LinkedList<MapNode> mapNodes = RoadMap.networkNodesList;
             for (MapNode node : mapNodes) {
                 if (node.hasMapMarker()) {
                     if (!node.getMarkerGroup().equals("All")) {
@@ -139,7 +139,7 @@ public class AddMarkerButton extends MarkerBaseButton {
             changeManager.addChangeable( new MarkerAddChanger(mapNode, newMarkerName, newMarkerGroup));
             if (configType == CONFIG_ROUTEMANAGER) {
                 boolean found = false;
-                for (MarkerGroup marker : RouteManagerXML.markerGroup) {
+                for (MarkerGroup marker : RoutesXML.markerGroup) {
                     if (Objects.equals(marker.groupName, newMarkerGroup)) {
                         found = true;
                         break;
@@ -147,7 +147,7 @@ public class AddMarkerButton extends MarkerBaseButton {
                 }
                 if (!found && !markerGroup.equals("All")) {
                     if (bDebugLogMarkerInfo) LOG.info("Adding new group {} to markerGroup", newMarkerGroup);
-                    RouteManagerXML.markerGroup.add(new MarkerGroup(RouteManagerXML.markerGroup.size() + 1, newMarkerGroup));
+                    RoutesXML.markerGroup.add(new MarkerGroup(RoutesXML.markerGroup.size() + 1, newMarkerGroup));
                 }
             }
             mapNode.createMapMarker(newMarkerName, newMarkerGroup);

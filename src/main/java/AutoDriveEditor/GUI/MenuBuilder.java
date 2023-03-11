@@ -8,8 +8,10 @@ import java.awt.event.KeyEvent;
 
 import static AutoDriveEditor.AutoDriveEditor.DEBUG;
 import static AutoDriveEditor.AutoDriveEditor.EXPERIMENTAL;
+import static AutoDriveEditor.MapPanel.MapImage.heightMapImage;
+import static AutoDriveEditor.MapPanel.MapImage.setImage;
+import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.GUIUtils.*;
-import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
 
 public class MenuBuilder {
@@ -59,19 +61,10 @@ public class MenuBuilder {
     public static final String MENU_HEIGHTMAP_SAVE = "Save Heightmap";
     public static final String MENU_HEIGHTMAP_SHOW = "Show HeightMap";
     public static final String MENU_HEIGHTMAP_FIX = "Fix Node Height";
-    public static final String MENU_GRID_SET = "Grid Set";
-    public static final String MENU_GRID_SHOW = "Grid Show";
-    public static final String MENU_GRID_SNAP = "Grid Snap";
-    public static final String MENU_GRID_SNAP_SUBS = "Grid Snap Subs";
-    public static final String MENU_ROTATE_SET = "Set Rotate Step";
-    public static final String MENU_ROTATE_CLOCKWISE_NINTY ="Rotate 90 Clockwise";
-    public static final String MENU_ROTATE_ANTICLOCKWISE_NINTY ="Rotate 90 Anticlockwise";
-    public static final String MENU_ROTATE_CLOCKWISE="Rotate Clockwise";
-    public static final String MENU_ROTATE_ANTICLOCKWISE="Rotate Anticlockwise";
     public static final String MENU_SCAN_OVERLAP="Scan Overlap";
     public static final String MENU_SCAN_MERGE="Merge Overlap";
     public static final String MENU_ABOUT = "About";
-    public static final String MENU_VERSION_HISTORY = "Versoion History";
+    public static final String MENU_VERSION_HISTORY = "Version History";
     public static final String MENU_DEBUG_ENABLE = "Enable Debug";
 
     public static final String MENU_DEBUG_MOVETO_NODE = "DEBUG MOVETO NODE";
@@ -92,6 +85,7 @@ public class MenuBuilder {
     public static final String MENU_DEBUG_LOG_MARKERS = "LOG MARKERS";
     public static final String MENU_DEBUG_LOG_RENDER = "LOG RENDER";
     public static final String MENU_DEBUG_LOG_GUI = "LOG GUI";
+    public static final String MENU_DEBUG_LOG_CONFIG_GUI = "LOG CONFIG GUI";
     public static final String MENU_DEBUG_LOG_CONFIG = "LOG CONFIG";
     public static final String MENU_DEBUG_LOG_COPYPASTE = "LOG COPYPASTE";
 
@@ -101,12 +95,13 @@ public class MenuBuilder {
     public static MenuListener menuListener;
 
     public static JMenu fileMenu, editMenu, mapMenu, routesMenu, heightmapMenu,
-                        helpMenu, subMenu, gridMenu, rotationMenu, fixItMenu, debugMenu;
+                        helpMenu, subMenu, fixItMenu, loggingSubMenu, debugMenu;
     public static JMenuBar menuBar;
     public static JMenuItem loadImageMenuItem;
     public static JMenuItem importFS19DDSMenuItem;
     public static JMenuItem importFS22DDSMenuItem;
     public static JMenuItem saveImageMenuItem;
+    public static JMenuItem loadConfigMenuItem;
     public static JMenuItem saveConfigMenuItem;
     public static JMenuItem saveConfigAsMenuItem;
     public static JMenuItem undoMenuItem;
@@ -142,17 +137,10 @@ public class MenuBuilder {
 
     public static JMenuItem importHeightmapMenuItem;
     public static JMenuItem exportHeightMapMenuItem;
-    public static JMenuItem gridSnapMenuItem;
-    public static JMenuItem gridSnapSubDivisionMenuItem;
 
     public static JMenuItem loadRoutesConfig;
     public static JMenuItem loadRoutesXML;
     public static JMenuItem saveRoutesXML;
-
-    public static JMenuItem rClockwiseMenuItem;
-    public static JMenuItem r90ClockwiseMenuItem;
-    public static JMenuItem rAntiClockwiseMenuItem;
-    public static JMenuItem r90AntiClockwiseMenuItem;
 
     public static JMenuItem fixNodesHeightMenuItem;
     public static JMenuItem showHeightMapMenuItem;
@@ -178,6 +166,7 @@ public class MenuBuilder {
     public static boolean bDebugLogMarkerInfo;
     public static boolean bDebugLogRenderInfo;
     public static boolean bDebugLogGUIInfo;
+    public static boolean bDebugLogConfigGUIInfo;
     public static boolean bDebugLogCopyPasteInfo;
     public static boolean bDebugLogConfigInfo;
 
@@ -191,7 +180,7 @@ public class MenuBuilder {
         // Create the file Menu
 
         fileMenu = makeMenu("menu_file", KeyEvent.VK_F, "menu_file_accstring", menuBar);
-        makeMenuItem("menu_file_loadconfig",  "menu_file_loadconfig_accstring", KeyEvent.VK_L, InputEvent.ALT_DOWN_MASK, fileMenu, menuListener, MENU_LOAD_CONFIG, true );
+        loadConfigMenuItem = makeMenuItem("menu_file_loadconfig",  "menu_file_loadconfig_accstring", KeyEvent.VK_L, InputEvent.ALT_DOWN_MASK, fileMenu, menuListener, MENU_LOAD_CONFIG, true );
         saveConfigMenuItem = makeMenuItem("menu_file_saveconfig",  "menu_file_saveconfig_accstring", KeyEvent.VK_S, InputEvent.ALT_DOWN_MASK, fileMenu, menuListener, MENU_SAVE_CONFIG, false );
         saveConfigAsMenuItem = makeMenuItem("menu_file_saveasconfig", "menu_file_saveasconfig_accstring",  KeyEvent.VK_A, InputEvent.ALT_DOWN_MASK,fileMenu, menuListener,MENU_SAVE_SAVEAS, false );
         makeMenuItem("menu_file_exit",  "menu_file_exit_accstring", KeyEvent.VK_Q, InputEvent.ALT_DOWN_MASK, fileMenu, menuListener, MENU_EXIT, true );
@@ -261,25 +250,6 @@ public class MenuBuilder {
         showHeightMapMenuItem = makeCheckBoxMenuItem("menu_heightmap_show", "menu_heightmap_show", bShowHeightMap, heightmapMenu, menuListener, MENU_HEIGHTMAP_SHOW, false);
         fixNodesHeightMenuItem = makeMenuItem("menu_heightmap_fix_nodes", "menu_heightmap_fix_nodes_accstring", heightmapMenu, menuListener, MENU_HEIGHTMAP_FIX,false);
 
-        // create the grid snap menu
-
-        gridMenu = makeMenu("menu_grid", KeyEvent.VK_G, "menu_grid_accstring", menuBar);
-        makeCheckBoxMenuItem("menu_grid_show", "menu_grid_show_accstring", KeyEvent.VK_G, bShowGrid, gridMenu, menuListener, MENU_GRID_SHOW, true);
-        gridSnapMenuItem = makeCheckBoxMenuItem("menu_grid_snap", "menu_grid_snap_accstring", KeyEvent.VK_S, bGridSnap, gridMenu, menuListener, MENU_GRID_SNAP, true);
-        gridSnapSubDivisionMenuItem = makeCheckBoxMenuItem("menu_grid_snap_subdivide", "menu_grid_snap_subdivide_accstring", KeyEvent.VK_D, bGridSnapSubs, gridMenu, menuListener, MENU_GRID_SNAP_SUBS, true);
-        gridMenu.addSeparator();
-        makeMenuItem("menu_grid_set_size", "menu_grid_set_size_accstring", KeyEvent.VK_F, InputEvent.ALT_DOWN_MASK, gridMenu, menuListener, MENU_GRID_SET, true );
-
-        // Create the Rotation Menu
-
-        rotationMenu = makeMenu("menu_rotate", KeyEvent.VK_R, "menu_rotate_accstring", menuBar);
-        rClockwiseMenuItem = makeMenuItem("menu_rotate_clockwise", "menu_rotate_clockwise_accstring", KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK, rotationMenu, menuListener, MENU_ROTATE_CLOCKWISE, false );
-        r90ClockwiseMenuItem = makeMenuItem("menu_rotate_clockwise_ninety", "menu_rotate_clockwise_ninety_accstring", KeyEvent.VK_T, InputEvent.SHIFT_DOWN_MASK, rotationMenu, menuListener, MENU_ROTATE_CLOCKWISE_NINTY, false );
-        rAntiClockwiseMenuItem = makeMenuItem("menu_rotate_anticlockwise", "menu_rotate_anticlockwise_accstring", KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK, rotationMenu, menuListener, MENU_ROTATE_ANTICLOCKWISE, false );
-        r90AntiClockwiseMenuItem = makeMenuItem("menu_rotate_anticlockwise_ninety", "menu_rotate_anticlockwise_ninety_accstring", KeyEvent.VK_R, InputEvent.SHIFT_DOWN_MASK, rotationMenu, menuListener, MENU_ROTATE_ANTICLOCKWISE_NINTY, false );
-        rotationMenu.addSeparator();
-        makeMenuItem("menu_rotate_set_step", "menu_rotate_set_step_accstring", KeyEvent.VK_Y, InputEvent.SHIFT_DOWN_MASK, rotationMenu, menuListener, MENU_ROTATE_SET, true );
-
         // Create the FixIt menu
 
         fixItMenu = makeMenu("menu_scan", KeyEvent.VK_S, "menu_scan_accstring", menuBar);
@@ -291,6 +261,7 @@ public class MenuBuilder {
         helpMenu = makeMenu("menu_help", KeyEvent.VK_H, "menu_help_accstring", menuBar);
         makeMenuItem("menu_help_about", "menu_help_about_accstring", KeyEvent.VK_H, InputEvent.ALT_DOWN_MASK, helpMenu, menuListener, MENU_ABOUT, true);
         makeMenuItem("menu_help_history", "menu_help_history_accstring", helpMenu, menuListener, MENU_VERSION_HISTORY, true);
+        helpMenu.addSeparator();
         makeCheckBoxMenuItem("menu_help_debug", "menu_help_debug_accstring", bDebugEnable, helpMenu, menuListener, MENU_DEBUG_ENABLE, true);
 
 
@@ -306,47 +277,36 @@ public class MenuBuilder {
             makeCheckBoxMenuItem("menu_debug_test", "menu_debug_test_accstring", bDebugTest, debugMenu, menuListener, MENU_DEBUG_TEST, true);
         }
         debugMenu.addSeparator();
-        makeCheckBoxMenuItem("menu_debug_log_zoom", "menu_debug_log_zoom_accstring", bDebugLogZoomScale, debugMenu, menuListener, MENU_DEBUG_LOG_ZOOMSCALE, true);
-        makeCheckBoxMenuItem("menu_debug_log_fileio", "menu_debug_log_fileio_accstring", bDebugLogFileIO, debugMenu, menuListener, MENU_DEBUG_LOG_FILEIO, true);
-        makeCheckBoxMenuItem("menu_debug_log_undo", "menu_debug_log_undo_accstring", bDebugLogUndoRedo, debugMenu, menuListener, MENU_DEBUG_LOG_UNDO, true);
-        makeCheckBoxMenuItem("menu_debug_log_merge", "menu_debug_log_merge_accstring", bDebugLogMerge, debugMenu, menuListener, MENU_DEBUG_LOG_MERGE, true);
-        makeCheckBoxMenuItem("menu_debug_log_routemanager", "menu_debug_log_routemanager_accstring", bDebugLogRouteManager, debugMenu, menuListener, MENU_DEBUG_LOG_ROUTEMANAGER, true);
-        makeCheckBoxMenuItem("menu_debug_log_config", "menu_debug_log_config_accstring", bDebugLogConfigInfo, debugMenu, menuListener, MENU_DEBUG_LOG_CONFIG, true);
-        makeCheckBoxMenuItem("menu_debug_log_heightmap_info", "menu_debug_log_heightmap_info_accstring", bDebugLogHeightMapInfo, debugMenu, menuListener, MENU_DEBUG_LOG_HEIGHTMAP, true);
-        makeCheckBoxMenuItem("menu_debug_log_curve_info", "menu_debug_log_curve_info_accstring", bDebugLogCurveInfo, debugMenu, menuListener, MENU_DEBUG_LOG_CURVES, true);
-        makeCheckBoxMenuItem("menu_debug_log_linearline_info", "menu_debug_log_linearline_info_accstring", bDebugLogLinearlineInfo, debugMenu, menuListener, MENU_DEBUG_LOG_LINEARLINE, true);
-        makeCheckBoxMenuItem("menu_debug_log_marker_info", "menu_debug_log_marker_info_accstring", bDebugLogMarkerInfo, debugMenu, menuListener, MENU_DEBUG_LOG_MARKERS, true);
-        makeCheckBoxMenuItem("menu_debug_log_render_info", "menu_debug_log_render_info_accstring", bDebugLogRenderInfo, debugMenu, menuListener, MENU_DEBUG_LOG_RENDER, true);
-        makeCheckBoxMenuItem("menu_debug_log_gui_info", "menu_debug_log_gui_info_accstring", bDebugLogGUIInfo, debugMenu, menuListener, MENU_DEBUG_LOG_GUI, true);
-        makeCheckBoxMenuItem("menu_debug_log_copypaste_info", "menu_debug_log_copypaste_info_accstring", bDebugLogCopyPasteInfo, debugMenu, menuListener, MENU_DEBUG_LOG_COPYPASTE, true);
+        loggingSubMenu = makeSubMenu("menu_debug_log_sub", "menu_debug_log_sub", debugMenu);
+        makeCheckBoxMenuItem("menu_debug_log_zoom", "menu_debug_log_zoom_accstring", bDebugLogZoomScale, loggingSubMenu, menuListener, MENU_DEBUG_LOG_ZOOMSCALE, true);
+        makeCheckBoxMenuItem("menu_debug_log_fileio", "menu_debug_log_fileio_accstring", bDebugLogFileIO, loggingSubMenu, menuListener, MENU_DEBUG_LOG_FILEIO, true);
+        makeCheckBoxMenuItem("menu_debug_log_undo", "menu_debug_log_undo_accstring", bDebugLogUndoRedo, loggingSubMenu, menuListener, MENU_DEBUG_LOG_UNDO, true);
+        makeCheckBoxMenuItem("menu_debug_log_merge", "menu_debug_log_merge_accstring", bDebugLogMerge, loggingSubMenu, menuListener, MENU_DEBUG_LOG_MERGE, true);
+        makeCheckBoxMenuItem("menu_debug_log_routemanager", "menu_debug_log_routemanager_accstring", bDebugLogRouteManager, loggingSubMenu, menuListener, MENU_DEBUG_LOG_ROUTEMANAGER, true);
+        makeCheckBoxMenuItem("menu_debug_log_config", "menu_debug_log_config_accstring", bDebugLogConfigInfo, loggingSubMenu, menuListener, MENU_DEBUG_LOG_CONFIG, true);
+        makeCheckBoxMenuItem("menu_debug_log_heightmap_info", "menu_debug_log_heightmap_info_accstring", bDebugLogHeightMapInfo, loggingSubMenu, menuListener, MENU_DEBUG_LOG_HEIGHTMAP, true);
+        makeCheckBoxMenuItem("menu_debug_log_curve_info", "menu_debug_log_curve_info_accstring", bDebugLogCurveInfo, loggingSubMenu, menuListener, MENU_DEBUG_LOG_CURVES, true);
+        makeCheckBoxMenuItem("menu_debug_log_linearline_info", "menu_debug_log_linearline_info_accstring", bDebugLogLinearlineInfo, loggingSubMenu, menuListener, MENU_DEBUG_LOG_LINEARLINE, true);
+        makeCheckBoxMenuItem("menu_debug_log_marker_info", "menu_debug_log_marker_info_accstring", bDebugLogMarkerInfo, loggingSubMenu, menuListener, MENU_DEBUG_LOG_MARKERS, true);
+        makeCheckBoxMenuItem("menu_debug_log_render_info", "menu_debug_log_render_info_accstring", bDebugLogRenderInfo, loggingSubMenu, menuListener, MENU_DEBUG_LOG_RENDER, true);
+        makeCheckBoxMenuItem("menu_debug_log_gui_info", "menu_debug_log_gui_info_accstring", bDebugLogGUIInfo, loggingSubMenu, menuListener, MENU_DEBUG_LOG_GUI, true);
+        makeCheckBoxMenuItem("menu_debug_log_config_gui_info", "menu_debug_log_config_gui_info_accstring", bDebugLogConfigGUIInfo, loggingSubMenu, menuListener, MENU_DEBUG_LOG_CONFIG_GUI, true);
+
+        makeCheckBoxMenuItem("menu_debug_log_copypaste_info", "menu_debug_log_copypaste_info_accstring", bDebugLogCopyPasteInfo, loggingSubMenu, menuListener, MENU_DEBUG_LOG_COPYPASTE, true);
 
     }
 
-    public static void mapMenuEnabled(boolean enabled) {
-        loadImageMenuItem.setEnabled(enabled);
-        importFS19DDSMenuItem.setEnabled(enabled);
-        importFS22DDSMenuItem.setEnabled(enabled);
-    }
-
-    public static void saveImageEnabled(boolean enabled) {
-        saveImageMenuItem.setEnabled(enabled);
-    }
-
-    public static void heightmapMenuEnabled(boolean enabled) {
-        showHeightMapMenuItem.setEnabled(enabled);
-        exportHeightMapMenuItem.setEnabled(enabled);
-        fixNodesHeightMenuItem.setEnabled(enabled);
-    }
-
-    public static void fixNodesEnabled(boolean enabled) {
-        scanNetworkMenuItem.setEnabled(enabled);
-        mergeNodesMenuItem.setEnabled(enabled);
-    }
-
-
-    public static void saveMenuEnabled(boolean enabled) {
-        saveConfigMenuItem.setEnabled(enabled);
+    public static void gameXMLSaveEnabled(boolean enabled) {
+        saveConfigMenuItem.setEnabled(isStale());
         saveConfigAsMenuItem.setEnabled(enabled);
+    }
+
+    public static void routesXMLSaveEnabled(boolean ignoredEnabled) {
+        if (configType == CONFIG_ROUTEMANAGER) {
+            if (isStale()) saveRoutesXML.setEnabled(true);
+        } else {
+            saveRoutesXML.setEnabled(false);
+        }
     }
 
     public static void editMenuEnabled(boolean enabled) {
@@ -358,10 +318,33 @@ public class MenuBuilder {
         pasteOriginalLocationMenuItem.setEnabled(enabled);
     }
 
-    public static void rotationMenuEnabled(boolean enabled) {
-        rClockwiseMenuItem.setEnabled(enabled);
-        r90ClockwiseMenuItem.setEnabled(enabled);
-        rAntiClockwiseMenuItem.setEnabled(enabled);
-        r90AntiClockwiseMenuItem.setEnabled(enabled);
+    public static void mapMenuEnabled(boolean enabled) {
+        loadImageMenuItem.setEnabled(enabled);
+        importFS19DDSMenuItem.setEnabled(enabled);
+        importFS22DDSMenuItem.setEnabled(enabled);
+        if (enabled) {
+            if (isUsingImportedImage) saveImageMenuItem.setEnabled(true);
+        } else {
+            saveImageMenuItem.setEnabled(false);
+        }
+    }
+
+    public static void saveImageEnabled(boolean enabled) {
+        saveImageMenuItem.setEnabled(enabled);
+    }
+
+    public static void heightmapMenuEnabled(boolean enabled) {
+        importHeightmapMenuItem.setEnabled(enabled);
+        if (heightMapImage != null) exportHeightMapMenuItem.setEnabled(enabled);
+        if (heightMapImage != null) {
+            showHeightMapMenuItem.setEnabled(enabled);
+            if (bShowHeightMap) setImage(heightMapImage, true);
+        }
+        fixNodesHeightMenuItem.setEnabled(enabled);
+    }
+
+    public static void scanMenuEnabled(boolean enabled) {
+        scanNetworkMenuItem.setEnabled(enabled);
+        mergeNodesMenuItem.setEnabled(enabled);
     }
 }

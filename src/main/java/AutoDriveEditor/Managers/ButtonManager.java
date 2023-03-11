@@ -3,6 +3,7 @@ package AutoDriveEditor.Managers;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -10,6 +11,7 @@ import java.util.concurrent.locks.Lock;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public class ButtonManager {
+
     public interface ButtonState {
         String getButtonID();
         String getButtonAction();
@@ -24,7 +26,7 @@ public class ButtonManager {
         void mouseReleased(MouseEvent e);
         void mouseDragged(MouseEvent e);
         void mouseMoved(MouseEvent e);
-        void mouseWheelMoved(MouseEvent e);
+        void mouseWheelMoved(MouseWheelEvent e);
         void drawToScreen(Graphics2D g, Lock lock, double scaledSizeQuarter, double scaledSizeHalf);
     }
 
@@ -52,7 +54,27 @@ public class ButtonManager {
         return buttonNode.button;
     }
 
-    public void enableAllButtons(boolean enabled) {
+    @SuppressWarnings("unused")
+    public void disableAllButtons() {
+        setAllButtonsTo(false);
+    }
+
+
+
+    public void enableAllButtons() {
+        setAllButtonsTo(true);
+    }
+
+    @SuppressWarnings("unused")
+    public void setButton(String buttonID, boolean result) {
+        for (ButtonNode buttonNode : buttonList) {
+            if (buttonNode.button.getButtonID().equals(buttonID)) {
+                buttonNode.button.setEnabled(result);
+            }
+        }
+    }
+
+    public void setAllButtonsTo(boolean enabled) {
         for (ButtonNode buttonNode : buttonList) {
             buttonNode.button.setEnabled(enabled);
         }
@@ -99,6 +121,10 @@ public class ButtonManager {
         }
     }
 
+    public Boolean isSelected(ButtonNode node) {
+        return getCurrentButton() == node;
+    }
+
     public void mouseClicked(MouseEvent e) {
         if (currentButton != null) currentButton.button.mouseClicked(e);
     }
@@ -117,8 +143,7 @@ public class ButtonManager {
         if (currentButton != null) currentButton.button.mouseMoved(e);
     }
 
-    public void mouseWheelMoved(MouseEvent e) {
-        if (currentButton != null) currentButton.button.mouseWheelMoved(e);
+    public void mouseWheelMoved(MouseWheelEvent e) { if (currentButton != null) currentButton.button.mouseWheelMoved(e);
     }
 
     public void draw(Graphics2D g, Lock lock, double scaledSizeQuarter, double scaledSizeHalf) {

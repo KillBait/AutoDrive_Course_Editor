@@ -23,7 +23,7 @@ import static AutoDriveEditor.Locale.LocaleManager.locale;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
-import static AutoDriveEditor.XMLConfig.RouteManagerXML.markerGroup;
+import static AutoDriveEditor.XMLConfig.RoutesXML.markerGroup;
 
 public class EditMarkerButton extends MarkerBaseButton {
 
@@ -46,7 +46,7 @@ public class EditMarkerButton extends MarkerBaseButton {
     @Override
     public void mouseClicked(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
-            MapNode selectedNode = getNodeAt(e.getX(), e.getY());
+            MapNode selectedNode = getNodeAtScreenPosition(e.getX(), e.getY());
             if (selectedNode != null) {
                 if (selectedNode.hasMapMarker()) {
                     markerDestinationInfo info = showEditMarkerDialog(selectedNode);
@@ -90,7 +90,7 @@ public class EditMarkerButton extends MarkerBaseButton {
 
         ArrayList<String> groupArray = new ArrayList<>();
         if (configType == CONFIG_SAVEGAME) {
-            LinkedList<MapNode> mapNodes = RoadMap.mapNodes;
+            LinkedList<MapNode> mapNodes = RoadMap.networkNodesList;
             for (MapNode mapNode : mapNodes) {
                 if (mapNode.hasMapMarker() && !mapNode.getMarkerGroup().equals("All")) {
                     if (!groupArray.contains(mapNode.getMarkerGroup())) {

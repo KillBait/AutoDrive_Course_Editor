@@ -15,6 +15,7 @@ public class MarkerGroup implements Comparable{
         this.groupName = name;
     }
 
+    @SuppressWarnings("ComparatorMethodParameterNotUsed")
     @Override
     public int compareTo(Object o) {
         if (o instanceof MarkerGroup) {

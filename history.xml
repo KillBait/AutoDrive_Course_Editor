@@ -7,9 +7,75 @@
         <body style="font-size:14;">
 
             <!------------------------->
+            <!-- Start version 1.0.5 -->
+            <!------------------------->
+
+            <br>
+            <h3 style="font-family:verdana;">Update to v1.0.5</h2>
+            <p><u><b>NOTE:-</b></u></p>
+            <ol type="1">
+               <li>From this release, the editors localization file is included in the release ZIP file ( as requested )
+               <li>This release includes some features that were for v1.1, i've included them as they were ready</li>
+            </ol>
+            <p><u>Added</u></p>
+            <ul>
+                <li>Rotation button added to sidebar, replaces the temporary 'Rotation' menu.
+                    <ul>
+                        <li>Node selection works like the other buttons, click drag the diamond node to rotate.</li>
+                        <li>Right click the rotation icon to set the number of degree snapping.</li>
+                    </ul>
+                </li>
+                <li>Grid option buttons added to sidebar, replaces the 'Grid' menu.
+                    <ul>
+                        <li>Grid on/off button for displaying the grid, right click to open grid settings.</li>
+                        <li>Grid snapping on/off button, can be right-clicked to toggle subdivision snapping.</li>
+                        <li>Keyboard shortcuts remain the same, G (Grid On/Off), S (Snapping On/Off), D (SubDivision On/Off).
+                    </ul>
+                </li>
+                <li>Added config option to lock the toolbar. ( no more accidental moving )</li>
+                <li>Added version history window. ( in 'Help' menu ) </li>
+            </ul>
+            <p><u>Changes</u></p>
+            <ul>
+                <li>Adjusted how a configs XML is parsed to create the node network
+                    <ul style="list-style-type: none;">
+                        <li>A massive loading performance increase for networks with large amounts of nodes</li>
+                        <li>and lots of incoming/outgoing connections.</li>
+                        <br>
+                        <li>e.g</li>
+                        <br>
+                        <li>A test config i have with 75,797 nodes ( ~170,000 incoming/outgoing connections )</li>
+                        <li>    v1.04 - 89.2 seconds to create the node network</li>
+                        <li>    v1.05 - 1.4 seconds to create the same node network!!</li>
+                    </ul>
+                </li>
+                <li>Adjusted the location priority when trying to load a mapImage or heightMap.</li>
+                <li>Removed the now redundant rotation menu.</li>
+                <li>Removed the now redundant grid menu.</li>
+            </ul>
+            <p><u>Bug Fixes</u></p>
+            <ul>
+                <li>Added a missing class file i forgot to commit. ( EventTriggerNumberFilter.java )</li>
+                <li>Fixed Copy/Paste copying control nodes by accident.</li>
+                <li>Fixed 'Show Heightmap' menu not switching back to map image if using the default image.</li>
+                <li>Fixed Crash on startup if no EditorConfig.xml was found.</li>
+                <li>Fixed failing to load a Routes XML due to a parsing error.</li>
+                <li>Fixed node focus keybinding 'F' working inconsistently</li>
+                <li>Fixed edge case where linear lines created an end node by mistake.</li>
+            </ul>
+            <p><u>Localization</u></p>
+            <ul>
+                <li>Removed redundant entries</li>
+                <li>Added new entries</li>
+            </ul>
+            <hr>
+
+
+            <!------------------------->
             <!-- Start version 1.0.4 -->
             <!------------------------->
 
+            <br>
             <h3 style="font-family:verdana;">Update to v1.0.4</h3>
             <p><u>Added</u></p>
             <ul>
@@ -63,6 +129,7 @@
             <!-- Start version 1.0.3 -->
             <!------------------------->
 
+            <br>
             <h3 style="font-family:verdana;">Update to v1.0.3</h3>
             <p><u>Bug Fixs</u></p>
             <ul>
@@ -74,6 +141,7 @@
             <!-- Start version 1.0.2 -->
             <!------------------------->
 
+            <br>
             <h3 style="font-family:verdana;">Update to v1.0.2</h3>
             <p><u>Changes</u></p>
             <ul>
@@ -102,6 +170,7 @@
             <!-- Start version 1.0.0 -->
             <!------------------------->
 
+            <br>
             <h3 style="font-family:verdana;">Update to v1.0.0</h3>
             <p><u>Added</u></p>
             <ul>
@@ -190,6 +259,7 @@
             <!-- Start version 0.90.0 -->
             <!-------------------------->
 
+            <br>
             <h3 style="font-family:verdana;">Update to v0.90.0</h3>
             <p><u>Added</u></p>
             <ul>
@@ -214,6 +284,7 @@
             <!-- Start version 0.80.0 -->
             <!-------------------------->
 
+            <br>
             <h3 style="font-family:verdana;">Update to v0.80.0</h3>
             <p><u>Added</u></p>
             <ul>
@@ -250,6 +321,7 @@
             <!-- Start version 0.70.1 -->
             <!-------------------------->
 
+            <br>
             <h3 style="font-family:verdana;">Update to v0.70.1</h3>
             <p><u>Added</u></p>
             <ul>
@@ -270,6 +342,7 @@
             <!-- Start version 0.70.0 -->
             <!-------------------------->
 
+            <br>
             <h3 style="font-family:verdana;">Update to v0.70.0</h3>
             <p><u>Added</u></p>
             <ul>
@@ -330,6 +403,7 @@
             <!-- Start version 0.60.2 -->
             <!-------------------------->
 
+            <br>
             <h3 style="font-family:verdana;">Update to v0.60.2</h3>
             <p><u>Fixes</u></p>
             <ul>
@@ -345,6 +419,7 @@
             <!-- Start version 0.60.1 -->
             <!-------------------------->
 
+            <br>
             <h3 style="font-family:verdana;">Update to v0.60.1</h3>
             <p><u>Bug Fixes</u></p>
             <ul>
@@ -359,6 +434,7 @@
             <!-- Start version 0.60.0 -->
             <!-------------------------->
 
+            <br>
             <h3 style="font-family:verdana;">Update to v0.60.0</h3>
             <ul>
                 <li>Complete refactor of codebase</li>
@@ -407,10 +483,14 @@
             <!-- Start version 0.50.1 -->
             <!-------------------------->
 
-            <h3 style="font-family:verdana;">Update to v0.50.1</h3>
+            <br>
+            <h3 style="font-family:verdana;">
+                Update to v0.50.1<br><br>
+                GitHub page created + first commit<br>(previously was pull requests on FS19 AutoDrive GitHub page)
+            </h3>
             <p><u>Bug Fixes</u></p>
             <ul>
-                <li>Potenial fix for blank FileChooser</li>
+                <li>Potential fix for blank FileChooser</li>
             </ul>
             <hr>
 

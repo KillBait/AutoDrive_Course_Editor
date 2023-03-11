@@ -1,6 +1,5 @@
 package AutoDriveEditor.Listeners;
 
-import AutoDriveEditor.Managers.CopyPasteManager;
 import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import javax.imageio.ImageIO;
@@ -20,19 +19,17 @@ import static AutoDriveEditor.GUI.RoutesGUI.createRoutesGUI;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.Managers.ImportManager.*;
 import static AutoDriveEditor.Managers.ScanManager.mergeOverlappingNodes;
-import static AutoDriveEditor.Managers.ScanManager.scanNetworkForOverlapNodes;
-import static AutoDriveEditor.Managers.VersionManager.createHyperLink;
 import static AutoDriveEditor.Managers.VersionManager.showVersionHistory;
 import static AutoDriveEditor.MapPanel.MapImage.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.FileUtils.getCurrentLocation;
 import static AutoDriveEditor.Utils.FileUtils.getSelectedFileWithExtension;
 import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
+import static AutoDriveEditor.Utils.HTMLUtils.createHyperLink;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
-import static AutoDriveEditor.XMLConfig.EditorXML.*;
 import static AutoDriveEditor.XMLConfig.GameXML.*;
-import static AutoDriveEditor.XMLConfig.RouteManagerXML.loadRouteManagerXML;
-import static AutoDriveEditor.XMLConfig.RouteManagerXML.saveRouteManagerXML;
+import static AutoDriveEditor.XMLConfig.RoutesXML.loadRouteManagerXML;
+import static AutoDriveEditor.XMLConfig.RoutesXML.saveRouteManagerXML;
 
 public class MenuListener implements ActionListener, ItemListener {
 
@@ -47,7 +44,7 @@ public class MenuListener implements ActionListener, ItemListener {
                 if (isStale()) {
                     int response = JOptionPane.showConfirmDialog(editor, getLocaleString("dialog_exit_unsaved"), getLocaleString("AutoDrive"), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                     if (response == JOptionPane.YES_OPTION) {
-                        saveConfigFile(null, false, false);
+                        saveGameConfig(null, false, false);
                     }
                 }
                 fc.setDialogTitle(getLocaleString("dialog_load_config_xml_title"));
@@ -55,9 +52,9 @@ public class MenuListener implements ActionListener, ItemListener {
                 fc.setFileFilter(new FileFilter() {
                     @Override
                     public boolean accept(File f) {
-                        // always accept directory's
+                        // always show folders/directory's
                         if (f.isDirectory()) return true;
-                        // but only files with a specific name
+                        // files only that end with the specific extension
                         return f.getName().contains(".xml");
                     }
 
@@ -71,20 +68,11 @@ public class MenuListener implements ActionListener, ItemListener {
                     canAutoSave = false;
                     lastLoadLocation = fc.getCurrentDirectory().getAbsolutePath();
                     File fileName = fc.getSelectedFile();
-                    loadConfigFile(fileName);
-                        /*forceMapImageRedraw();
-                        isUsingImportedImage = false;
-                        saveImageEnabled(false);
-                        setStale(false);
-                        scanNetworkForOverlapNodes();
-                        bShowHeightMap = false;
-                        showHeightMapMenuItem.setSelected(false);
-                        canAutoSave=true;*/
-
+                    loadGameConfig(fileName);
                 }
                 break;
             case MENU_SAVE_CONFIG:
-                saveConfigFile(null, false, false);
+                saveGameConfig(null, false, false);
                 break;
             case MENU_SAVE_SAVEAS:
                 if (xmlConfigFile == null) break;
@@ -109,7 +97,7 @@ public class MenuListener implements ActionListener, ItemListener {
                 if (fc.showSaveDialog(editor) == JFileChooser.APPROVE_OPTION) {
                     lastLoadLocation = fc.getCurrentDirectory().getAbsolutePath();
                     LOG.info("{} {}", getLocaleString("console_config_save_as"), getSelectedFileWithExtension(fc));
-                    saveConfigFile(getSelectedFileWithExtension(fc).toString(), false, false);
+                    saveGameConfig(getSelectedFileWithExtension(fc).toString(), false, false);
                 }
                 break;
             case MENU_LOAD_ROUTES_MANAGER_CONFIG:
@@ -133,11 +121,8 @@ public class MenuListener implements ActionListener, ItemListener {
                 if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
                     canAutoSave = false;
                     lastLoadLocation = fc.getCurrentDirectory().getAbsolutePath();
-                    //getMapPanel().confirmCurve();
                     File fileName = fc.getSelectedFile();
-
                     createRoutesGUI(fileName, editor);
-                    configType = CONFIG_ROUTEMANAGER;
                     canAutoSave = true;
                 }
                 break;
@@ -145,7 +130,7 @@ public class MenuListener implements ActionListener, ItemListener {
                 if (isStale()) {
                     int response = JOptionPane.showConfirmDialog(editor, getLocaleString("dialog_exit_unsaved"), "AutoDrive", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                     if (response == JOptionPane.YES_OPTION) {
-                        saveConfigFile(null, false, false);
+                        saveGameConfig(null, false, false);
                     }
                 }
                 fc.setDialogTitle(getLocaleString("dialog_load_route_xml_title"));
@@ -172,7 +157,6 @@ public class MenuListener implements ActionListener, ItemListener {
                     if (loadRouteManagerXML(fileName, false, null)) {
                         isUsingImportedImage = false;
                         saveImageEnabled(false);
-                        setStale(false);
                         canAutoSave = true;
                     }
                 }
@@ -273,7 +257,7 @@ public class MenuListener implements ActionListener, ItemListener {
                             break;
                         }
                     }
-                    boolean exportSuccess = exportImageToDisk(getMapImage(), getSelectedFileWithExtension(fc).toString());
+                    boolean exportSuccess = exportImageToDisk(getMapPanelImage(), getSelectedFileWithExtension(fc).toString());
                     if (exportSuccess) {
                         imageLoadedLabel.setForeground(new Color(0, 100, 0));
                         imageLoadedLabel.setText("Saved");
@@ -374,7 +358,7 @@ public class MenuListener implements ActionListener, ItemListener {
                 });
                 if (fc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
                     File fileName = fc.getSelectedFile();
-                    loadHeightMap(fileName, true);
+                    manualLoadHeightMap(fileName);
                 }
                 break;
             case MENU_HEIGHTMAP_SAVE:
@@ -515,29 +499,12 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_EDIT_REDO:
                 changeManager.redo();
                 break;
-            case MENU_GRID_SET:
-                getMapPanel().showGridSettingDialog();
-                break;
-            case MENU_ROTATE_SET:
-                getMapPanel().showRotationSettingDialog();
-                break;
-            case MENU_ROTATE_CLOCKWISE:
-                CopyPasteManager.rotateSelected(rotationAngle);
-                break;
-            case MENU_ROTATE_ANTICLOCKWISE:
-                CopyPasteManager.rotateSelected(-rotationAngle);
-                break;
-            case MENU_ROTATE_CLOCKWISE_NINTY:
-                CopyPasteManager.rotateSelected(90);
-                break;
-            case MENU_ROTATE_ANTICLOCKWISE_NINTY:
-                CopyPasteManager.rotateSelected(-90);
-                break;
             case MENU_ABOUT:
                 showAbout();
                 break;
             case MENU_VERSION_HISTORY:
                 showVersionHistory();
+                break;
             case MENU_HEIGHTMAP_FIX:
                 fixNodeHeight();
                 break;
@@ -574,25 +541,15 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_HEIGHTMAP_SHOW:
                 bShowHeightMap = menuItem.isSelected();
                 if (bShowHeightMap) {
-                    setImage(heightMapImage, true);
+                    if (heightMapImage != null ) setImage(heightMapImage, true);
                 } else {
-                    setImage(mapImage, false);
+                    if (pdaImage != null ) {
+                        setImage(pdaImage, false);
+                    } else {
+                        useDefaultMapImage();
+                    }
                 }
                 forceMapImageRedraw();
-                break;
-            case MENU_GRID_SHOW:
-                bShowGrid = menuItem.isSelected();
-                getMapPanel().repaint();
-                break;
-            case MENU_GRID_SNAP:
-                bGridSnap = menuItem.isSelected();
-                if (!menuItem.isSelected()) {
-                    bGridSnapSubs = false;
-                    gridSnapSubDivisionMenuItem.setSelected(false);
-                }
-                break;
-            case MENU_GRID_SNAP_SUBS:
-                bGridSnapSubs = menuItem.isSelected();
                 break;
             case MENU_DEBUG_SHOWID:
                 bDebugShowID = menuItem.isSelected();
@@ -601,18 +558,24 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_DEBUG_SELECTED_LOCATION:
                 bDebugShowSelectedLocation = menuItem.isSelected();
                 break;
-            case MENU_DEBUG_LOG_FILEIO:
-                bDebugLogFileIO = menuItem.isSelected();
-                break;
             case MENU_DEBUG_PROFILE:
                 bDebugProfile = menuItem.isSelected();
                 break;
+            case MENU_DEBUG_HEIGHTMAP:
+                bDebugShowHeightMapInfo = menuItem.isSelected();
+                if (!menuItem.isSelected()) showInTextArea("", true, false);
+                break;
+            case MENU_DEBUG_TEST:
+                bDebugTest = menuItem.isSelected();
+                break;
+            case MENU_DEBUG_LOG_ZOOMSCALE:
+                bDebugLogZoomScale = menuItem.isSelected();
+                break;
+            case MENU_DEBUG_LOG_FILEIO:
+                bDebugLogFileIO = menuItem.isSelected();
+                break;
             case MENU_DEBUG_LOG_UNDO:
                 bDebugLogUndoRedo = menuItem.isSelected();
-                break;
-            case MENU_DEBUG_HEIGHTMAP:
-                 bDebugShowHeightMapInfo = menuItem.isSelected();
-                if (!menuItem.isSelected()) showInTextArea("", true, false);
                 break;
             case MENU_DEBUG_LOG_MERGE:
                 bDebugLogMerge = menuItem.isSelected();
@@ -620,8 +583,11 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_DEBUG_LOG_ROUTEMANAGER:
                 bDebugLogRouteManager = menuItem.isSelected();
                 break;
-            case MENU_DEBUG_TEST:
-                bDebugTest = menuItem.isSelected();
+            case MENU_DEBUG_LOG_CONFIG:
+                bDebugLogConfigInfo = menuItem.isSelected();
+                break;
+            case MENU_DEBUG_LOG_HEIGHTMAP:
+                bDebugLogHeightMapInfo = menuItem.isSelected();
                 break;
             case MENU_DEBUG_LOG_CURVES:
                 bDebugLogCurveInfo = menuItem.isSelected();
@@ -638,8 +604,8 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_DEBUG_LOG_GUI:
                 bDebugLogGUIInfo = menuItem.isSelected();
                 break;
-            case MENU_DEBUG_LOG_CONFIG:
-                bDebugLogConfigInfo = menuItem.isSelected();
+            case MENU_DEBUG_LOG_CONFIG_GUI:
+                bDebugLogConfigGUIInfo = menuItem.isSelected();
                 break;
             case MENU_DEBUG_LOG_COPYPASTE:
                 bDebugLogCopyPasteInfo = menuItem.isSelected();
@@ -649,6 +615,7 @@ public class MenuListener implements ActionListener, ItemListener {
                 debugMenu.setVisible(menuItem.isSelected());
                 DEBUG = menuItem.isSelected();
                 break;
+
         }
     }
 

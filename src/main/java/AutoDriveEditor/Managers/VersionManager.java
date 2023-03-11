@@ -200,34 +200,4 @@ public class VersionManager {
             JOptionPane.showMessageDialog(editor, scrollPane, "Version History", JOptionPane.INFORMATION_MESSAGE);
         }
     }
-
-    public static JEditorPane createHyperLink(String text, String linkText, String URL) {
-        JLabel label = new JLabel();
-        label.setHorizontalAlignment(SwingConstants.CENTER);
-        Font font = label.getFont();
-
-        // create some css from the label's font
-        String style = "font-family:" + font.getFamily() + ";" + "font-weight:" + (font.isBold() ? "bold" : "normal") + ";" +
-                "font-size:" + font.getSize() + "pt;" +
-                "text-align: centre";
-
-        // html content
-        JEditorPane ep = new JEditorPane("text/html", "<html><body style=\"" + style + "\">" //
-                + text + " <a href=\"" + URL + "\">" + linkText + "</a>" //
-                + "</body></html>");
-
-        // handle link events
-        ep.addHyperlinkListener(e -> {
-            if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
-                try {
-                    Desktop.getDesktop().browse(e.getURL().toURI()); // roll your own link launcher or use Desktop if J6+
-                } catch (IOException | URISyntaxException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
-        ep.setEditable(false);
-        ep.setBackground(label.getBackground());
-        return ep;
-    }
 }

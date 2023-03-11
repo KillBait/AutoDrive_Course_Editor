@@ -6,7 +6,7 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 
 import static AutoDriveEditor.MapPanel.MapPanel.getMapPanel;
-import static AutoDriveEditor.Utils.ImageUtils.getNewBufferedImage;
+import static AutoDriveEditor.Utils.ImageUtils.getNewBufferImage;
 import static AutoDriveEditor.Utils.MathUtils.normalizeAngle;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
@@ -22,7 +22,7 @@ public class ColourPreviewPanel extends JPanel {
     public static boolean connectionDual;
 
     public ColourPreviewPanel() {
-        previewImage = getNewBufferedImage(196,40, Transparency.BITMASK);
+        previewImage = getNewBufferImage(196,40, Transparency.BITMASK);
         previewGraphics = (Graphics2D) previewImage.getGraphics();
         previewGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         previewGraphics.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);

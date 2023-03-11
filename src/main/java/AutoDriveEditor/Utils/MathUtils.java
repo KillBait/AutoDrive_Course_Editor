@@ -22,13 +22,11 @@ public class MathUtils {
         double xPI = (2*Math.PI);
         if (input > xPI) {
             input -= xPI;
-        }
-        else {
+        } else {
             if (input < -xPI ) {
                 input += xPI;
             }
         }
-
         return input;
     }
 

@@ -4,9 +4,7 @@ import AutoDriveEditor.RoadNetwork.MapNode;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
 
@@ -14,10 +12,12 @@ import static AutoDriveEditor.AutoDriveEditor.buttonManager;
 import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogGUIInfo;
 import static AutoDriveEditor.Managers.ButtonManager.ButtonNode;
 import static AutoDriveEditor.Managers.ButtonManager.ButtonState;
+import static AutoDriveEditor.Managers.MultiSelectManager.clearMultiSelection;
 import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
-public abstract class BaseButton implements ButtonState, ActionListener {
+public abstract class BaseButton implements ButtonState, ActionListener, MouseListener
+{
 
     //protected abstract String getInfoText();
 
@@ -26,7 +26,7 @@ public abstract class BaseButton implements ButtonState, ActionListener {
 
     public String getButtonID() { return "BaseButton"; }
     public String getButtonAction() { return null; }
-    public String getInfoText() {  return null; }
+    public String getInfoText() {  return button.getToolTipText(); }
     public Boolean ignoreDeselect() {
         return false;
     }
@@ -40,6 +40,7 @@ public abstract class BaseButton implements ButtonState, ActionListener {
                 if (bDebugLogGUIInfo) LOG.info("BaseButton > setting {} as current", buttonManager.getCurrentButtonID());
             }
         } else {
+
             if (buttonManager.getCurrentButton() != null) {
                 if (buttonNode.button.ignoreDeselect()) {
                     if (bDebugLogGUIInfo) LOG.info("BaseButton > {} ignoring deselect", buttonNode.button.getButtonID());
@@ -67,7 +68,11 @@ public abstract class BaseButton implements ButtonState, ActionListener {
     }
 
     @Override
-    public void mouseClicked(MouseEvent e) {}
+    public void mouseClicked(MouseEvent e) {
+        if (e.getButton() == MouseEvent.BUTTON3) {
+            if (button.isSelected()) clearMultiSelection();
+        }
+    }
 
     @Override
     public void mousePressed(MouseEvent e) {}
@@ -82,7 +87,13 @@ public abstract class BaseButton implements ButtonState, ActionListener {
     public void mouseMoved(MouseEvent e) {}
 
     @Override
-    public void mouseWheelMoved(MouseEvent e) {}
+    public void mouseWheelMoved(MouseWheelEvent e) {}
+
+    @Override
+    public void mouseEntered(MouseEvent e) {}
+
+    @Override
+    public void mouseExited(MouseEvent e) {}
 
     @Override
     public void drawToScreen(Graphics2D g, Lock lock, double scaledSizeQuarter, double scaledSizeHalf) {}

@@ -5,19 +5,19 @@ import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import static AutoDriveEditor.AutoDriveEditor.changeManager;
-import static AutoDriveEditor.MapPanel.MapImage.mapImage;
+import static AutoDriveEditor.MapPanel.MapImage.mapPanelImage;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 
 public abstract class AddNodeBaseButton extends BaseButton {
 
     public static MapNode createNode(double worldX, double worldZ, int flag) {
         canAutoSave = false;
-        if ((roadMap == null) || (mapImage == null)) {
+        if ((roadMap == null) || (mapPanelImage == null)) {
             return null;
         }
         double heightMapY = getYValueFromHeightMap(worldX, worldZ);
-        MapNode mapNode = new MapNode(RoadMap.mapNodes.size()+1, worldX, heightMapY, worldZ, flag, false, false); //flag = 0 causes created node to be regular by default
-        RoadMap.mapNodes.add(mapNode);
+        MapNode mapNode = new MapNode(RoadMap.networkNodesList.size()+1, worldX, heightMapY, worldZ, flag, false, false); //flag = 0 causes created node to be regular by default
+        RoadMap.networkNodesList.add(mapNode);
         getMapPanel().repaint();
         changeManager.addChangeable( new AddNodeChanger(mapNode) );
         setStale(true);

@@ -16,7 +16,8 @@ import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.cubicCurve;
 import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.isCubicCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.isQuadCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
-import static AutoDriveEditor.GUI.MenuBuilder.*;
+import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogCurveInfo;
+import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogUndoRedo;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.Managers.MultiSelectManager.*;
 import static AutoDriveEditor.Managers.ScanManager.checkNodeOverlap;
@@ -26,6 +27,8 @@ import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public class DeleteNodeButton extends BaseButton {
+
+    public static LinkedList<NodeLinks> deleteNodeList = new LinkedList<>();
 
     public DeleteNodeButton(JPanel panel) {
         button = makeImageToggleButton("buttons/deletenodes","buttons/deletenodes_selected", null,"nodes_remove_tooltip","nodes_remove_alt", panel, false, false, null, false, this);
@@ -46,7 +49,7 @@ public class DeleteNodeButton extends BaseButton {
     @Override
     public void mousePressed(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
-            MapNode toDeleteNode = getNodeAt(e.getX(), e.getY());
+            MapNode toDeleteNode = getNodeAtScreenPosition(e.getX(), e.getY());
             if (toDeleteNode != null) {
                 boolean canDelete = true;
                 if (toDeleteNode.isControlNode()) {
@@ -68,7 +71,7 @@ public class DeleteNodeButton extends BaseButton {
                 if (canDelete) {
                     addToDeleteList(toDeleteNode);
                     changeManager.addChangeable( new DeleteNodeChanger(deleteNodeList));
-                    getMapPanel().removeDeleteListNodes();
+                    removeDeleteListNodes();
                     if (toDeleteNode.hasWarning) {
                         LOG.info("Checking {} warning nodes", toDeleteNode.warningNodes.size());
                         for(MapNode overNode : toDeleteNode.warningNodes) {
@@ -150,10 +153,67 @@ public class DeleteNodeButton extends BaseButton {
         }
         changeManager.addChangeable( new DeleteNodeChanger(deleteNodeList));
         canAutoSave = false;
-        getMapPanel().removeDeleteListNodes();
+        removeDeleteListNodes();
         canAutoSave = true;
         deleteNodeList.clear();
         clearMultiSelection();
+    }
+
+    public static void addToDeleteList(MapNode node) {
+        LinkedList<MapNode> otherNodesInLinks = new LinkedList<>();
+        LinkedList<MapNode> otherNodesOutLinks = new LinkedList<>();
+
+        LinkedList<MapNode> roadmapNodes = RoadMap.networkNodesList;
+        for (MapNode mapNode : roadmapNodes) {
+            if (mapNode != node) {
+                if (mapNode.outgoing.contains(node)) {
+                    otherNodesOutLinks.add(mapNode);
+                }
+                if (mapNode.incoming.contains(node)) {
+                    otherNodesInLinks.add(mapNode);
+                }
+            }
+
+        }
+        deleteNodeList.add(new NodeLinks(node, otherNodesInLinks, otherNodesOutLinks));
+    }
+
+    public static void removeDeleteListNodes() {
+        canAutoSave = false;
+
+        for (NodeLinks nodeLinks : deleteNodeList) {
+            MapNode inList = nodeLinks.node;
+            RoadMap.removeMapNode(inList);
+        }
+
+        canAutoSave = true;
+        setStale(true);
+        hoveredNode = null;
+        getMapPanel().repaint();
+    }
+
+    public static class NodeLinks {
+
+        public MapNode node;
+        public int nodeIDBackup;
+        public LinkedList<MapNode> otherIncoming;
+        public LinkedList<MapNode> otherOutgoing;
+
+        public NodeLinks(MapNode mapNode, LinkedList<MapNode> in, LinkedList<MapNode> out) {
+            this.node = mapNode;
+            this.nodeIDBackup = mapNode.id;
+            this.otherIncoming = new LinkedList<>();
+            this.otherOutgoing = new LinkedList<>();
+
+            for (int i = 0; i <= in.size() - 1 ; i++) {
+                MapNode inNode = in.get(i);
+                if (!this.otherIncoming.contains(inNode)) this.otherIncoming.add(inNode);
+            }
+            for (int i = 0; i <= out.size() - 1 ; i++) {
+                MapNode outNode = out.get(i);
+                if (!this.otherOutgoing.contains(outNode)) this.otherOutgoing.add(outNode);
+            }
+        }
     }
 
     //

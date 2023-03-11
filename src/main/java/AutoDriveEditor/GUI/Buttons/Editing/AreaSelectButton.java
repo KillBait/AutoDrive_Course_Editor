@@ -1,4 +1,4 @@
-package AutoDriveEditor.GUI.Buttons.CopyPaste;
+package AutoDriveEditor.GUI.Buttons.Editing;
 
 import AutoDriveEditor.GUI.Buttons.CopyPasteBaseButton;
 
@@ -47,13 +47,6 @@ public class AreaSelectButton extends CopyPasteBaseButton {
     public void mouseDragged(MouseEvent e) {
         if (rectangleStart != null && isMultiSelectDragging) {
             getMapPanel().repaint();
-        }
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON3) {
-            clearMultiSelection();
         }
     }
 }

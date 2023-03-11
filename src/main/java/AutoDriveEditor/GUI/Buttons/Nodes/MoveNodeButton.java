@@ -53,7 +53,7 @@ public class MoveNodeButton extends BaseButton {
     @Override
     public void mousePressed(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
-            selectedNode = getNodeAt(e.getX(), e.getY());
+            selectedNode = getNodeAtScreenPosition(e.getX(), e.getY());
             if (selectedNode != null) {
                 if (bGridSnap || bGridSnapSubs) {
                     Point2D p = worldPosToScreenPos(selectedNode.x, selectedNode.z);
@@ -115,13 +115,6 @@ public class MoveNodeButton extends BaseButton {
             }
         }
         getMapPanel().repaint();
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON3) {
-            clearMultiSelection();
-        }
     }
 
     private void snapMoveNodeBy(LinkedList<MapNode> nodeList, int diffX, int diffY) {

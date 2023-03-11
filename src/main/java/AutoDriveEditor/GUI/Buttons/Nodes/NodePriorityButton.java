@@ -36,7 +36,7 @@ public class NodePriorityButton extends BaseButton {
     @Override
     public void mousePressed(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
-            MapNode changingNode = getNodeAt(e.getX(), e.getY());
+            MapNode changingNode = getNodeAtScreenPosition(e.getX(), e.getY());
             if (changingNode != null) {
                 if (changingNode.flag != NODE_FLAG_CONTROL_POINT) {
                     changeNodePriority(changingNode);

@@ -5,9 +5,9 @@ import AutoDriveEditor.MapPanel.LinearLine;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
 import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
@@ -15,21 +15,16 @@ import java.util.concurrent.locks.Lock;
 import static AutoDriveEditor.GUI.GUIBuilder.mapPanel;
 import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogLinearlineInfo;
 import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogUndoRedo;
-import static AutoDriveEditor.Listeners.MouseListener.currentMouseX;
-import static AutoDriveEditor.Listeners.MouseListener.currentMouseY;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.MapPanel.MapImage.backBufferGraphics;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_STANDARD;
 import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_SUBPRIO;
 import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
+import static AutoDriveEditor.Utils.ImageUtils.backBufferGraphics;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
 public abstract class LinerLineBaseButton extends BaseButton{
-
-    protected abstract void setNormalStateIcons();
-    protected abstract void setAlternateStateIcons();
 
     public static final int CONNECTION_STANDARD = 0;
     @SuppressWarnings("unused")
@@ -43,6 +38,9 @@ public abstract class LinerLineBaseButton extends BaseButton{
     public int connectionType = 0;
     boolean isDraggingLine = false;
 
+    protected abstract void setNormalStateIcons();
+    protected abstract void setAlternateStateIcons();
+
     @Override
     public void setSelected(boolean selected) {
         if (selected) {
@@ -55,8 +53,8 @@ public abstract class LinerLineBaseButton extends BaseButton{
     }
 
     public void mouseClicked(MouseEvent e) {
-        if (SwingUtilities.isRightMouseButton(e) && e.getClickCount() == 1) {
-            if (e.getSource() == button) {
+        if (e.getButton() == MouseEvent.BUTTON3 && e.getSource() == button) {
+            if (button.isEnabled() && button.isSelected()) {
                 connectionState = 1 - connectionState;
                 if (connectionState == NODE_FLAG_STANDARD) { // == 0
                     setNormalStateIcons();
@@ -69,12 +67,12 @@ public abstract class LinerLineBaseButton extends BaseButton{
 
     public void mousePressed(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
-            MapNode selected = getNodeAt(e.getX(), e.getY());
+            MapNode selected = getNodeAtScreenPosition(e.getX(), e.getY());
             if (startNode == null) {
                 if (selected != null && !selected.isControlNode) {
                     startNode = selected;
-                    Point2D pointerPos = screenPosToWorldPos(e.getX(), e.getY());
-                    linearLine = new LinearLine(startNode, pointerPos.getX(), pointerPos.getY(), connectionState);
+                    //Point2D pointerPos = screenPosToWorldPos(e.getX(), e.getY());
+                    linearLine = new LinearLine(startNode, e.getX(), e.getY(), connectionState);
                     isDraggingLine = true;
                     if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## created linear line starting at x {} y {} z {}",startNode.x, startNode.y, startNode.z);
                     showInTextArea(getLocaleString("infopanel_linearline_started"), true, false);
@@ -88,12 +86,12 @@ public abstract class LinerLineBaseButton extends BaseButton{
 
                 if (selected != null && !selected.isControlNode) {
                     if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## End node selected, creating linear line");
-                    createLinearLine(new Point2D.Double(e.getX(), e.getY()));
+                    createLinearLine(selected);
                     if (bContinuousConnections) {
                         if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## Continuous connection enabled, starting next line");
                         startNode = selected;
-                        Point2D pointerPos = screenPosToWorldPos(e.getX(), e.getY());
-                        linearLine = new LinearLine(selected, pointerPos.getX(), pointerPos.getY(), connectionState);
+                        //Point2D pointerPos = screenPosToWorldPos(e.getX(), e.getY());
+                        linearLine = new LinearLine(selected, e.getX(), e.getY(), connectionState);
                     } else {
                         if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## Linear line finished");
                         isDraggingLine = false;
@@ -102,9 +100,9 @@ public abstract class LinerLineBaseButton extends BaseButton{
                 } else {
                     if (selected == null && bCreateLinearLineEndNode) {
                         if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## No end node selected");
-                        createLinearLine(new Point2D.Double(e.getX(), e.getY()));
+                        createLinearLine(null);
                         if (bContinuousConnections) {
-                            linearLine = new LinearLine(getNodeAt(e.getX(), e.getY()), e.getX(), e.getY(), connectionState);
+                            linearLine = new LinearLine(getNodeAtScreenPosition(e.getX(), e.getY()), e.getX(), e.getY(), connectionState);
                         } else {
                             isDraggingLine = false;
                             startNode = null;
@@ -125,18 +123,22 @@ public abstract class LinerLineBaseButton extends BaseButton{
             if (e.getY() > mapPanel.getHeight()) getMapPanel().moveMapBy( 0, -10);
             if (e.getY() <= 0) getMapPanel().moveMapBy( 0, 10);
             Point2D pointerPos = screenPosToWorldPos(e.getX(), e.getY());
-            linearLine.updateLine(pointerPos.getX(), pointerPos.getY());
+            linearLine.updateLineEndLocation(pointerPos.getX(), pointerPos.getY());
             getMapPanel().repaint();
         }
     }
 
-    public void mouseWheelMoved(MouseEvent e) {
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
         Point2D pointerPos = screenPosToWorldPos(e.getX(), e.getY());
-        linearLine.updateLine(pointerPos.getX(), pointerPos.getY());
+        if (linearLine != null) {
+            linearLine.updateLineEndLocation(pointerPos.getX(), pointerPos.getY());
+            getMapPanel().repaint();
+        }
     }
 
-    protected void createLinearLine(Point2D endConnectionScreenPos) {
-        linearLine.commit(endConnectionScreenPos, connectionType, connectionState);
+    private void createLinearLine(MapNode endNode) {
+        linearLine.commit(endNode, connectionType, connectionState);
         showInTextArea(getLocaleString("infopanel_linearline_completed"), true, false);
         linearLine.clear();
         setStale(true);
@@ -160,16 +162,14 @@ public abstract class LinerLineBaseButton extends BaseButton{
 
             drawLock.lock();
             try {
-                if (lineNodeList.size() > 2) {
-                    for (int j = 0; j < lineNodeList.size() - 1; j++) { // skip the last node of the array
-                        MapNode firstPos = lineNodeList.get(j);
-                        MapNode secondPos = lineNodeList.get(j+1);
+                for (int j = 0; j < lineNodeList.size(); j++) { // skip the last node of the array
+                    MapNode firstPos = lineNodeList.get(j);
+                    Point2D startNodePos = worldPosToScreenPos(firstPos.x, firstPos.z);
 
-                        Point2D startNodePos = worldPosToScreenPos(firstPos.x, firstPos.z);
-                        Point2D endNodePos = worldPosToScreenPos(secondPos.x, secondPos.z);
-
-                        // don't draw the node image for the first node as it already exists
-                        if (j > 0) {
+                    // don't draw the first node image as it already exists
+                    if (j > 0) {
+                        // only draw the last node if bCreateLinearLineEndNode is true
+                        if (j < lineNodeList.size() -1 || bCreateLinearLineEndNode) {
                             Shape oldClip = backBufferGraphics.getClip();
                             Graphics2D g2d = (Graphics2D) backBufferGraphics.create();
                             g2d.setComposite(AlphaComposite.SrcOver.derive(0.5f));
@@ -182,6 +182,11 @@ public abstract class LinerLineBaseButton extends BaseButton{
                             g2d.setClip(oldClip);
                             g2d.dispose();
                         }
+                    }
+
+                    if ( j < lineNodeList.size() - 1) {
+                        MapNode secondPos = lineNodeList.get(j+1);
+                        Point2D endNodePos = worldPosToScreenPos(secondPos.x, secondPos.z);
 
                         // select the colour of line to draw
                         if ( connectionType == CONNECTION_STANDARD) {
@@ -203,35 +208,11 @@ public abstract class LinerLineBaseButton extends BaseButton{
                         backBufferGraphics.setColor(colour);
                         drawArrowBetween(backBufferGraphics, startNodePos, endNodePos, connectionType == CONNECTION_DUAL);
                     }
-                }  else {
-                    if ( connectionType == CONNECTION_DUAL ) {
-                        colour = Color.BLUE;
-                    } else if ( connectionType == CONNECTION_REVERSE ) {
-                        colour = Color.CYAN;
-                    }
-                    Point2D startNodePos = worldPosToScreenPos(linearLine.getLineStartNode().x, linearLine.getLineStartNode().z);
-                    Point2D mousePos = new Point2D.Double(currentMouseX,currentMouseY);
-
-                    backBufferGraphics.setColor(colour);
-                    drawArrowBetween(backBufferGraphics, startNodePos, mousePos, connectionType == CONNECTION_DUAL);
                 }
             } finally {
                 drawLock.unlock();
             }
-        }/* else {
-            if (startNode != null) {
-                Point2D startNodePos = worldPosToScreenPos(startNode.x, startNode.z);
-                Point2D mousePos = new Point2D.Double(currentMouseX,currentMouseY);
-
-                drawLock.lock();
-                try {
-                    backBufferGraphics.setColor(Color.WHITE);
-                    drawArrowBetween(backBufferGraphics, startNodePos, mousePos, false);
-                } finally {
-                    drawLock.unlock();
-                }
-            }
-        }*/
+        }
     }
 
     //

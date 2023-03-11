@@ -15,11 +15,11 @@ import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.cubicCurve;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
 import static AutoDriveEditor.Listeners.MouseListener.*;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.MapPanel.MapImage.backBufferGraphics;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_STANDARD;
 import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
 import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
+import static AutoDriveEditor.Utils.ImageUtils.backBufferGraphics;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
@@ -62,6 +62,7 @@ public final class QuadCurveButton extends CurveBaseButton {
             quadCurve.setNumInterpolationPoints(GUIBuilder.numIterationsSlider.getValue() + 1);
             isQuadCurveCreated = true;
             showConnectingLine = false;
+            GUIBuilder.curveOptionsPanel.setVisible(true);
         }
     }
 
@@ -120,7 +121,7 @@ public final class QuadCurveButton extends CurveBaseButton {
             }
         }
         if (e.getButton() == MouseEvent.BUTTON1) {
-            MapNode node = getNodeAt(e.getX(), e.getY());
+            MapNode node = getNodeAtScreenPosition(e.getX(), e.getY());
             if (quadCurve != null && node != null && node.isControlNode() && quadCurve.isControlPoint(node)) controlNodeSelected = true;
         }
     }

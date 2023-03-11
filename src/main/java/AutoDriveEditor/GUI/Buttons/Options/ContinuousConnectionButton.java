@@ -31,12 +31,6 @@ public class ContinuousConnectionButton extends OptionsBaseButton {
     public String getButtonID() { return "ContinuousConnectionButton"; }
 
     @Override
-    public String getButtonAction() { return "OptionToggle"; }
-
-    @Override
-    public String getButtonPanel() { return "Options"; }
-
-    @Override
     public String getInfoText() { return null; }
 
     @Override

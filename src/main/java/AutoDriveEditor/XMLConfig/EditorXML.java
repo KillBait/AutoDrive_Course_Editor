@@ -34,7 +34,9 @@ public class EditorXML {
     public static int y = -99;
     public static int width = 1024;
     public static int height = 768;
-    public static boolean noSavedWindowPosition;
+    public static boolean bNoSavedWindowPosition;
+
+    public static boolean bShowSelectionBounds = false;
     
     // Map panel default options
 
@@ -58,6 +60,7 @@ public class EditorXML {
 
     public static boolean bContinuousConnections = false; 
     public static boolean bMiddleMouseMove = false;
+    public static boolean bLockToolbarPosition = false;
     
     // Grid menu default options
     
@@ -67,7 +70,7 @@ public class EditorXML {
     public static float gridSpacingX = 2;
     public static float gridSpacingY = 2;
     public static int gridSubDivisions = 4;
-    public static int rotationAngle = 5;
+    public static int rotationSnap = 5;
 
     // Autosave default options
     
@@ -130,7 +133,7 @@ public class EditorXML {
 
             x = getIntegerValue(x, rootElement, "WindowX");
             y = getIntegerValue(y, rootElement, "WindowY");
-            if ( x == -99 || y == -99) noSavedWindowPosition = true;
+            if ( x == -99 || y == -99) bNoSavedWindowPosition = true;
             width = getIntegerValue(width, rootElement, "WindowWidth");
             height = getIntegerValue(height, rootElement, "WindowHeight");
             toolbarPosition = getTextValue(toolbarPosition, rootElement, "Toolbar_Position");
@@ -140,6 +143,7 @@ public class EditorXML {
             bUseOnlineMapImages = getBooleanValue(bUseOnlineMapImages, rootElement, "Check_Online_MapImages");
             bContinuousConnections = getBooleanValue(bContinuousConnections, rootElement, "Continuous_Connection");
             bMiddleMouseMove = getBooleanValue(bMiddleMouseMove, rootElement, "MiddleMouseMove");
+            bLockToolbarPosition = getBooleanValue(bLockToolbarPosition, rootElement, "LockToolbar");
             curveSliderMax = getIntegerValue(curveSliderMax, rootElement, "CurveSliderMaximum");
             curveSliderDefault = getIntegerValue(curveSliderDefault, rootElement, "CurveSliderDefault");
             if (curveSliderDefault > curveSliderMax) curveSliderDefault = curveSliderMax;
@@ -150,7 +154,7 @@ public class EditorXML {
             gridSpacingY = getFloatValue(rootElement, "GridSpacingY", gridSpacingY);
             bGridSnapSubs = getBooleanValue(bGridSnapSubs, rootElement, "SnapSubDivision");
             gridSubDivisions = getIntegerValue(gridSubDivisions, rootElement, "GridSubDivisions");
-            rotationAngle = getIntegerValue(rotationAngle, rootElement, "RotationStep");
+            rotationSnap = getIntegerValue(rotationSnap, rootElement, "RotationStep");
             bFilledArrows = getBooleanValue(bFilledArrows, rootElement, "FilledConnectionArrows");
             bCreateLinearLineEndNode = getBooleanValue(bCreateLinearLineEndNode, rootElement, "CreateLinearLineEndNode");
             linearLineNodeDistance = getIntegerValue(linearLineNodeDistance, rootElement, "LinearLineNodeDistance");
@@ -242,7 +246,7 @@ public class EditorXML {
             System.out.println(pce.getMessage());
         } catch (IOException ioe) {
             LOG.warn(getLocaleString("console_editor_config_load_not_found"));
-            noSavedWindowPosition = true;
+            bNoSavedWindowPosition = true;
         }
     }
 
@@ -270,6 +274,7 @@ public class EditorXML {
             setBooleanValue("Check_Online_MapImages", doc, bUseOnlineMapImages, rootElement);
             setBooleanValue("Continuous_Connection", doc, bContinuousConnections, rootElement);
             setBooleanValue("MiddleMouseMove", doc, bMiddleMouseMove, rootElement);
+            setBooleanValue("LockToolbar", doc, bLockToolbarPosition, rootElement);
             setIntegerValue("CurveSliderMaximum", doc, curveSliderMax, rootElement);
             setIntegerValue("CurveSliderDefault", doc, curveSliderDefault, rootElement);
             if (curveSliderDefault > curveSliderMax) curveSliderDefault = curveSliderMax;
@@ -280,7 +285,7 @@ public class EditorXML {
             setFloatValue("GridSpacingY", doc, gridSpacingY, rootElement);
             setBooleanValue("SnapSubDivision",doc, bGridSnapSubs, rootElement);
             setIntegerValue("GridSubDivisions", doc, gridSubDivisions, rootElement);
-            setIntegerValue("RotationStep", doc, rotationAngle, rootElement);
+            setIntegerValue("RotationStep", doc, rotationSnap, rootElement);
             setBooleanValue("FilledConnectionArrows", doc, bFilledArrows, rootElement);
             setBooleanValue("CreateLinearLineEndNode", doc, bCreateLinearLineEndNode, rootElement);
             setIntegerValue("LinearLineNodeDistance", doc, linearLineNodeDistance, rootElement);

@@ -89,18 +89,23 @@ public class FileUtils {
             input.close();
             output.close();
 
-            LOG.info("File '{}' downloaded successfully!", file);
+            LOG.info("File '{}' downloaded successfully!", url.getFile());
             LOG.info("Saved downloaded image to {}", fullPath);
             return file;
         }
         catch(IOException ioEx) {
+            LOG.info("## FileNotFoundException ## - Unable to download image");
             ioEx.printStackTrace();
             return null;
         }
     }
 
     public static String removeFilenameFromString(String path) {
-        return path.substring(0, path.lastIndexOf("\\") + 1);
+        return path.substring(0, indexOfLastSeparator(path) + 1);
+    }
+
+    public static String removePathFromString(String path) {
+        return path.substring(indexOfLastSeparator(path) +1);
     }
 
     @SuppressWarnings("unused")

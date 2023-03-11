@@ -21,15 +21,15 @@ import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
-import static AutoDriveEditor.XMLConfig.GameXML.saveConfigFile;
+import static AutoDriveEditor.XMLConfig.GameXML.saveGameConfig;
 import static AutoDriveEditor.XMLConfig.GameXML.xmlConfigFile;
 
 public class AutoDriveEditor extends JFrame {
 
-    public static final String COURSE_EDITOR_VERSION = "1.0.5-beta1";
+    public static final String COURSE_EDITOR_VERSION = "1.0.5";
     public static final String COURSE_EDITOR_NAME = "AutoDrive Course Editor";
     public static final String COURSE_EDITOR_TITLE = COURSE_EDITOR_NAME + " " + COURSE_EDITOR_VERSION;
-    public static final String COURSE_EDITOR_BUILD_INFO = "Java 13 SDK + IntelliJ IDEA 2022.2.3 Community Edition";
+    public static final String COURSE_EDITOR_BUILD_INFO = "Java 11 SDK + IntelliJ IDEA 2022.2.3 Community Edition";
 
     public static AutoDriveEditor editor;
 
@@ -41,11 +41,10 @@ public class AutoDriveEditor extends JFrame {
 
     public AutoDriveEditor() {
         super();
-
         LOG.info("Starting AutoDrive Editor v{} .....", COURSE_EDITOR_VERSION);
         LOG.info("Java Runtime Version {}", Runtime.version().feature());
         LocaleManager.setLocale();
-        setTitle(createTitle());
+        setTitle(createWindowTitleString());
         loadIcons();
         loadEditorXMLConfig();
         setPreferredSize(new Dimension(1024,768));
@@ -63,7 +62,7 @@ public class AutoDriveEditor extends JFrame {
                 if (isStale()) {
                     int response = JOptionPane.showConfirmDialog(e.getComponent(), getLocaleString("dialog_exit_unsaved"), "AutoDrive", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                     if (response == JOptionPane.YES_OPTION) {
-                        saveConfigFile(null, false, false);
+                        saveGameConfig(null, false, false);
                     }
                 }
                 if ( getMapPanel().connectionDrawThread != null ) {
@@ -116,8 +115,8 @@ public class AutoDriveEditor extends JFrame {
 
         buttonManager = new ButtonManager();
 
-        this.add(GUIBuilder.createButtonPanel(mainLayout, layoutPosition), layoutPosition);
         this.add(GUIBuilder.createMapPanel(), BorderLayout.CENTER);
+        this.add(GUIBuilder.createButtonPanel(mainLayout, layoutPosition), layoutPosition);
         this.add(GUIBuilder.initTextPanel(), BorderLayout.PAGE_END);
 
         MenuBuilder.editMenuEnabled(false);
@@ -125,7 +124,7 @@ public class AutoDriveEditor extends JFrame {
         editor = this;
         pack();
 
-        if (noSavedWindowPosition) {
+        if (bNoSavedWindowPosition) {
             LOG.info("Invalid saved window Location/Size");
             setLocationRelativeTo(null);
         } else {
@@ -170,7 +169,7 @@ public class AutoDriveEditor extends JFrame {
         });
     }
 
-    public static String createTitle() {
+    public static String createWindowTitleString() {
         StringBuilder sb = new StringBuilder();
         sb.append(COURSE_EDITOR_TITLE);
         if (xmlConfigFile != null) {
@@ -179,6 +178,16 @@ public class AutoDriveEditor extends JFrame {
         if (RoadMap.mapName != null) {
             sb.append(" ( ").append(RoadMap.mapName).append(" )");
         }
+        if (EXPERIMENTAL) {
+            sb.append(" ( EXPERIMENTAL MODE )");
+        } else if (DEBUG) {
+            sb.append(" ( DEBUG MODE )");
+        }
+
         return sb.toString();
+    }
+
+    public static void updateWindowTitle() {
+        editor.setTitle(createWindowTitleString());
     }
 }

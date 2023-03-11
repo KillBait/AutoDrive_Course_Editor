@@ -12,11 +12,12 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.Enumeration;
 
+import static AutoDriveEditor.AutoDriveEditor.EXPERIMENTAL;
 import static AutoDriveEditor.GUI.Buttons.Options.OpenConfigButton.configListener;
 import static AutoDriveEditor.GUI.Config.ColourPreviewPanel.*;
 import static AutoDriveEditor.GUI.GUIBuilder.numIterationsSlider;
 import static AutoDriveEditor.GUI.GUIImages.getTractorImage;
-import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogGUIInfo;
+import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogConfigGUIInfo;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.GUIUtils.*;
@@ -31,7 +32,7 @@ public class ConfigGUI extends JFrame {
     private static final int WIN_HEIGHT = 300;
 
     private boolean bTempAutoSaveEnabled = bAutoSaveEnabled;
-    private int tempAutoSaveInterval = autoSaveInterval;
+    private final int tempAutoSaveInterval = autoSaveInterval;
     private int tempMaxAutoSaveSlots = maxAutoSaveSlots;
 
     private final JButton applyNewAutoSaveSettingsNow;
@@ -100,12 +101,12 @@ public class ConfigGUI extends JFrame {
 
         JPanel mapPanelTab = new JPanel();
         configTabPane.addTab(getLocaleString("panel_config_tab_mappanel"), null, mapPanelTab, getLocaleString("panel_config_tab_mappanel_tooltip"));
-        JPanel mapPanelOptions = new JPanel(new GridLayout(4,2,0,5));
+        JPanel mapPanelOptions = new JPanel(new GridLayout(5,2,0,5));
 
         // Use online images checkbox
 
         JLabel enableOnlineImagesLabel = new JLabel(getLocaleString("panel_config_tab_mappanel_online_images") + "  ", JLabel.TRAILING);
-        JCheckBox cbEnableOnlineImages = makeCheckBox(enableOnlineImagesLabel, "OnlineImages", null, true, bUseOnlineMapImages);
+        JCheckBox cbEnableOnlineImages = makeCheckBox(enableOnlineImagesLabel, getLocaleString("panel_config_tab_mappanel_online_images"), null, true, bUseOnlineMapImages);
         cbEnableOnlineImages.addItemListener(e -> bUseOnlineMapImages = e.getStateChange() == ItemEvent.SELECTED);
         enableOnlineImagesLabel.setLabelFor(cbEnableOnlineImages);
         mapPanelOptions.add(enableOnlineImagesLabel);
@@ -114,11 +115,42 @@ public class ConfigGUI extends JFrame {
         // Middle mouse button move checkbox
 
         JLabel middleMouseMoveLabel = new JLabel(getLocaleString("panel_config_tab_mappanel_middle_mouse_move") + "  ", JLabel.TRAILING);
-        JCheckBox cbMiddleMouseMove = makeCheckBox(middleMouseMoveLabel, "MiddleMouseMove", null, true, bMiddleMouseMove);
+        JCheckBox cbMiddleMouseMove = makeCheckBox(middleMouseMoveLabel, getLocaleString("panel_config_tab_mappanel_middle_mouse_move"), null, true, bMiddleMouseMove);
         cbMiddleMouseMove.addItemListener(e -> bMiddleMouseMove = e.getStateChange() == ItemEvent.SELECTED);
-        enableOnlineImagesLabel.setLabelFor(cbEnableOnlineImages);
+        middleMouseMoveLabel.setLabelFor(cbMiddleMouseMove);
         mapPanelOptions.add(middleMouseMoveLabel);
         mapPanelOptions.add(cbMiddleMouseMove);
+
+        JLabel lockToolbarLabel = new JLabel(getLocaleString("panel_config_tab_mappanel_lock_toolbar") + "  ", JLabel.TRAILING);
+        JCheckBox cbLockToolbar = makeCheckBox(lockToolbarLabel, getLocaleString("panel_config_tab_mappanel_lock_toolbar"), null, true, bLockToolbarPosition);
+        cbLockToolbar.addItemListener(e -> bLockToolbarPosition = e.getStateChange() == ItemEvent.SELECTED);
+        lockToolbarLabel.setLabelFor(cbLockToolbar);
+        mapPanelOptions.add(lockToolbarLabel);
+        mapPanelOptions.add(cbLockToolbar);
+
+        cbLockToolbar.addPropertyChangeListener(evt -> {
+            if ("UNCHECKEDHOT".equals(evt.getNewValue())) {
+                bLockToolbarPosition = false;
+            } else if ("CHECKEDHOT".equals(evt.getNewValue())) {
+                bLockToolbarPosition = true;
+            }
+        });
+
+        if (EXPERIMENTAL) {
+
+            // Show Selection Bounds checkbox
+
+            JLabel showSelectionBoundsLabel = new JLabel(getLocaleString("panel_config_tab_mappanel_show_selection_bounds") + "  ", JLabel.TRAILING);
+            JCheckBox cbShowSelectionBounds = makeCheckBox(showSelectionBoundsLabel, "ShowSelectionBounds", null, true, bShowSelectionBounds);
+            cbShowSelectionBounds.addItemListener(e -> {
+                bShowSelectionBounds = e.getStateChange() == ItemEvent.SELECTED;
+                getMapPanel().repaint();
+            });
+            showSelectionBoundsLabel.setLabelFor(cbShowSelectionBounds);
+            mapPanelOptions.add(showSelectionBoundsLabel);
+            mapPanelOptions.add(cbShowSelectionBounds);
+
+        }
 
         // Maximum zoom level text field and buttons
 
@@ -195,7 +227,7 @@ public class ConfigGUI extends JFrame {
         JCheckBox cbEnableAutoSave = makeCheckBox(enabledAutoSaveLabel, "AutoSaveEnabled", null, true, bAutoSaveEnabled);
         cbEnableAutoSave.addItemListener(e -> {
             bTempAutoSaveEnabled = e.getStateChange() == ItemEvent.SELECTED;
-            LOG.info("AutoSave = {}", bTempAutoSaveEnabled);
+            if (bDebugLogConfigGUIInfo) LOG.info("AutoSave = {}", bTempAutoSaveEnabled);
             checkIfThreadRestartButtonNeedsEnabling();
         });
         enabledAutoSaveLabel.setLabelFor(cbEnableAutoSave);
@@ -204,32 +236,18 @@ public class ConfigGUI extends JFrame {
 
         // Autosave interval slider
 
-        JLabel autoSaveIntervalLabel = new JLabel(getLocaleString("panel_config_tab_autosave_interval") + "  ", JLabel.TRAILING);
+        JLabel autoSaveIntervalLabel = new JLabel(getLocaleString("panel_config_tab_autosave_interval") + " ("+ autoSaveInterval+")" + "  ", JLabel.TRAILING);
         JSlider autoSaveIntervalSlider = new JSlider(SwingConstants.HORIZONTAL);
-        autoSaveIntervalSlider.addMouseListener(new MouseListener() {
-            @Override
-            public void mouseClicked(MouseEvent e) {}
 
-            @Override
-            public void mousePressed(MouseEvent e) {}
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                if (autoSaveIntervalSlider.getValue() > 5 ) {
-                    tempAutoSaveInterval = autoSaveIntervalSlider.getValue();
-                } else {
-                    tempAutoSaveInterval = 5;
-                    autoSaveIntervalSlider.setValue(5);
-                }
-                LOG.info("AutoSave Interval set to {}", tempAutoSaveInterval);
-                checkIfThreadRestartButtonNeedsEnabling();
+        autoSaveIntervalSlider.addChangeListener(e -> {
+            JSlider source = (JSlider) e.getSource();
+            if (source.getValueIsAdjusting()) {
+                int intervalValue = autoSaveIntervalSlider.getValue();
+                autoSaveInterval = Math.max(intervalValue, 5);
+                autoSaveIntervalSlider.setValue(autoSaveInterval);
+                String text = getLocaleString("panel_config_tab_autosave_interval") + " (" + autoSaveInterval + ")  ";
+                autoSaveIntervalLabel.setText(text);
             }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {}
-
-            @Override
-            public void mouseExited(MouseEvent e) {}
         });
 
         autoSaveIntervalSlider.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
@@ -254,7 +272,7 @@ public class ConfigGUI extends JFrame {
             JSlider source = (JSlider) e.getSource();
             if (source.getValueIsAdjusting()) {
                 tempMaxAutoSaveSlots = source.getValue();
-                LOG.info("Max AutoSave Slots = {}", tempMaxAutoSaveSlots);
+                if (bDebugLogConfigGUIInfo) LOG.info("Max AutoSave Slots = {}", tempMaxAutoSaveSlots);
                 checkIfThreadRestartButtonNeedsEnabling();
             }
         });
@@ -452,7 +470,7 @@ public class ConfigGUI extends JFrame {
                     linearLineNodeDistance = 5;
                     linearLineLengthSlider.setValue(5);
                 }
-                String text = getLocaleString("panel_config_tab_mappanel_linearline_label") + " ( " + linearLineNodeDistance + "m )  ";
+                String text = getLocaleString("panel_config_tab_linearline_linespacing_label") + " ( " + linearLineNodeDistance + "m )  ";
                 linearLineLengthLabel.setText(text);
             }
         });
@@ -587,7 +605,7 @@ public class ConfigGUI extends JFrame {
             blueTextField.setText(String.valueOf(colorModel.getBlue()));
 
             String actionCommand = getButtonActionCommand(pathGroup);
-            if (bDebugLogGUIInfo) LOG.info(" Action = {}", actionCommand);
+            if (bDebugLogConfigGUIInfo) LOG.info(" Action = {}", actionCommand);
             switch (actionCommand) {
                 case "NODE_REGULAR":
                     colourNodeRegular = newColor;

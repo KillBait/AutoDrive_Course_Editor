@@ -1,4 +1,4 @@
-package AutoDriveEditor.GUI.Buttons.CopyPaste;
+package AutoDriveEditor.GUI.Buttons.Editing;
 
 import AutoDriveEditor.GUI.Buttons.CopyPasteBaseButton;
 

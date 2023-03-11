@@ -1,4 +1,4 @@
-package AutoDriveEditor.GUI.Buttons.CopyPaste;
+package AutoDriveEditor.GUI.Buttons.Editing;
 
 import AutoDriveEditor.GUI.Buttons.CopyPasteBaseButton;
 import AutoDriveEditor.Managers.ChangeManager;
@@ -54,13 +54,13 @@ public class PasteSelectionButton extends CopyPasteBaseButton {
 
         public void undo(){
             clearMultiSelection();
-            RoadMap.mapNodes.removeAll(this.storeNodes);
+            RoadMap.networkNodesList.removeAll(this.storeNodes);
             getMapPanel().repaint();
             setStale(this.isStale);
         }
 
         public void redo(){
-            RoadMap.mapNodes.addAll(this.storeNodes);
+            RoadMap.networkNodesList.addAll(this.storeNodes);
             getMapPanel().repaint();
             setStale(true);
         }

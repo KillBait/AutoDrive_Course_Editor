@@ -1,27 +1,26 @@
 package AutoDriveEditor.Managers;
 
-import AutoDriveEditor.GUI.Buttons.CopyPaste.PasteSelectionButton;
-import AutoDriveEditor.GUI.Buttons.Nodes.DeleteNodeButton.DeleteNodeChanger;
-import AutoDriveEditor.GUI.MenuBuilder;
+import AutoDriveEditor.GUI.Buttons.Editing.PasteSelectionButton;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
 
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.util.LinkedList;
 
 import static AutoDriveEditor.AutoDriveEditor.changeManager;
+import static AutoDriveEditor.GUI.Buttons.Nodes.DeleteNodeButton.*;
 import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogCopyPasteInfo;
 import static AutoDriveEditor.Managers.MultiSelectManager.*;
-import static AutoDriveEditor.MapPanel.MapImage.mapImage;
+import static AutoDriveEditor.MapPanel.MapImage.mapPanelImage;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.Utils.MathUtils.roundUpDoubleToDecimalPlaces;
 
 
 public class CopyPasteManager {
 
-    private static final int WORLD_COORDINATES = 1;
-    private static final int SCREEN_COORDINATES = 2;
+    public static final int WORLD_COORDINATES = 1;
+    public static final int SCREEN_COORDINATES = 2;
 
     private LinkedList<MapNode> nodeCache;
 
@@ -54,7 +53,7 @@ public class CopyPasteManager {
         }
         changeManager.addChangeable( new DeleteNodeChanger(deleteNodeList));
         CopySelection(nodesToCopy);
-        getMapPanel().removeDeleteListNodes();
+        removeDeleteListNodes();
         clearMultiSelection();
     }
 
@@ -66,7 +65,6 @@ public class CopyPasteManager {
             tempCache = createNewMapNodesFromList(nodesToCopy);
             // create a cached LinkedList, so we can paste this in as many times as needed
             nodeCache = createNewMapNodesFromList(tempCache);
-            MenuBuilder.rotationMenuEnabled(true);
         }
         clearMultiSelection();
     }
@@ -90,11 +88,13 @@ public class CopyPasteManager {
 
         int n = 1;
         for (MapNode node : list) {
-            MapNode workBufferNode = new MapNode(n++, node.x, node.y, node.z, node.flag, true, false);
-            if (node.hasMapMarker()) {
-                workBufferNode.createMapMarker(node.getMarkerName(), node.getMarkerGroup());
+            if (!node.isControlNode) {
+                MapNode workBufferNode = new MapNode(n++, node.x, node.y, node.z, node.flag, true, false);
+                if (node.hasMapMarker()) {
+                    workBufferNode.createMapMarker(node.getMarkerName(), node.getMarkerGroup());
+                }
+                tempWorkBuffer.add(new NodeTransform(node, workBufferNode));
             }
-            tempWorkBuffer.add(new NodeTransform(node, workBufferNode));
         }
 
         // iterate through the list and remake the connections using the new nodes
@@ -145,17 +145,15 @@ public class CopyPasteManager {
         double diffX = 0;
         double diffY = 0;
 
-        if ((roadMap == null) || (mapImage == null)) {
+        if ((roadMap == null) || (mapPanelImage == null)) {
             return;
         }
 
         if (!inOriginalLocation) {
             selectionCentre = screenPosToWorldPos(getMapPanel().getWidth() / 2, getMapPanel().getHeight() / 2);
-            selectionAreaInfo areaInfo = getSelectionBounds(newNodes, WORLD_COORDINATES);
-            if (areaInfo != null) {
-                diffX = areaInfo.selectionCentre.getX() - selectionCentre.getX();
-                diffY = areaInfo.selectionCentre.getY() - selectionCentre.getY();
-            }
+            selectionAreaInfo areaInfo = getSelectionBounds(newNodes);
+            diffX = areaInfo.selectionCentre.getX() - selectionCentre.getX();
+            diffY = areaInfo.selectionCentre.getY() - selectionCentre.getY();
             if (bDebugLogCopyPasteInfo) {
                 LOG.info("World coordinates of viewport Centre = {}", selectionCentre);
                 LOG.info("Move distance = {},{}", diffX, diffY);
@@ -166,17 +164,19 @@ public class CopyPasteManager {
 
         canAutoSave = false;
 
-        int startID = RoadMap.mapNodes.size() + 1;
+        int startID = RoadMap.networkNodesList.size() + 1;
         for (MapNode node : newNodes) {
             node.id = startID++;
-            if ( !inOriginalLocation) {
-                node.x -= diffX;
-                node.z -= diffY;
+            if (!inOriginalLocation) {
+                node.x = roundUpDoubleToDecimalPlaces(node.x - diffX, 3);
+                //node.x -= diffX;
+                node.z = roundUpDoubleToDecimalPlaces(node.z - diffY, 3);
+                //node.z -= diffY;
                 double yValue = getYValueFromHeightMap(node.x, node.z);
                 if (yValue != -1) node.y = yValue;
             }
             node.isSelected = true;
-            RoadMap.mapNodes.add(node);
+            RoadMap.networkNodesList.add(node);
             multiSelectList.add(node);
         }
 
@@ -189,35 +189,12 @@ public class CopyPasteManager {
         getMapPanel().repaint();
     }
 
-    public static void rotateSelected(double angle) {
-        selectionAreaInfo recInfo = getSelectionBounds(multiSelectList, WORLD_COORDINATES);
-        canAutoSave = false;
-        for (MapNode node : multiSelectList) {
-            if ( recInfo != null ) {
-                rotate(node, recInfo.selectionCentre, angle);
-            }
-        }
-        canAutoSave = true;
-        getMapPanel().repaint();
-        getSelectionBounds(multiSelectList, WORLD_COORDINATES);
-    }
-
-    public static void rotate(MapNode node, Point2D centre, double angle) {
-        Point2D result = new Point2D.Double();
-        AffineTransform rotation = new AffineTransform();
-        double angleInRadians = Math.toRadians(angle);
-        rotation.rotate(angleInRadians, centre.getX(), centre.getY());
-        rotation.transform(new Point2D.Double(node.x, node.z), result);
-        node.x = result.getX();
-        node.z = result.getY();
-    }
-
     @SuppressWarnings("SameParameterValue")
-    private static selectionAreaInfo getSelectionBounds(LinkedList<MapNode> nodesToCopy, int coordType) {
+    public static selectionAreaInfo getSelectionBounds(LinkedList<MapNode> selectedNodes/*, int coordType*/) {
         double topLeftX = 0, topLeftY = 0;
         double bottomRightX = 0, bottomRightY = 0;
-        for (int j = 0; j < nodesToCopy.size(); j++) {
-            MapNode node = nodesToCopy.get(j);
+        for (int j = 0; j < selectedNodes.size(); j++) {
+            MapNode node = selectedNodes.get(j);
             if (j == 0) {
                 topLeftX = node.x;
                 topLeftY = node.z;
@@ -243,30 +220,30 @@ public class CopyPasteManager {
         double centreX = bottomRightX - ( rectSizeX / 2 );
         double centreY = bottomRightY - ( rectSizeY / 2 );
 
-        if (coordType == WORLD_COORDINATES) {
+        /*if (coordType == WORLD_COORDINATES) {*/
             if (bDebugLogCopyPasteInfo) LOG.info("## WORLD_COORDINATES ## Rectangle start = {} , {} : end = {} , {} : size = {} , {} : Centre = {} , {}", topLeftX, topLeftY, bottomRightX, bottomRightY, rectSizeX, rectSizeY, centreX, centreY);
             return new selectionAreaInfo( new Point2D.Double(topLeftX, topLeftY) ,
                     new Point2D.Double(bottomRightX, bottomRightY),
                     new Point2D.Double(rectSizeX, rectSizeY),
                     new Point2D.Double(centreX, centreY));
-        } else if (coordType == SCREEN_COORDINATES) {
+        /*} else if (coordType == SCREEN_COORDINATES) {
             Point2D topLeft = worldPosToScreenPos(topLeftX, topLeftY);
             Point2D bottomRight = worldPosToScreenPos(bottomRightX, bottomRightY);
-            Point2D rectSize = worldPosToScreenPos(rectSizeX, rectSizeY);
+            Point2D rectSize = new Point2D.Double(bottomRight.getX() - topLeft.getX(), bottomRight.getY() - topLeft.getY());
             Point2D rectCentre = worldPosToScreenPos(centreX, centreY);
             if (bDebugLogCopyPasteInfo) LOG.info("## SCREEN_COORDINATES ## Rectangle start = {} : end = {} : size = {} : Centre = {} ", topLeft, bottomRight, rectSize, rectCentre);
             return new selectionAreaInfo(topLeft, bottomRight, rectSize, rectCentre);
         } else {
             LOG.info("No return type specified for getSelectionBounds() - returning null");
             return null;
-        }
+        }*/
     }
 
     public static class selectionAreaInfo {
         private final Point2D startCoordinates;
         private final Point2D EndCoordinates;
         private final Point2D selectionSize;
-        private final Point2D selectionCentre;
+        public final Point2D selectionCentre;
 
         public selectionAreaInfo(Point2D start, Point2D end, Point2D size, Point2D centre){
             this.startCoordinates = start;
@@ -275,25 +252,39 @@ public class CopyPasteManager {
             this.selectionCentre = centre;
         }
         // getter setters
-        @SuppressWarnings("unused")
-        public Point2D getRectangleStart() {
-            return this.startCoordinates;
+
+        public Point2D getSelectionStart(int coordType) {
+            if (coordType == WORLD_COORDINATES) {
+                return this.startCoordinates;
+            } else {
+                return worldPosToScreenPos(this.startCoordinates.getX(), this.startCoordinates.getY());
+            }
+        }
+
+        public Point2D getSelectionEnd(int coordType) {
+            if (coordType == WORLD_COORDINATES) {
+                return this.EndCoordinates;
+            } else {
+                return worldPosToScreenPos(this.EndCoordinates.getX(), this.EndCoordinates.getY());
+            }
+            //return this.EndCoordinates;
         }
 
         @SuppressWarnings("unused")
-        public Point2D getRectangleEnd() {
-            return this.EndCoordinates;
+        public Point2D getSelectionSize(int coordType) {
+            if (coordType == WORLD_COORDINATES) {
+                return this.selectionSize;
+            } else {
+                return worldPosToScreenPos(this.selectionSize.getX(), this.selectionSize.getY());
+            }//return this.selectionSize;
         }
 
-        @SuppressWarnings("unused")
-        public Point2D getRectangleSize() {
-            return this.selectionSize;
+        public Point2D getSelectionCentre(int coordType) {
+            if (coordType == WORLD_COORDINATES) {
+                return this.selectionCentre;
+            } else {
+                return worldPosToScreenPos(this.selectionCentre.getX(), this.selectionCentre.getY());
+            }
         }
-
-        @SuppressWarnings("unused")
-        public Point2D getRectangleCentre() {
-            return this.selectionCentre;
-        }
-
     }
 }

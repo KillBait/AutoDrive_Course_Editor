@@ -4,20 +4,14 @@ import AutoDriveEditor.GUI.Buttons.Alignment.DepthAlignButton;
 import AutoDriveEditor.GUI.Buttons.Alignment.EditLocationButton;
 import AutoDriveEditor.GUI.Buttons.Alignment.HorizontalAlignButton;
 import AutoDriveEditor.GUI.Buttons.Alignment.VerticalAlignButton;
-import AutoDriveEditor.GUI.Buttons.CopyPaste.AreaSelectButton;
-import AutoDriveEditor.GUI.Buttons.CopyPaste.CopySelectionButton;
-import AutoDriveEditor.GUI.Buttons.CopyPaste.CutSelectionButton;
-import AutoDriveEditor.GUI.Buttons.CopyPaste.PasteSelectionButton;
 import AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton;
 import AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton;
+import AutoDriveEditor.GUI.Buttons.Editing.*;
 import AutoDriveEditor.GUI.Buttons.Markers.AddMarkerButton;
 import AutoDriveEditor.GUI.Buttons.Markers.DeleteMarkerButton;
 import AutoDriveEditor.GUI.Buttons.Markers.EditMarkerButton;
 import AutoDriveEditor.GUI.Buttons.Nodes.*;
-import AutoDriveEditor.GUI.Buttons.Options.ContinuousConnectionButton;
-import AutoDriveEditor.GUI.Buttons.Options.NodeSizeDownButton;
-import AutoDriveEditor.GUI.Buttons.Options.NodeSizeUpButton;
-import AutoDriveEditor.GUI.Buttons.Options.OpenConfigButton;
+import AutoDriveEditor.GUI.Buttons.Options.*;
 import AutoDriveEditor.GUI.Buttons.Testing.TestButton;
 import AutoDriveEditor.Listeners.CurvePanelListener;
 import AutoDriveEditor.MapPanel.MapPanel;
@@ -38,6 +32,7 @@ import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 import static javax.swing.BoxLayout.X_AXIS;
 import static javax.swing.BoxLayout.Y_AXIS;
+import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER;
 
 
 public class GUIBuilder {
@@ -54,7 +49,6 @@ public class GUIBuilder {
     // Main Window Reference
 
     public static MapPanel mapPanel;
-
 
     // Curve Panel
 
@@ -79,7 +73,7 @@ public class GUIBuilder {
 
     // Toolbar Panels
 
-    static JToolBar buttonToolbar = new JToolBar();
+    public static JToolBar buttonToolbar = new JToolBar();
     static JPanel nodePanel = new JPanel();
     static JPanel curvesPanel = new JPanel();
     static JPanel markerPanel = new JPanel();
@@ -96,16 +90,15 @@ public class GUIBuilder {
         mapPanel = new MapPanel();
         mapPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLoweredBevelBorder(), BorderFactory.createRaisedBevelBorder()));
         mapPanel.add( new AlphaContainer(initCurvePanel(new CurvePanelListener())));
-        //JRotation rot = new JRotation();
-        //mapPanel.add(rot);
         return mapPanel;
 
     }
 
     public static JToolBar createButtonPanel(BorderLayout mainLayout, String layoutPosition) {
 
-        // Set the initial toolbar rotation
+        if (bLockToolbarPosition) buttonToolbar.setFloatable(false);
 
+        // Set the initial toolbar rotation
         boolean isToolbarHorizontal = layoutPosition.equals(BorderLayout.PAGE_START);
         if (isToolbarHorizontal) {
             buttonToolbar.setOrientation(SwingConstants.HORIZONTAL);
@@ -159,7 +152,9 @@ public class GUIBuilder {
         nodeBorder.setTitleJustification(TitledBorder.CENTER);
         nodePanel.setBorder(nodeBorder);
 
+
         buttonToolbar.add(nodePanel);
+        buttonToolbar.add(Box.createRigidArea(new Dimension(10, 10)));
 
         buttonManager.addButton(new MoveNodeButton(nodePanel));
         buttonManager.addButton(new NormalConnectionButton(nodePanel));
@@ -171,7 +166,10 @@ public class GUIBuilder {
         buttonManager.addButton(new DeleteNodeButton(nodePanel));
         if (EXPERIMENTAL) {
             buttonManager.addButton(new FlipDirectionButton(nodePanel));
+            buttonManager.addButton(new RoadConnection(nodePanel));
         }
+
+
 
         //
         // Create Curve panel
@@ -181,6 +179,7 @@ public class GUIBuilder {
         curvesBorder.setTitleJustification(TitledBorder.CENTER);
         curvesPanel.setBorder(curvesBorder);
         buttonToolbar.add(curvesPanel);
+        buttonToolbar.add(Box.createRigidArea(new Dimension(10, 10)));
 
         buttonManager.addButton(new QuadCurveButton(curvesPanel));
         buttonManager.addButton(new CubicCurveButton(curvesPanel));
@@ -193,6 +192,7 @@ public class GUIBuilder {
         markerBorder.setTitleJustification(TitledBorder.CENTER);
         markerPanel.setBorder(markerBorder);
         buttonToolbar.add(markerPanel);
+        buttonToolbar.add(Box.createRigidArea(new Dimension(10, 10)));
 
         buttonManager.addButton(new AddMarkerButton(markerPanel));
         buttonManager.addButton(new EditMarkerButton(markerPanel));
@@ -208,6 +208,7 @@ public class GUIBuilder {
         alignmentBorder.setTitleJustification(TitledBorder.CENTER);
         alignPanel.setBorder(alignmentBorder);
         buttonToolbar.add(alignPanel);
+        buttonToolbar.add(Box.createRigidArea(new Dimension(10, 10)));
 
         buttonManager.addButton(new HorizontalAlignButton(alignPanel));
         buttonManager.addButton(new VerticalAlignButton(alignPanel));
@@ -222,11 +223,13 @@ public class GUIBuilder {
         copyBorder.setTitleJustification(TitledBorder.CENTER);
         editPanel.setBorder(copyBorder);
         buttonToolbar.add(editPanel);
+        buttonToolbar.add(Box.createRigidArea(new Dimension(10, 10)));
 
         buttonManager.addButton(new AreaSelectButton(editPanel));
         buttonManager.addButton(new CutSelectionButton(editPanel));
         buttonManager.addButton(new CopySelectionButton(editPanel));
         buttonManager.addButton(new PasteSelectionButton(editPanel));
+        buttonManager.addButton(new RotationButton(editPanel));
 
         //
         // create options panel
@@ -236,11 +239,14 @@ public class GUIBuilder {
         optionsBorder.setTitleJustification(TitledBorder.CENTER);
         optionsPanel.setBorder(optionsBorder);
         buttonToolbar.add(optionsPanel);
+        buttonToolbar.add(Box.createRigidArea(new Dimension(10, 10)));
 
-        buttonManager.addButton(new NodeSizeUpButton(optionsPanel));
-        buttonManager.addButton(new NodeSizeDownButton(optionsPanel));
         buttonManager.addButton(new OpenConfigButton(optionsPanel));
         buttonManager.addButton(new ContinuousConnectionButton(optionsPanel));
+        buttonManager.addButton(new NodeSizeUpButton(optionsPanel));
+        buttonManager.addButton(new NodeSizeDownButton(optionsPanel));
+        buttonManager.addButton(new GridDisplayButton(optionsPanel));
+        buttonManager.addButton(new GridSnapButton(optionsPanel));
 
         //
         // create experimental panel
@@ -295,12 +301,12 @@ public class GUIBuilder {
         markerPanel.setMaximumSize(new Dimension(80, (int)markerPanel.getPreferredSize().getHeight()));
         alignPanel.setLayout(new GridLayout(2,2,8,8));
         alignPanel.setMaximumSize(new Dimension(80, (int)alignPanel.getPreferredSize().getHeight()));
-        editPanel.setLayout(new GridLayout(2,2,8,8));
+        editPanel.setLayout(new GridLayout(3,2,8,8));
         editPanel.setMaximumSize(new Dimension(80, (int) editPanel.getPreferredSize().getHeight()));
-        optionsPanel.setLayout(new GridLayout(2,2,8,8));
+        optionsPanel.setLayout(new GridLayout(3,2,8,8));
         optionsPanel.setMaximumSize(new Dimension(80, (int) optionsPanel.getPreferredSize().getHeight()));
         if (EXPERIMENTAL) {
-            experimentalPanel.setLayout(new GridLayout(2,2,8,8));
+            experimentalPanel.setLayout(new GridLayout(4,2,8,8));
             experimentalPanel.setMaximumSize(new Dimension(80, (int) experimentalPanel.getPreferredSize().getHeight()));
         }
     }
@@ -385,6 +391,7 @@ public class GUIBuilder {
         textPanel = new JPanel(new BorderLayout());
         textArea = new JTextArea("Welcome to the AutoDrive Editor... Load a config to start editing..\n ",3,0);
         JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_NEVER);
         textArea.setEditable(false);
         Font textAreaFont = textArea.getFont();
         textArea.setFont(new Font(textArea.getFont().toString(), Font.PLAIN, textAreaFont.getSize() - 1));

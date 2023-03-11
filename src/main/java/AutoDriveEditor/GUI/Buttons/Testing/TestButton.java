@@ -7,7 +7,6 @@ import java.awt.event.ActionEvent;
 
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.Utils.GUIUtils.makeButton;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public class TestButton extends BaseButton {
 
@@ -15,7 +14,6 @@ public class TestButton extends BaseButton {
 
     public TestButton(JPanel panel) {
         button = makeButton(null, "nodes_test_tooltip", "nodes_test_alt", panel, null, false, this, true);
-        //button = makeImageButton("buttons/copy", "buttons/copy_selected", null, "copypaste_copy_tooltip", "copypaste_copy_alt", panel,true, this);
     }
 
     @Override
@@ -33,6 +31,6 @@ public class TestButton extends BaseButton {
     @Override
     public void actionPerformed(ActionEvent e) {
         super.actionPerformed(e);
-        LOG.info("Super called");
+        // do stuff here on click
     }
 }

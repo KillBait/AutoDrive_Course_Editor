@@ -1,5 +1,6 @@
 package AutoDriveEditor.XMLConfig;
 
+import AutoDriveEditor.Managers.ChangeManager;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.MarkerGroup;
 import AutoDriveEditor.RoadNetwork.RoadMap;
@@ -21,27 +22,33 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Objects;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.MenuBuilder.*;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
+import static AutoDriveEditor.Managers.MultiSelectManager.clearMultiSelection;
 import static AutoDriveEditor.Managers.ScanManager.scanNetworkForOverlapNodes;
 import static AutoDriveEditor.MapPanel.MapImage.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
+import static AutoDriveEditor.RoadNetwork.RoadMap.setRoadMapNodes;
 import static AutoDriveEditor.Utils.FileUtils.removeExtension;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.maxAutoSaveSlots;
 import static AutoDriveEditor.XMLConfig.GameXML.autoSaveLastUsedSlot;
 import static AutoDriveEditor.XMLConfig.GameXML.xmlConfigFile;
 
-public class RouteManagerXML {
+public class RoutesXML {
 
     public static LinkedList<MarkerGroup> markerGroup = new LinkedList<>();
 
     public static boolean loadRouteManagerXML(File fXmlFile, boolean skipRoutesCheck, String mapName) {
         LOG.info("RouteManager loadFile: {}", fXmlFile.getAbsolutePath());
+
+        canAutoSave = false;
 
         try {
             if (bDebugLogRouteManager) LOG.info("Parent = {}", fXmlFile.getParentFile().getParent());
@@ -78,28 +85,33 @@ public class RouteManagerXML {
                     RoadMap.mapName = mapName;
                 }
                 if (bDebugLogRouteManager) LOG.info("map = {}", RoadMap.mapName);
+                configType = CONFIG_ROUTEMANAGER;
                 loadMapImage(RoadMap.mapName);
-                loadHeightMap(fXmlFile, false);
+                loadHeightMap(RoadMap.mapName);
                 checkStoredMapInfoFor(mapName);
+                LOG.info("Session UUID = {}", RoadMap.uuid);
+                updateWindowTitle();
+                changeManager = new ChangeManager();
                 forceMapImageRedraw();
-                saveRoutesXML.setEnabled(true);
-                saveConfigMenuItem.setEnabled(false);
-                saveConfigAsMenuItem.setEnabled(false);
-                if (RoadMap.mapName != null ) {
-                    editor.setTitle(COURSE_EDITOR_TITLE + " - " + fXmlFile.getAbsolutePath() + " ( " + RoadMap.mapName + " )");
-                } else {
-                    editor.setTitle(COURSE_EDITOR_TITLE + " - " + fXmlFile.getAbsolutePath());
-                }
-                scanNetworkForOverlapNodes();
+                isUsingImportedImage = false;
+                saveImageEnabled(false);
                 setStale(false);
+                scanNetworkForOverlapNodes();
+                clearMultiSelection();
+                gameXMLSaveEnabled(false);
+                routesXMLSaveEnabled(true);
+                canAutoSave = true;
+                buttonManager.enableAllButtons();
                 return true;
             } else {
                 JOptionPane.showMessageDialog(editor, getLocaleString("dialog_config_route_unknown"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
+                canAutoSave = true;
                 return false;
             }
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
             JOptionPane.showMessageDialog(editor, getLocaleString("dialog_config_load_route_failed"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
+            canAutoSave = true;
             return false;
         }
     }
@@ -173,7 +185,8 @@ public class RouteManagerXML {
 
         NodeList waypointsList = doc.getElementsByTagName("waypoints");
 
-        LinkedList<MapNode> nodes = new LinkedList<>();
+
+        ArrayList<MapNode> nodes = new ArrayList<>();
 
         for (int temp = 0; temp < waypointsList.getLength(); temp++) {
             LOG.info("----------------------------");
@@ -228,9 +241,9 @@ public class RouteManagerXML {
 
                     for (int i=0; i<wayPointIDs; i++) {
                         int id = i+1;
-                        long x = Long.parseLong(xValues[i]);
-                        long y = Long.parseLong(yValues[i]);
-                        long z = Long.parseLong(zValues[i]);
+                        float x = Float.parseFloat(xValues[i]);
+                        float y = Float.parseFloat(yValues[i]);
+                        float z = Float.parseFloat(zValues[i]);
                         int flag = Integer.parseInt(flagsValue[i]);
                         MapNode mapNode = new MapNode(id, x, y, z, flag, false, false);
                         nodes.add(mapNode);
@@ -300,7 +313,7 @@ public class RouteManagerXML {
             }
         }
         RoadMap roadMap = new RoadMap();
-        RoadMap.mapNodes = nodes;
+        setRoadMapNodes(roadMap, new LinkedList<>(nodes));
         return roadMap;
     }
 
@@ -319,19 +332,18 @@ public class RouteManagerXML {
 
         Element waypoints = doc.createElement("waypoints");
         root.appendChild(waypoints);
-        waypoints.setAttribute("c", String.valueOf(RoadMap.mapNodes.size()));
+        waypoints.setAttribute("c", String.valueOf(RoadMap.networkNodesList.size()));
 
         // create a child node for all x co-ordinates
 
         Element xElement = doc.createElement("x");
         waypoints.appendChild(xElement);
         StringBuilder xPositions = new StringBuilder();
-        for (int j = 0; j < RoadMap.mapNodes.size(); j++) {
-            MapNode mapNode = RoadMap.mapNodes.get(j);
-            xPositions.append(mapNode.x);
-            if (j < (RoadMap.mapNodes.size() - 1)) {
-                xPositions.append(";");
-            }
+        for (Iterator<MapNode> xIterator = RoadMap.networkNodesList.iterator(); xIterator.hasNext();) {
+            MapNode node = xIterator.next();
+            String ID = String.valueOf(node.x);
+            if (xIterator.hasNext()) ID += ";";
+            xPositions.append(ID);
         }
         xElement.setTextContent(xPositions.toString());
 
@@ -340,12 +352,11 @@ public class RouteManagerXML {
         Element yElement = doc.createElement("y");
         waypoints.appendChild(yElement);
         StringBuilder yPositions = new StringBuilder();
-        for (int j = 0; j < RoadMap.mapNodes.size(); j++) {
-            MapNode mapNode = RoadMap.mapNodes.get(j);
-            yPositions.append(mapNode.y);
-            if (j < (RoadMap.mapNodes.size() - 1)) {
-                yPositions.append(";");
-            }
+        for (Iterator<MapNode> yIterator = RoadMap.networkNodesList.iterator(); yIterator.hasNext();) {
+            MapNode node = yIterator.next();
+            String ID = String.valueOf(node.y);
+            if (yIterator.hasNext()) ID += ";";
+            yPositions.append(ID);
         }
         yElement.setTextContent(yPositions.toString());
 
@@ -354,12 +365,11 @@ public class RouteManagerXML {
         Element zElement = doc.createElement("z");
         waypoints.appendChild(zElement);
         StringBuilder zPositions = new StringBuilder();
-        for (int j = 0; j < RoadMap.mapNodes.size(); j++) {
-            MapNode mapNode = RoadMap.mapNodes.get(j);
-            zPositions.append(mapNode.z);
-            if (j < (RoadMap.mapNodes.size() - 1)) {
-                zPositions.append(";");
-            }
+        for (Iterator<MapNode> zIterator = RoadMap.networkNodesList.iterator(); zIterator.hasNext();) {
+            MapNode node = zIterator.next();
+            String ID = String.valueOf(node.z);
+            if (zIterator.hasNext()) ID += ";";
+            zPositions.append(ID);
         }
         zElement.setTextContent(zPositions.toString());
 
@@ -367,65 +377,58 @@ public class RouteManagerXML {
 
         Element outElement = doc.createElement("out");
         waypoints.appendChild(outElement);
-        StringBuilder outString = new StringBuilder();
-        for (int j = 0; j < RoadMap.mapNodes.size(); j++) {
-            MapNode mapNode = RoadMap.mapNodes.get(j);
-            StringBuilder outgoingPerNode = new StringBuilder();
-            for (int outgoingIndex = 0; outgoingIndex < mapNode.outgoing.size(); outgoingIndex++) {
-                MapNode outgoingNode = mapNode.outgoing.get(outgoingIndex);
-                outgoingPerNode.append(outgoingNode.id);
-                if (outgoingIndex < (mapNode.outgoing.size() - 1)) {
-                    outgoingPerNode.append(",");
-                }
+        StringBuilder outElementString = new StringBuilder();
+        for (Iterator<MapNode> roadmapIterator = RoadMap.networkNodesList.iterator(); roadmapIterator.hasNext();) {
+            MapNode node = roadmapIterator.next();
+            StringBuilder outString = new StringBuilder();
+            for (Iterator<MapNode> outgoingIterator = node.outgoing.iterator(); outgoingIterator.hasNext();) {
+                MapNode n = outgoingIterator.next();
+                String ID = String.valueOf(n.id);
+                if (outgoingIterator.hasNext()) ID += ",";
+                outString.append(ID);
             }
-            if (outgoingPerNode.toString().isEmpty()) {
-                outgoingPerNode = new StringBuilder("-1");
+            if (outString.toString().isEmpty()) {
+                outString = new StringBuilder("-1");
             }
-            outString.append(outgoingPerNode);
-            if (j < (RoadMap.mapNodes.size() - 1)) {
-                outString.append(";");
-            }
+            outElementString.append(outString);
+            if (roadmapIterator.hasNext()) outElementString.append(";");
         }
-        outElement.setTextContent(outString.toString());
+        outElement.setTextContent(outElementString.toString());
 
         // create a child node for all incoming connections
 
         Element inElement = doc.createElement("in");
         waypoints.appendChild(inElement);
-        StringBuilder inString = new StringBuilder();
-        for (int j = 0; j < RoadMap.mapNodes.size(); j++) {
-            MapNode mapNode = RoadMap.mapNodes.get(j);
-            StringBuilder incomingPerNode = new StringBuilder();
-            for (int incomingIndex = 0; incomingIndex < mapNode.incoming.size(); incomingIndex++) {
-                MapNode incomingNode = mapNode.incoming.get(incomingIndex);
-                incomingPerNode.append(incomingNode.id);
-                if (incomingIndex < (mapNode.incoming.size() - 1)) {
-                    incomingPerNode.append(",");
-                }
+        StringBuilder inElementString = new StringBuilder();
+        for (Iterator<MapNode> roadmapIterator = RoadMap.networkNodesList.iterator(); roadmapIterator.hasNext();) {
+            MapNode node = roadmapIterator.next();
+            StringBuilder inString = new StringBuilder();
+            for (Iterator<MapNode> incomingIterator = node.incoming.iterator(); incomingIterator.hasNext();) {
+                MapNode n = incomingIterator.next();
+                String ID = String.valueOf(n.id);
+                if (incomingIterator.hasNext()) ID += ",";
+                inString.append(ID);
             }
-            if (incomingPerNode.toString().isEmpty()) {
-                incomingPerNode = new StringBuilder("-1");
+            if (inString.toString().isEmpty()) {
+                inString = new StringBuilder("-1");
             }
-            inString.append(incomingPerNode);
-            if (j < (RoadMap.mapNodes.size() - 1)) {
-                inString.append(";");
-            }
+            inElementString.append(inString);
+            if (roadmapIterator.hasNext()) inElementString.append(";");
         }
-        inElement.setTextContent(inString.toString());
+        inElement.setTextContent(inElementString.toString());
 
         // create a child node for all flags
 
         Element flagsElement = doc.createElement("flags");
         waypoints.appendChild(flagsElement);
-        StringBuilder flags = new StringBuilder();
-        for (int j = 0; j < RoadMap.mapNodes.size(); j++) {
-            MapNode mapNode = RoadMap.mapNodes.get(j);
-            flags.append(mapNode.flag);
-            if (j < (RoadMap.mapNodes.size() - 1)) {
-                flags.append(";");
-            }
+        StringBuilder flagElementString = new StringBuilder();
+        for (Iterator<MapNode> flagIterator = RoadMap.networkNodesList.iterator(); flagIterator.hasNext();) {
+            MapNode node = flagIterator.next();
+            String ID = String.valueOf(node.flag);
+            if (flagIterator.hasNext()) ID += ";";
+            flagElementString.append(ID);
         }
-        flagsElement.setTextContent(flags.toString());
+        flagsElement.setTextContent(flagElementString.toString());
 
         // create a parent node for map markers
 
@@ -433,7 +436,7 @@ public class RouteManagerXML {
         root.appendChild(markers);
 
         // add all map markers to the marker element
-        for (MapNode mapNode : RoadMap.mapNodes) {
+        for (MapNode mapNode : RoadMap.networkNodesList) {
             if (mapNode.hasMapMarker()) {
                 Element newMapMarker = doc.createElement("m");
                 markers.appendChild(newMapMarker);
@@ -475,7 +478,7 @@ public class RouteManagerXML {
             result = new StreamResult(newFile);
             if (!isAutoSave) {
                 xmlConfigFile = newFile;
-                editor.setTitle(createTitle());
+                editor.setTitle(createWindowTitleString());
             }
         }
         transformer.transform(source, result);

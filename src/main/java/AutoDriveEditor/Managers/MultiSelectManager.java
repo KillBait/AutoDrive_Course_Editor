@@ -7,14 +7,16 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.LinkedList;
 
+import static AutoDriveEditor.AutoDriveEditor.DEBUG;
 import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.cubicCurve;
 import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.isCubicCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.isQuadCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
-import static AutoDriveEditor.MapPanel.MapImage.mapImage;
+import static AutoDriveEditor.MapPanel.MapImage.mapPanelImage;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.Utils.MathUtils.getNormalizedRectangleFor;
+import static AutoDriveEditor.Utils.MathUtils.roundUpDoubleToDecimalPlaces;
 
 public class MultiSelectManager {
 
@@ -25,19 +27,19 @@ public class MultiSelectManager {
     public static boolean isMultiSelectDragging;
 
     public static void startMultiSelect(int mousePosX, int mousePosY) {
-        if ( mapImage != null ) {
+        if ( mapPanelImage != null ) {
             rectangleStart = screenPosToWorldPos(mousePosX, mousePosY);
-            LOG.info("Multi select started at world position x = {}, z = {}", rectangleStart.getX(), rectangleStart.getY());
+            if (DEBUG) LOG.info("Multi select started at world position x = {}, z = {}", rectangleStart.getX(), rectangleStart.getY());
             isMultiSelectDragging = true;
         }
     }
 
     public static void stopMultiSelect(int mousePosX, int mousePosY) {
-        if (mapImage != null && rectangleStart != null ) {
+        if (mapPanelImage != null && rectangleStart != null ) {
             rectangleEnd = screenPosToWorldPos(mousePosX, mousePosY);
-            LOG.info("Multi select stopped at world position x = {}, z = {}", rectangleEnd.getX(), rectangleEnd.getY());
+            if (DEBUG) LOG.info("Multi select stopped at world position x = {}, z = {}", rectangleEnd.getX(), rectangleEnd.getY());
             if (rectangleStart.getX() != rectangleEnd.getX() && rectangleStart.getY() != rectangleEnd.getY()) {
-                LOG.info("Selection size {},{}", rectangleEnd.getX() - rectangleStart.getX(), rectangleEnd.getY() - rectangleStart.getY());
+                if (DEBUG) LOG.info("Selection size {},{}", roundUpDoubleToDecimalPlaces(rectangleEnd.getX() - rectangleStart.getX(), 3), roundUpDoubleToDecimalPlaces(rectangleEnd.getY() - rectangleStart.getY(), 3));
             }
         }
         isMultiSelectDragging = false;
@@ -62,14 +64,14 @@ public class MultiSelectManager {
     public boolean isMultiSelectDragging() { return isMultiSelectDragging; }
 
     public static int getAllNodesInSelectedArea(Point2D rectangleStart, Point2D rectangleEnd) {
-        if ((roadMap == null) || (mapImage == null)) {
+        if ((roadMap == null) || (mapPanelImage == null)) {
             return 0;
         }
 
         int count = 0;
 
         Rectangle2D rectangle = getNormalizedRectangleFor(rectangleStart.getX(), rectangleStart.getY(), rectangleEnd.getX() - rectangleStart.getX(), rectangleEnd.getY() - rectangleStart.getY());
-        for (MapNode mapNode : RoadMap.mapNodes) {
+        for (MapNode mapNode : RoadMap.networkNodesList) {
             if (mapNode.x > rectangle.getX() && mapNode.x < rectangle.getX() + rectangle.getWidth() && mapNode.z > rectangle.getY() && mapNode.z < rectangle.getY() + rectangle.getHeight()) {
                 if (multiSelectList.contains(mapNode)) {
                     multiSelectList.remove(mapNode);

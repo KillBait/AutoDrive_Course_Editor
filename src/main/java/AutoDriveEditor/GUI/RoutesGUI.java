@@ -1,7 +1,7 @@
 package AutoDriveEditor.GUI;
 
 import AutoDriveEditor.MapPanel.MapPanel;
-import AutoDriveEditor.XMLConfig.RouteManagerXML;
+import AutoDriveEditor.XMLConfig.RoutesXML;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -15,8 +15,8 @@ import static AutoDriveEditor.GUI.GUIImages.getTractorImage;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.Utils.GUIUtils.makeBasicButton;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
-import static AutoDriveEditor.XMLConfig.GameXML.saveConfigFile;
-import static AutoDriveEditor.XMLConfig.RouteManagerXML.*;
+import static AutoDriveEditor.XMLConfig.GameXML.saveGameConfig;
+import static AutoDriveEditor.XMLConfig.RoutesXML.*;
 
 public class RoutesGUI extends JFrame {
 
@@ -65,7 +65,7 @@ public class RoutesGUI extends JFrame {
             if (MapPanel.isStale()) {
                 int response = JOptionPane.showConfirmDialog(editor, getLocaleString("dialog_exit_unsaved"), "AutoDrive", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                 if (response == JOptionPane.YES_OPTION) {
-                    saveConfigFile(null, false, false);
+                    saveGameConfig(null, false, false);
                 }
             }
             loadRouteManagerXML(new File(routeFile), true, mapName);
@@ -96,7 +96,7 @@ public class RoutesGUI extends JFrame {
         DefaultListModel<String> model = new DefaultListModel<>();
         list = new JList<>(model);
 
-        LinkedList<RouteManagerXML.Route> routeList = getRoutesConfigContents(routesFile);
+        LinkedList<RoutesXML.Route> routeList = getRoutesConfigContents(routesFile);
         if (routeList != null) {
             for (Route route : routeList) {
                 model.addElement(route.name);

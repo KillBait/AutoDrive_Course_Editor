@@ -25,15 +25,6 @@ public class OpenConfigButton extends OptionsBaseButton {
     public String getButtonID() { return "OpenConfigButton"; }
 
     @Override
-    public String getButtonAction() { return "OptionToggle"; }
-
-    @Override
-    public String getButtonPanel() { return "Options"; }
-
-    @Override
-    public String getInfoText() { return null; }
-
-    @Override
     public void actionPerformed(ActionEvent e) {
         super.actionPerformed(e);
         if (!ConfigGUI.isConfigWindowOpen) {

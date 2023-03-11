@@ -11,6 +11,7 @@ public class GUIImages {
 
     public static BufferedImage tractorImage;
     public static BufferedImage rotateRing;
+    public static BufferedImage rotateIcon;
     public static BufferedImage overlapWarningImage;
     public static BufferedImage negativeHeightWarningImage;
 
@@ -24,6 +25,7 @@ public class GUIImages {
         overlapWarningImage = loadImage("editor/nodes/node_warning.png");
         negativeHeightWarningImage = loadImage("editor/nodes/node_warning_y.png");
         rotateRing = loadImage("editor/rotate_ring.png");
+        rotateIcon = loadImage("editor/nodes/node_rotate.png");
     }
 
     public static ImageIcon getMarkerIcon() {

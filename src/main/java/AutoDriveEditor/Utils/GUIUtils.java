@@ -243,6 +243,13 @@ public class GUIUtils {
         return newMenu;
     }
 
+    public static JMenu makeSubMenu(String menuName, String accString, JMenu parentMenu) {
+        JMenu newMenu = new JMenu(getLocaleString(menuName));
+        newMenu.getAccessibleContext().setAccessibleDescription(getLocaleString(accString));
+        parentMenu.add(newMenu);
+        return newMenu;
+    }
+
     public static JMenu makeSubMenu(String menuName, int keyEvent, String accString, JMenu parentMenu) {
         JMenu newMenu = new JMenu(getLocaleString(menuName));
         newMenu.setMnemonic(keyEvent);
@@ -288,6 +295,7 @@ public class GUIUtils {
     public static JCheckBoxMenuItem makeCheckBoxMenuItem (String text, String accString, Boolean isSelected, JMenu menu, MenuListener itemListener, String actionCommand, Boolean enabled) {
         return makeCheckBoxMenuItem(text, accString, KeyEvent_NONE, InputEvent_NONE, isSelected, menu, itemListener, actionCommand, enabled);
     }
+    @SuppressWarnings("unused")
     public static JCheckBoxMenuItem makeCheckBoxMenuItem (String text, String accString, int keyEvent, Boolean isSelected, JMenu menu, MenuListener itemListener, String actionCommand, Boolean enabled) {
         return makeCheckBoxMenuItem(text, accString, keyEvent, InputEvent_NONE, isSelected, menu, itemListener, actionCommand, enabled);
     }

@@ -33,7 +33,7 @@ public class DeleteMarkerButton extends MarkerBaseButton {
     @Override
     public void mouseClicked(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
-            MapNode selectedNode = getNodeAt(e.getX(), e.getY());
+            MapNode selectedNode = getNodeAtScreenPosition(e.getX(), e.getY());
             if (selectedNode != null) {
                 if (selectedNode.hasMapMarker()) {
                     removeMarkerFromNode(selectedNode);

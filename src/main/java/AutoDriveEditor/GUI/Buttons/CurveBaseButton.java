@@ -43,6 +43,8 @@ public abstract class CurveBaseButton extends BaseButton {
         }
     }
 
+    public String getInfoText() {  return button.getToolTipText(); }
+
     public void commitCurve() {}
     public void cancelCurve() {}
     @SuppressWarnings("unused")
@@ -56,7 +58,7 @@ public abstract class CurveBaseButton extends BaseButton {
 
     public void mouseReleased(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
-            MapNode selected = getNodeAt(e.getX(), e.getY());
+            MapNode selected = getNodeAtScreenPosition(e.getX(), e.getY());
             if (selected != null && !selected.isControlNode()) {
                 if (curveStartNode == null) {
                     setCurveStartNode(selected);

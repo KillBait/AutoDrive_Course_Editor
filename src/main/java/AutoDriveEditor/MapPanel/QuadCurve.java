@@ -120,8 +120,8 @@ public class QuadCurve {
             if (heightMapY == -1) {
                 heightMapY = curveStartNode.y + ( yInterpolation * j);
             }
-            MapNode newNode = new MapNode(RoadMap.mapNodes.size() + 1, tempNode.x, heightMapY, tempNode.z, this.nodeType, false, false);
-            RoadMap.mapNodes.add(newNode);
+            MapNode newNode = new MapNode(RoadMap.networkNodesList.size() + 1, tempNode.x, heightMapY, tempNode.z, this.nodeType, false, false);
+            RoadMap.networkNodesList.add(newNode);
             mergeNodesList.add(newNode);
         }
 

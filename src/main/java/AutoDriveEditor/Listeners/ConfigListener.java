@@ -14,7 +14,6 @@ import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogGUIInfo;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
-import static AutoDriveEditor.XMLConfig.GameXML.saveConfigFile;
 
 public class ConfigListener implements ItemListener, ActionListener {
 

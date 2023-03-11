@@ -19,8 +19,9 @@ public abstract class AlignBaseButton extends BaseButton {
 
     @Override
     public void mouseClicked(MouseEvent e) {
+        super.mouseClicked(e);
         if (e.getButton() == MouseEvent.BUTTON1) {
-            MapNode clickedNode = getNodeAt(e.getX(), e.getY());
+            MapNode clickedNode = getNodeAtScreenPosition(e.getX(), e.getY());
             if (multiSelectList != null && isMultipleSelected &&  clickedNode != null) {
                 canAutoSave = false;
                 adjustNodesTo(clickedNode);

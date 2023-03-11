@@ -15,11 +15,11 @@ import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
 import static AutoDriveEditor.GUI.GUIBuilder.*;
 import static AutoDriveEditor.Listeners.MouseListener.*;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.MapPanel.MapImage.backBufferGraphics;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_STANDARD;
 import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
 import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
+import static AutoDriveEditor.Utils.ImageUtils.backBufferGraphics;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
@@ -120,7 +120,7 @@ public final class CubicCurveButton extends CurveBaseButton {
             }
         }
         if (e.getButton() == MouseEvent.BUTTON1) {
-            MapNode node = getNodeAt(e.getX(), e.getY());
+            MapNode node = getNodeAtScreenPosition(e.getX(), e.getY());
             if (cubicCurve != null && node != null && node.isControlNode() && cubicCurve.isControlPoint(node)) {
                 selectedControlPoint = node;
                 controlNodeSelected = true;
@@ -144,24 +144,6 @@ public final class CubicCurveButton extends CurveBaseButton {
             if (selectedControlPoint == cubicCurve.getControlPoint2()) {
                 cubicCurve.moveControlPoint2(e.getX() - prevMousePosX, e.getY() - prevMousePosY);
             }
-            cubicCurve.updateCurve();
-            getMapPanel().repaint();
-        }
-    }
-
-    @Override
-    public void mouseWheelMoved(MouseEvent e) {
-        if (cubicCurve != null && !showConnectingLine) {
-            if (cubicCurve.getControlPoint1().isSelected || hoveredNode == cubicCurve.getControlPoint1()) {
-                MapNode node = cubicCurve.getControlPoint1();
-                Point2D c = worldPosToScreenPos(node.x, node.z);
-                cubicCurve.moveControlPoint1(e.getX() - c.getX(), e.getY() - c.getY());
-            } else if (cubicCurve.getControlPoint2().isSelected || hoveredNode == cubicCurve.getControlPoint2()) {
-                MapNode node = cubicCurve.getControlPoint2();
-                Point2D c = worldPosToScreenPos(node.x, node.z);
-                cubicCurve.moveControlPoint2(e.getX() - c.getX(), e.getY() - c.getY());
-            }
-
             cubicCurve.updateCurve();
             getMapPanel().repaint();
         }

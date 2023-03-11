@@ -1,11 +1,11 @@
 package AutoDriveEditor.Utils;
 
-public class TimeProfiler {
+public class ProfileUtils {
 
     private static long time;
     private static long startTime = 0;
 
-    public TimeProfiler() {
+    public ProfileUtils() {
         time = 0;
     }
 

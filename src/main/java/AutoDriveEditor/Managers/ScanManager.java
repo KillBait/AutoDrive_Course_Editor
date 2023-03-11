@@ -10,17 +10,18 @@ import java.util.LinkedList;
 import java.util.concurrent.ExecutionException;
 
 import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogMerge;
+import static AutoDriveEditor.GUI.MenuBuilder.bDebugProfile;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.RoadNetwork.MapNode.NODE_WARNING_OVERLAP;
-import static AutoDriveEditor.RoadNetwork.RoadMap.mapNodes;
+import static AutoDriveEditor.RoadNetwork.RoadMap.networkNodesList;
 import static AutoDriveEditor.RoadNetwork.RoadMap.removeMapNode;
 import static AutoDriveEditor.Utils.FileUtils.removeExtension;
 import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
-import static AutoDriveEditor.XMLConfig.GameXML.saveConfigFile;
+import static AutoDriveEditor.XMLConfig.GameXML.saveGameConfig;
 import static AutoDriveEditor.XMLConfig.GameXML.xmlConfigFile;
-import static AutoDriveEditor.XMLConfig.RouteManagerXML.saveRouteManagerXML;
+import static AutoDriveEditor.XMLConfig.RoutesXML.saveRouteManagerXML;
 
 
 public class ScanManager {
@@ -35,7 +36,7 @@ public class ScanManager {
     public static Integer scanNetworkForOverlapNodes(double distance, boolean getResult) {
         networkScanned = false;
         searchDistance = distance;
-        for (MapNode node : RoadMap.mapNodes) {
+        for (MapNode node : RoadMap.networkNodesList) {
             node.clearWarning();
             node.warningNodes.clear();
         }
@@ -69,10 +70,10 @@ public class ScanManager {
         protected Integer doInBackground() {
             int count = 0;
             Thread.currentThread().setName("Network Scan Thread");
-            LOG.info("Starting Background Scan");
+            LOG.info("## Starting Background Scan  ##");
             timer = System.currentTimeMillis();
 
-            for (MapNode node : RoadMap.mapNodes) {
+            for (MapNode node : RoadMap.networkNodesList) {
                 int result = checkAreaForNodeOverlap(node);
                 if (result > 0) count += 1;
             }
@@ -85,15 +86,24 @@ public class ScanManager {
             networkScanned = true;
             try {
                 int count = get();
-                String text = "## Background Scan Complete ## Checked " + mapNodes.size() + " Roadmap nodes --- Found " + count + " nodes overlapping --- Time Taken " +
+                String text = "## Background Scan Complete ## Checked " + networkNodesList.size() + " Roadmap nodes --- Found " + count + " nodes overlapping --- Time Taken " +
                         (float) (System.currentTimeMillis() - timer) / 1000 + " seconds" ;
                 showInTextArea(text, true, true);
+                if (bDebugProfile) {
+                    if (count >= 0 ) {
+                        StringBuilder list = new StringBuilder();
+                        for (MapNode mapNode : RoadMap.networkNodesList) {
+                            if (mapNode.hasWarning) list.append(mapNode.id).append(",");
+                        }
+                        LOG.info("Overlapping Nodes {}", list);
+                    }
+                }
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
 
             getMapPanel().repaint();
-            MenuBuilder.fixNodesEnabled(true);
+            MenuBuilder.scanMenuEnabled(true);
         }
     }
 
@@ -115,7 +125,7 @@ public class ScanManager {
             node.hasWarning = false;
             node.warningNodes.clear();
 
-            for (MapNode mapNode : RoadMap.mapNodes) {
+            for (MapNode mapNode : RoadMap.networkNodesList) {
                 if (mapNode != node) {
                     if (worldStartX < mapNode.x + searchDistance && (worldStartX + areaX) > mapNode.x - searchDistance &&
                             worldStartY < mapNode.y + searchDistance && (worldStartY + areaY) > mapNode.y - searchDistance &&
@@ -172,7 +182,7 @@ public class ScanManager {
                 LinkedList<MapNode> mergeNodeList = new LinkedList<>();
 
                 LOG.info("Running merge nodes");
-                for (MapNode mapNode : RoadMap.mapNodes) {
+                for (MapNode mapNode : RoadMap.networkNodesList) {
                     if (mapNode.hasWarning && !mapNode.scheduledToBeDeleted) {
 
                         if (bDebugLogMerge) LOG.info("Merging overlapping nodes into ID {}", mapNode.id);
@@ -207,7 +217,7 @@ public class ScanManager {
                                 }
                             }
 
-                            for (MapNode reverseNode : RoadMap.mapNodes) {
+                            for (MapNode reverseNode : RoadMap.networkNodesList) {
                                 if (reverseNode.outgoing.contains(overlapNode) && !overlapNode.incoming.contains(reverseNode)) {
                                     if (bDebugLogMerge) LOG.info("#### reverse incoming Connection from {}", reverseNode.id);
                                     if (!reverseNode.outgoing.contains(mapNode)) reverseNode.outgoing.add(mapNode);
@@ -263,7 +273,7 @@ public class ScanManager {
                     }
                 }
 
-                for (MapNode node : RoadMap.mapNodes) {
+                for (MapNode node : RoadMap.networkNodesList) {
                     if ( node.incoming.size() >10 || node.outgoing.size() > 10 ) {
                         LOG.info(" #### HIGH CONNECTION COUNT #### ID {} -- incoming {} , outgoing {}", node.id, node.incoming.size(), node.outgoing.size());
                     }
@@ -277,7 +287,7 @@ public class ScanManager {
         LOG.info("{}", getLocaleString("console_config_merge_backup"));
         String filename = removeExtension(xmlConfigFile.getAbsolutePath()) + "_mergeBackup.xml";
         if (configType == CONFIG_SAVEGAME) {
-            saveConfigFile(filename, false, true);
+            saveGameConfig(filename, false, true);
         } else if (configType == CONFIG_ROUTEMANAGER) {
             saveRouteManagerXML(filename, false, true);
         }

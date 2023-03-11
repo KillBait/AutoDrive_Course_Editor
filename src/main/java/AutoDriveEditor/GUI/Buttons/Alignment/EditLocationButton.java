@@ -35,7 +35,7 @@ public class EditLocationButton extends BaseButton {
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        MapNode clickedNode = getNodeAt(e.getX(), e.getY());
+        MapNode clickedNode = getNodeAtScreenPosition(e.getX(), e.getY());
         if (clickedNode != null) showEditNodeLocationDialog(clickedNode);
     }
 

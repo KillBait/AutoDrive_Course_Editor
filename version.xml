@@ -1,53 +1,67 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <AutoDriveEditor>
-    <latest_version>1.0.4</latest_version>
+    <latest_version>1.0.5</latest_version>
     <version_notes><![CDATA[<html>
         <head>
             <title>Version Notes</title>
         </head>
         <body>
-            <h3 style="font-family:verdana;">Update to v1.0.4</h2>
+            <h3 style="font-family:verdana;">Update to v1.0.5</h2>
+            <p><u><b>NOTE:-</b></u></p>
+            <ol type="1">
+               <li>From this release, the editors localization file is included in the release ZIP file ( as requested )
+               <li>This release includes some features that were for v1.1, i've included them as they were ready</li>
+            </ol>
             <p><u>Added</u></p>
             <ul>
-                <li>Colour tab added to config menu, changing the colours of nodes/connections is now possible.</li>
-                <li>Added functionality to Linear lines</li>
-                <ul>
-                    <li>(Configurable) Can now automatically create an end node if you do not select one.,/li>
-                </ul>
+                <li>Rotation button added to sidebar, replaces the temporary 'Rotation' menu.
+                    <ul>
+                        <li>Node selection works like the other buttons, click drag the diamond node to rotate.</li>
+                        <li>Right click the rotation icon to set the number of degree snapping.</li>
+                    </ul>
+                </li>
+                <li>Grid option buttons added to sidebar, replaces the 'Grid' menu.
+                    <ul>
+                        <li>Grid on/off button for displaying the grid, right click to open grid settings.</li>
+                        <li>Grid snapping on/off button, can be right-clicked to toggle subdivision snapping.</li>
+                        <li>Keyboard shortcuts remain the same, G (Grid On/Off), S (Snapping On/Off), D (SubDivision On/Off).
+                    </ul>
+                </li>
+                <li>Added config option to lock the toolbar. ( no more accidental moving )</li>
+                <li>Added version history window. ( in 'Help' menu ) </li>
             </ul>
             <p><u>Changes</u></p>
             <ul>
-                <li>Major rework of the GUI code to move the functionality out of main code and into their</li>
-                <ul style="list-style: none;">
-                    <li>own classes, fixes a multitude of odd behaviours with buttons and mouse clicks.</li>
-                </ul>
-                <li>(Configurable) Connection arrows can now be drawn as solid or just lines.</li>
-                <li>Added keyboard shortcut "F", will centre selected node in viewport.</li>
-                <li>Added Linear Line Tab to config window.</li>
-                <ul>
-                    <li>Added toggle option for connections having solid arrows. (on by default)</li>
-                    <li>Added toggle option to create end node if none selected.</li>
-                    <li>Moved Linear Line Spacing option from general tab to Linear Line Tab.</li>
-                </ul>
-                <li>Changed how known maps are stored in Editor.xml, old configs will be updated on next save.</li>
-                <li>Updated default en_US locale file.</li>
-                <li>Updated Log4j to v2.19.0.</li>
+                <li>Adjusted how a configs XML is parsed to create the node network
+                    <ul style="list-style-type: none;">
+                        <li>A massive loading performance increase for networks with large amounts of nodes</li>
+                        <li>and lots of incoming/outgoing connections.</li>
+                        <br>
+                        <li>e.g</li>
+                        <br>
+                        <li>A test config i have with 75,797 nodes ( ~170,000 incoming/outgoing connections )</li>
+                        <li>    v1.04 - 89.2 seconds to create the node network</li>
+                        <li>    v1.05 - 1.4 seconds to create the same node network!!</li>
+                    </ul>
+                </li>
+                <li>Adjusted the location priority when trying to load a mapImage or heightMap.</li>
+                <li>Removed the now redundant rotation menu.</li>
+                <li>Removed the now redundant grid menu.</li>
             </ul>
             <p><u>Bug Fixes</u></p>
             <ul>
-                <li>Editor will no longer crash if a missing locale string is found, will show an error in log file.</li>
-                <li>Fixed continuous zoom in/zoom out causing the actual zoom levels to drift over time.</li>
-                <li>Fixed Linear Line preview not showing correctly if subprio was selected.</li>
-                <li>Fixed linear line end position not updating on zoom in/out.</li>
-                <li>Fixed node locations having excessive decimal places. ( now limited to three, same as AutoDrive )</li>
-                <li>Fixed multiple curve GUI issues.</li>
-                <li>Fixed in-progress curve draw order issue's.</li>
-                <li>Fixed curve control point visibility.</li>
-                <li>Fixed edge case with movement scaler not applying to curves control nodes.</li>
-                <li>Fixed issue where certain types of connections were being rendered as Dual connections in error.</li>
-                <li>Fixed inconsistent interpolation nodes Y values on new linear lines.</li>
-                <li>Fixed overlap warnings and number of overlap nodes not updating properly.</li>
-                <li>Fixed various potential null pointer exceptions.</li>
+                <li>Added a missing class file i forgot to commit. ( EventTriggerNumberFilter.java )</li>
+                <li>Fixed Copy/Paste copying control nodes by accident.</li>
+                <li>Fixed 'Show Heightmap' menu not switching back to map image if using the default image.</li>
+                <li>Fixed Crash on startup if no EditorConfig.xml was found.</li>
+                <li>Fixed failing to load a Routes XML due to a parsing error.</li>
+                <li>Fixed node focus keybinding 'F' working inconsistently</li>
+                <li>Fixed edge case where linear lines created an end node by mistake.</li>
+            </ul>
+            <p><u>Localization</u></p>
+            <ul>
+                <li>Removed redundant entries</li>
+                <li>Added new entries</li>
             </ul>
             <p>Visit the Release Page <a href="https://github.com/KillBait/AutoDrive_Course_Editor/releases">Here</a>.</p>
         </body>

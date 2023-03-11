@@ -8,8 +8,9 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
 import static AutoDriveEditor.AutoDriveEditor.buttonManager;
+import static AutoDriveEditor.MapPanel.MapPanel.bIsShiftPressed;
 
-public class MouseListener implements java.awt.event.MouseListener, MouseMotionListener, MouseWheelListener {
+public class MouseListener implements MouseMotionListener, MouseWheelListener, java.awt.event.MouseListener {
 
     private final MapPanel previewPanel;
     public static int currentMouseX;
@@ -94,7 +95,7 @@ public class MouseListener implements java.awt.event.MouseListener, MouseMotionL
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        previewPanel.increaseZoomLevelBy(e.getWheelRotation());
+        if (!bIsShiftPressed)  previewPanel.increaseZoomLevelBy(e.getWheelRotation());
         buttonManager.mouseWheelMoved(e);
     }
 

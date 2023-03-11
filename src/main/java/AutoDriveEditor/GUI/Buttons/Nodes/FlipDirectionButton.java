@@ -17,7 +17,7 @@ import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 public final class FlipDirectionButton extends BaseButton {
 
     public FlipDirectionButton(JPanel panel) {
-        button = makeImageToggleButton("buttons/flip","buttons/flip_selected", null,"nodes_flip_tooltip","nodes_flip_alt", panel, false, false,  null, false, this);
+        button = makeImageToggleButton("buttons/rotatenode","buttons/rotatenode_selected", null,"nodes_flip_tooltip","nodes_flip_alt", panel, false, false,  null, false, this);
     }
 
     @Override

@@ -8,7 +8,6 @@ import java.awt.*;
 
 import static AutoDriveEditor.Utils.ConversionUtils.ColorToHex;
 import static AutoDriveEditor.Utils.ConversionUtils.HexToColor;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public class XMLUtils {
 

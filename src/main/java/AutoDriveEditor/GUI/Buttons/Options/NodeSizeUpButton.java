@@ -19,15 +19,6 @@ public class NodeSizeUpButton extends OptionsBaseButton {
     public String getButtonID() { return "NodeSizeUpButton"; }
 
     @Override
-    public String getButtonAction() { return "OptionChange"; }
-
-    @Override
-    public String getButtonPanel() { return "Options"; }
-
-    @Override
-    public String getInfoText() { return null; }
-
-    @Override
     public void actionPerformed(ActionEvent e) {
         super.actionPerformed(e);
         updateNodeSizeTo(nodeSize + 0.10f);
