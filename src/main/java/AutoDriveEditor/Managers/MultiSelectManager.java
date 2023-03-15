@@ -12,6 +12,7 @@ import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.cubicCurve;
 import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.isCubicCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.isQuadCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
+import static AutoDriveEditor.GUI.MenuBuilder.updateEditMenu;
 import static AutoDriveEditor.MapPanel.MapImage.mapPanelImage;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
@@ -57,6 +58,7 @@ public class MultiSelectManager {
         rectangleStart = null;
         rectangleEnd = null;
         LOG.info("Clearing all Selected Nodes");
+        updateEditMenu();
         getMapPanel().repaint();
     }
 
@@ -129,6 +131,7 @@ public class MultiSelectManager {
             LOG.info("No nodes selected");
             isMultipleSelected = false;
         }
+        updateEditMenu();
         return multiSelectList.size();
     }
 }

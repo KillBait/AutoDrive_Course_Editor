@@ -10,9 +10,12 @@ import java.util.LinkedList;
 import static AutoDriveEditor.AutoDriveEditor.changeManager;
 import static AutoDriveEditor.GUI.Buttons.Nodes.DeleteNodeButton.*;
 import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogCopyPasteInfo;
+import static AutoDriveEditor.GUI.MenuBuilder.updateEditMenu;
 import static AutoDriveEditor.Managers.MultiSelectManager.*;
+import static AutoDriveEditor.Managers.ScanManager.checkNodeOverlap;
 import static AutoDriveEditor.MapPanel.MapImage.mapPanelImage;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
+import static AutoDriveEditor.RoadNetwork.RoadMap.createMapNode;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.Utils.MathUtils.roundUpDoubleToDecimalPlaces;
 
@@ -53,20 +56,24 @@ public class CopyPasteManager {
         }
         changeManager.addChangeable( new DeleteNodeChanger(deleteNodeList));
         CopySelection(nodesToCopy);
+        if (bDebugLogCopyPasteInfo) LOG.info("## CopyPasteManager Debug ## Cutting {} nodes",nodesToCopy.size());
         removeDeleteListNodes();
         clearMultiSelection();
+        updateEditMenu();
     }
 
     public void CopySelection(LinkedList<MapNode> nodesToCopy) {
         LinkedList<MapNode> tempCache;
         //get the centre point of the setSelected nodes
         if (nodesToCopy.size() > 0) {
+            if (bDebugLogCopyPasteInfo) LOG.info("## CopyPasteManager Debug ## Copying {} nodes",nodesToCopy.size());
             // rebuild the setSelected nodes and there connections to a new arrayList
             tempCache = createNewMapNodesFromList(nodesToCopy);
             // create a cached LinkedList, so we can paste this in as many times as needed
             nodeCache = createNewMapNodesFromList(tempCache);
         }
         clearMultiSelection();
+        updateEditMenu();
     }
 
     public void PasteSelection(boolean inOriginalLocation) {
@@ -76,6 +83,10 @@ public class CopyPasteManager {
         } else {
             LOG.info("Cannot Paste - Buffer empty");
         }
+    }
+
+    public boolean isCopyPasteBufferEmpty() {
+        return nodeCache.size() == 0;
     }
 
 
@@ -89,7 +100,7 @@ public class CopyPasteManager {
         int n = 1;
         for (MapNode node : list) {
             if (!node.isControlNode) {
-                MapNode workBufferNode = new MapNode(n++, node.x, node.y, node.z, node.flag, true, false);
+                MapNode workBufferNode = createMapNode(n++, node.x, node.y, node.z, node.flag, true, false);
                 if (node.hasMapMarker()) {
                     workBufferNode.createMapMarker(node.getMarkerName(), node.getMarkerGroup());
                 }
@@ -177,6 +188,7 @@ public class CopyPasteManager {
             }
             node.isSelected = true;
             RoadMap.networkNodesList.add(node);
+            checkNodeOverlap(node);
             multiSelectList.add(node);
         }
 
@@ -220,23 +232,11 @@ public class CopyPasteManager {
         double centreX = bottomRightX - ( rectSizeX / 2 );
         double centreY = bottomRightY - ( rectSizeY / 2 );
 
-        /*if (coordType == WORLD_COORDINATES) {*/
-            if (bDebugLogCopyPasteInfo) LOG.info("## WORLD_COORDINATES ## Rectangle start = {} , {} : end = {} , {} : size = {} , {} : Centre = {} , {}", topLeftX, topLeftY, bottomRightX, bottomRightY, rectSizeX, rectSizeY, centreX, centreY);
-            return new selectionAreaInfo( new Point2D.Double(topLeftX, topLeftY) ,
-                    new Point2D.Double(bottomRightX, bottomRightY),
-                    new Point2D.Double(rectSizeX, rectSizeY),
-                    new Point2D.Double(centreX, centreY));
-        /*} else if (coordType == SCREEN_COORDINATES) {
-            Point2D topLeft = worldPosToScreenPos(topLeftX, topLeftY);
-            Point2D bottomRight = worldPosToScreenPos(bottomRightX, bottomRightY);
-            Point2D rectSize = new Point2D.Double(bottomRight.getX() - topLeft.getX(), bottomRight.getY() - topLeft.getY());
-            Point2D rectCentre = worldPosToScreenPos(centreX, centreY);
-            if (bDebugLogCopyPasteInfo) LOG.info("## SCREEN_COORDINATES ## Rectangle start = {} : end = {} : size = {} : Centre = {} ", topLeft, bottomRight, rectSize, rectCentre);
-            return new selectionAreaInfo(topLeft, bottomRight, rectSize, rectCentre);
-        } else {
-            LOG.info("No return type specified for getSelectionBounds() - returning null");
-            return null;
-        }*/
+        if (bDebugLogCopyPasteInfo) LOG.info("## WORLD_COORDINATES ## Rectangle start = {} , {} : end = {} , {} : size = {} , {} : Centre = {} , {}", topLeftX, topLeftY, bottomRightX, bottomRightY, rectSizeX, rectSizeY, centreX, centreY);
+        return new selectionAreaInfo( new Point2D.Double(topLeftX, topLeftY) ,
+                new Point2D.Double(bottomRightX, bottomRightY),
+                new Point2D.Double(rectSizeX, rectSizeY),
+                new Point2D.Double(centreX, centreY));
     }
 
     public static class selectionAreaInfo {
@@ -267,7 +267,6 @@ public class CopyPasteManager {
             } else {
                 return worldPosToScreenPos(this.EndCoordinates.getX(), this.EndCoordinates.getY());
             }
-            //return this.EndCoordinates;
         }
 
         @SuppressWarnings("unused")
@@ -276,7 +275,7 @@ public class CopyPasteManager {
                 return this.selectionSize;
             } else {
                 return worldPosToScreenPos(this.selectionSize.getX(), this.selectionSize.getY());
-            }//return this.selectionSize;
+            }
         }
 
         public Point2D getSelectionCentre(int coordType) {

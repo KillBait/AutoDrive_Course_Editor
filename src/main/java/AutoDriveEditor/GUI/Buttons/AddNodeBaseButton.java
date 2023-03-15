@@ -7,6 +7,7 @@ import AutoDriveEditor.RoadNetwork.RoadMap;
 import static AutoDriveEditor.AutoDriveEditor.changeManager;
 import static AutoDriveEditor.MapPanel.MapImage.mapPanelImage;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
+import static AutoDriveEditor.RoadNetwork.RoadMap.createNewNetworkNode;
 
 public abstract class AddNodeBaseButton extends BaseButton {
 
@@ -15,14 +16,12 @@ public abstract class AddNodeBaseButton extends BaseButton {
         if ((roadMap == null) || (mapPanelImage == null)) {
             return null;
         }
-        double heightMapY = getYValueFromHeightMap(worldX, worldZ);
-        MapNode mapNode = new MapNode(RoadMap.networkNodesList.size()+1, worldX, heightMapY, worldZ, flag, false, false); //flag = 0 causes created node to be regular by default
-        RoadMap.networkNodesList.add(mapNode);
+        MapNode newNode = createNewNetworkNode(worldX, worldZ, flag, false, false);
         getMapPanel().repaint();
-        changeManager.addChangeable( new AddNodeChanger(mapNode) );
+        changeManager.addChangeable( new AddNodeChanger(newNode));
         setStale(true);
         canAutoSave = true;
-        return mapNode;
+        return newNode;
     }
 
     //

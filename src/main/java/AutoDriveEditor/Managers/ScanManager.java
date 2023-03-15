@@ -151,6 +151,11 @@ public class ScanManager {
     }
 
     public static void checkNodeOverlap(MapNode node) {
+        if (node.hasWarning) {
+            for (MapNode warningNode : node.warningNodes) {
+                checkAreaForNodeOverlap(warningNode);
+            }
+        }
         if (checkAreaForNodeOverlap(node) == 0 ) {
             for (MapNode mapNode : node.warningNodes) {
                 mapNode.warningNodes.remove(node);
@@ -165,6 +170,13 @@ public class ScanManager {
 
             node.clearWarning();
             node.warningNodes.clear();
+            getMapPanel().repaint();
+        }
+    }
+
+    public static void checkAllNodesForOverlap(LinkedList<MapNode> list) {
+        for (MapNode listNode : list) {
+            checkNodeOverlap(listNode);
         }
     }
 

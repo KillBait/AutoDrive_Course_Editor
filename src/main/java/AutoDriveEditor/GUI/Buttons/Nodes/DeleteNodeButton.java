@@ -47,7 +47,11 @@ public class DeleteNodeButton extends BaseButton {
     public String getInfoText() { return getLocaleString("nodes_remove_tooltip"); }
 
     @Override
+    public Boolean ignoreMultiSelect() { return false; }
+
+    @Override
     public void mousePressed(MouseEvent e) {
+        super.mousePressed(e);
         if (e.getButton() == MouseEvent.BUTTON1) {
             MapNode toDeleteNode = getNodeAtScreenPosition(e.getX(), e.getY());
             if (toDeleteNode != null) {
@@ -84,79 +88,70 @@ public class DeleteNodeButton extends BaseButton {
                 }
             }
         }
-        if (e.getButton() == MouseEvent.BUTTON3) {
-            startMultiSelect(e.getX(), e.getY());
-        }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        super.mouseReleased(e);
         if (e.getButton() == MouseEvent.BUTTON3) {
-            stopMultiSelect(e.getX(), e.getY());
-            getAllNodesInSelectedArea(rectangleStart, rectangleEnd);
             removeAllNodesInScreenArea();
         }
     }
 
-    @Override
-    public void mouseDragged(MouseEvent e) {
-        if (rectangleStart != null && isMultiSelectDragging) {
-            getMapPanel().repaint();
-        }
-    }
-
     private void removeAllNodesInScreenArea() {
-        LOG.info("{}", getLocaleString("console_node_area_remove"));
-        if (quadCurve != null && isQuadCurveCreated) {
-            if (multiSelectList.contains(quadCurve.getCurveStartNode())) {
-                if (bDebugLogCurveInfo) LOG.info("Cannot delete start node of quad curve until it is confirmed or cancelled");
-                multiSelectList.remove(quadCurve.getCurveStartNode());
-                quadCurve.getCurveStartNode().isSelected = false;
+        if (multiSelectList.size() > 0) {
+            LOG.info("{}", getLocaleString("console_node_area_remove"));
+            if (quadCurve != null && isQuadCurveCreated) {
+                if (multiSelectList.contains(quadCurve.getCurveStartNode())) {
+                    if (bDebugLogCurveInfo) LOG.info("Cannot delete start node of quad curve until it is confirmed or cancelled");
+                    multiSelectList.remove(quadCurve.getCurveStartNode());
+                    quadCurve.getCurveStartNode().isSelected = false;
+                }
+                if (multiSelectList.contains(quadCurve.getCurveEndNode())) {
+                    if (bDebugLogCurveInfo) LOG.info("Cannot delete end nodes of quad curve until it is confirmed or cancelled");
+                    multiSelectList.remove(quadCurve.getCurveEndNode());
+                    quadCurve.getCurveEndNode().isSelected = false;
+                }
+                if (multiSelectList.contains(quadCurve.getControlPoint())) {
+                    if (bDebugLogCurveInfo) LOG.info("Cannot delete quad curve control point");
+                    multiSelectList.remove(quadCurve.getControlPoint());
+                    quadCurve.getControlPoint().isSelected = false;
+                }
             }
-            if (multiSelectList.contains(quadCurve.getCurveEndNode())) {
-                if (bDebugLogCurveInfo) LOG.info("Cannot delete end nodes of quad curve until it is confirmed or cancelled");
-                multiSelectList.remove(quadCurve.getCurveEndNode());
-                quadCurve.getCurveEndNode().isSelected = false;
+            if (cubicCurve != null && isCubicCurveCreated) {
+                if (multiSelectList.contains(cubicCurve.getCurveStartNode())) {
+                    if (bDebugLogCurveInfo) LOG.info("Cannot delete start node of cubic curve until it is confirmed or cancelled");
+                    multiSelectList.remove(cubicCurve.getCurveStartNode());
+                    cubicCurve.getCurveStartNode().isSelected = false;
+                }
+                if (multiSelectList.contains(cubicCurve.getCurveEndNode())) {
+                    if (bDebugLogCurveInfo) LOG.info("Cannot delete end node of cubic curve until it is confirmed or cancelled");
+                    multiSelectList.remove(cubicCurve.getCurveEndNode());
+                    cubicCurve.getCurveEndNode().isSelected = false;
+                }
+                if (multiSelectList.contains(cubicCurve.getControlPoint1())) {
+                    if (bDebugLogCurveInfo) LOG.info("Cannot delete cubic curve control point 1");
+                    multiSelectList.remove(cubicCurve.getControlPoint1());
+                    cubicCurve.getControlPoint1().isSelected = false;
+                }
+                if (multiSelectList.contains(cubicCurve.getControlPoint2())) {
+                    if (bDebugLogCurveInfo) LOG.info("Cannot delete cubic curve control point 2");
+                    multiSelectList.remove(cubicCurve.getControlPoint2());
+                    cubicCurve.getControlPoint2().isSelected = false;
+                }
             }
-            if (multiSelectList.contains(quadCurve.getControlPoint())) {
-                if (bDebugLogCurveInfo) LOG.info("Cannot delete quad curve control point");
-                multiSelectList.remove(quadCurve.getControlPoint());
-                quadCurve.getControlPoint().isSelected = false;
-            }
-        }
-        if (cubicCurve != null && isCubicCurveCreated) {
-            if (multiSelectList.contains(cubicCurve.getCurveStartNode())) {
-                if (bDebugLogCurveInfo) LOG.info("Cannot delete start node of cubic curve until it is confirmed or cancelled");
-                multiSelectList.remove(cubicCurve.getCurveStartNode());
-                cubicCurve.getCurveStartNode().isSelected = false;
-            }
-            if (multiSelectList.contains(cubicCurve.getCurveEndNode())) {
-                if (bDebugLogCurveInfo) LOG.info("Cannot delete end node of cubic curve until it is confirmed or cancelled");
-                multiSelectList.remove(cubicCurve.getCurveEndNode());
-                cubicCurve.getCurveEndNode().isSelected = false;
-            }
-            if (multiSelectList.contains(cubicCurve.getControlPoint1())) {
-                if (bDebugLogCurveInfo) LOG.info("Cannot delete cubic curve control point 1");
-                multiSelectList.remove(cubicCurve.getControlPoint1());
-                cubicCurve.getControlPoint1().isSelected = false;
-            }
-            if (multiSelectList.contains(cubicCurve.getControlPoint2())) {
-                if (bDebugLogCurveInfo) LOG.info("Cannot delete cubic curve control point 2");
-                multiSelectList.remove(cubicCurve.getControlPoint2());
-                cubicCurve.getControlPoint2().isSelected = false;
-            }
-        }
-        for (MapNode node : multiSelectList) {
+            for (MapNode node : multiSelectList) {
 
-            addToDeleteList(node);
-            if (bDebugLogUndoRedo) LOG.info("Added ID {} to delete list", node.id);
+                addToDeleteList(node);
+                if (bDebugLogUndoRedo) LOG.info("Added ID {} to delete list", node.id);
+            }
+            changeManager.addChangeable( new DeleteNodeChanger(deleteNodeList));
+            canAutoSave = false;
+            removeDeleteListNodes();
+            canAutoSave = true;
+            deleteNodeList.clear();
+            clearMultiSelection();
         }
-        changeManager.addChangeable( new DeleteNodeChanger(deleteNodeList));
-        canAutoSave = false;
-        removeDeleteListNodes();
-        canAutoSave = true;
-        deleteNodeList.clear();
-        clearMultiSelection();
     }
 
     public static void addToDeleteList(MapNode node) {

@@ -3,6 +3,7 @@ package AutoDriveEditor.GUI.Buttons.Nodes;
 import AutoDriveEditor.GUI.Buttons.BaseButton;
 import AutoDriveEditor.MapPanel.LinearLine;
 import AutoDriveEditor.RoadNetwork.MapNode;
+import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,7 +19,6 @@ import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_STANDARD;
 import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_SUBPRIO;
-import static AutoDriveEditor.RoadNetwork.RoadMap.createNewMapNode;
 import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
 import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
 import static AutoDriveEditor.Utils.ImageUtils.backBufferGraphics;
@@ -83,11 +83,11 @@ public class RoadConnection extends BaseButton {
                     // create secondary Linear Line
 
                     Point2D pointerWorldPos = screenPosToWorldPos(e.getX(), e.getY());
-                    secondaryStartNode = createNewMapNode(-99, pointerWorldPos.getX(), pointerWorldPos.getY(), NODE_FLAG_STANDARD, false, false);
+                    secondaryStartNode = RoadMap.createMapNode(-99, pointerWorldPos.getX(), pointerWorldPos.getY(), NODE_FLAG_STANDARD, false, false);
 
                     Point2D selectedScreenPos = worldPosToScreenPos(selected.x, selected.z);
                     secondaryLinearLine = new LinearLine(secondaryStartNode, (int) selectedScreenPos.getX(), (int) selectedScreenPos.getY(), connectionState);
-                    secondaryEndNode = createNewMapNode(-99,selected.x, selected.z, NODE_FLAG_STANDARD, false, false);
+                    secondaryEndNode = RoadMap.createMapNode(-99,selected.x, selected.z, NODE_FLAG_STANDARD, false, false);
                     if (bDebugLogLinearlineInfo) LOG.info("## RoadConnection Debug ## created secondary linear line starting at mouse pointer x={},y={} : ending at x={}, y={}, z={}",pointerWorldPos.getX(), pointerWorldPos.getY(), secondaryEndNode.x, secondaryEndNode.y, secondaryEndNode.z);
 
                     getMapPanel().repaint();

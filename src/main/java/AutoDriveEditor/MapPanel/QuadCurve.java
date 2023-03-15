@@ -3,7 +3,6 @@ package AutoDriveEditor.MapPanel;
 import AutoDriveEditor.GUI.Buttons.CurveBaseButton;
 import AutoDriveEditor.GUI.GUIBuilder;
 import AutoDriveEditor.RoadNetwork.MapNode;
-import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import java.awt.geom.Point2D;
 import java.util.LinkedList;
@@ -15,6 +14,8 @@ import static AutoDriveEditor.Listeners.MouseListener.prevMousePosX;
 import static AutoDriveEditor.Listeners.MouseListener.prevMousePosY;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.RoadNetwork.MapNode.*;
+import static AutoDriveEditor.RoadNetwork.RoadMap.createMapNode;
+import static AutoDriveEditor.RoadNetwork.RoadMap.createNewNetworkNode;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.Utils.MathUtils.roundUpDoubleToDecimalPlaces;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
@@ -37,7 +38,7 @@ public class QuadCurve {
         this.curveEndNode = endNode;
         this.numInterpolationPoints = GUIBuilder.numIterationsSlider.getValue();
         if (this.numInterpolationPoints < 2) this.numInterpolationPoints = 2;
-        this.controlPoint1 = new MapNode(0, startNode.x, 0, endNode.z, NODE_FLAG_CONTROL_POINT, false, true);
+        this.controlPoint1 = createMapNode(0, startNode.x, 0, endNode.z, NODE_FLAG_CONTROL_POINT, false, true);
         this.virtualControlPoint1 = new Point2D.Double(controlPoint1.x, controlPoint1.z);
         this.isReversePath = GUIBuilder.curvePathReverse.isSelected();
         this.isDualPath = GUIBuilder.curvePathDual.isSelected();
@@ -74,7 +75,7 @@ public class QuadCurve {
         int id = 0;
         for (double i = step; i + step < 1.0001; i += step) {
             Point2D.Double point = calcPointsForCurve(startNode, endNode, this.virtualControlPoint1.x, this.virtualControlPoint1.y, i);
-            curveNodesList.add(new MapNode(id, point.getX(), -1, point.getY(), this.nodeType, false, false));
+            curveNodesList.add(createMapNode(id, point.getX(), -1, point.getY(), this.nodeType, false, false));
             if (i + step >= 1.0001)
                 LOG.info("WARNING -- last node was not calculated, this should not happen!! -- step = {} ,  ", i + step);
             id++;
@@ -120,8 +121,7 @@ public class QuadCurve {
             if (heightMapY == -1) {
                 heightMapY = curveStartNode.y + ( yInterpolation * j);
             }
-            MapNode newNode = new MapNode(RoadMap.networkNodesList.size() + 1, tempNode.x, heightMapY, tempNode.z, this.nodeType, false, false);
-            RoadMap.networkNodesList.add(newNode);
+            MapNode newNode = createNewNetworkNode(tempNode.x, heightMapY, tempNode.z, this.nodeType, false, false);
             mergeNodesList.add(newNode);
         }
 

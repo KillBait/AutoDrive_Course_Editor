@@ -3,11 +3,8 @@ package AutoDriveEditor.GUI.Buttons.Editing;
 import AutoDriveEditor.GUI.Buttons.CopyPasteBaseButton;
 
 import javax.swing.*;
-import java.awt.event.MouseEvent;
 
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.Managers.MultiSelectManager.*;
-import static AutoDriveEditor.MapPanel.MapPanel.getMapPanel;
 import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
 
 public class AreaSelectButton extends CopyPasteBaseButton {
@@ -29,24 +26,5 @@ public class AreaSelectButton extends CopyPasteBaseButton {
     public String getInfoText() { return getLocaleString("copypaste_select_tooltip"); }
 
     @Override
-    public void mousePressed(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON3) {
-            startMultiSelect(e.getX(), e.getY());
-        }
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON3) {
-            stopMultiSelect(e.getX(), e.getY());
-            getAllNodesInSelectedArea(rectangleStart, rectangleEnd);
-        }
-    }
-
-    @Override
-    public void mouseDragged(MouseEvent e) {
-        if (rectangleStart != null && isMultiSelectDragging) {
-            getMapPanel().repaint();
-        }
-    }
+    public Boolean ignoreMultiSelect() { return false; }
 }

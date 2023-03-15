@@ -30,9 +30,8 @@ public final class RotationButton extends BaseButton {
 
     public static Rotation rotation;
     boolean isControlNodeSelected = false;
-    int displayedRadius;
-    double totalAngle = 0;
-    Point mouseStart;
+    public int displayedRadius;
+    private int totalAngle = 0;
 
     public RotationButton(JPanel panel) {
         button = makeImageToggleButton("buttons/rotatenode","buttons/rotatenode_selected", null,"copypaste_rotate_tooltip","copypaste_rotate_alt", panel, false, false,  null, false, this);
@@ -48,6 +47,9 @@ public final class RotationButton extends BaseButton {
 
     @Override
     public String getButtonPanel() { return "Edit"; }
+
+    @Override
+    public Boolean ignoreMultiSelect() { return false; }
 
     @Override
     public void setSelected(boolean selected) {
@@ -79,38 +81,32 @@ public final class RotationButton extends BaseButton {
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON3 && e.getSource() == getMapPanel()) {
-            startMultiSelect(e.getX(), e.getY());
-        }
+        super.mousePressed(e);
         if (e.getButton() == MouseEvent.BUTTON1) {
             if ( hoveredNode == rotation.getControlNode()) isControlNodeSelected = true;
             totalAngle = 0;
-            mouseStart = new Point(e.getX(), e.getY());
         }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        super.mouseReleased(e);
         if (e.getButton() == MouseEvent.BUTTON3 && e.getSource() == getMapPanel()) {
-            stopMultiSelect(e.getX(), e.getY());
-            getAllNodesInSelectedArea(rectangleStart, rectangleEnd);
             updateSelection();
         }
         if (e.getButton() == MouseEvent.BUTTON1 && this.button.isEnabled()) {
             isControlNodeSelected = false;
-            if (totalAngle > 0) changeManager.addChangeable(new RotateNodeChanger(multiSelectList, totalAngle, isStale()));
+            if (totalAngle > 0) changeManager.addChangeable(new RotateNodeChanger(multiSelectList, rotation.getCentrePointWorld(), totalAngle, isStale()));
         }
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        if (rectangleStart != null && isMultiSelectDragging) {
-            getMapPanel().repaint();
-        }
+        super.mouseDragged(e);
         if (isControlNodeSelected) {
             totalAngle += rotation.rotateControlNode(e.getX(), e.getY(), 0);
+            getMapPanel().repaint();
         }
-        getMapPanel().repaint();
     }
 
     @Override
@@ -151,6 +147,7 @@ public final class RotationButton extends BaseButton {
 
     @Override
     public void drawToScreen(Graphics2D g, Lock lock, double nodeSizeScaledQuarter, double scaledSizeHalf) {
+        super.drawToScreen(g, lock, nodeSizeScaledQuarter, scaledSizeHalf);
         if (multiSelectList.size() > 0 && this.button.isSelected()) {
 
             Graphics2D gTemp = (Graphics2D) backBufferGraphics.create();
@@ -198,12 +195,14 @@ public final class RotationButton extends BaseButton {
     public static class RotateNodeChanger implements ChangeManager.Changeable {
 
         private final LinkedList<MapNode> storedRotateNodeList;
-        private final double angle;
+        private final Point2D centrePointWorld;
+        private final int angle;
         private final boolean isStale;
 
-        public RotateNodeChanger(LinkedList<MapNode> rotateNodes, double angle, boolean isStale){
+        public RotateNodeChanger(LinkedList<MapNode> rotateNodes, Point2D centrePointWorld, int angle, boolean isStale){
             super();
             this.storedRotateNodeList = new LinkedList<>();
+            this.centrePointWorld = centrePointWorld;
             this.angle = angle;
             this.isStale = isStale;
 
@@ -215,15 +214,15 @@ public final class RotationButton extends BaseButton {
         }
 
         public void undo(){
-            rotation.setCentrePoint(this.storedRotateNodeList);
-            rotation.rotateChanger(this.storedRotateNodeList, -this.angle);
+            //rotation.setCentrePointWorld(this.centrePointWorld);
+            rotation.rotateChanger(this.storedRotateNodeList, this.centrePointWorld, -this.angle);
             getMapPanel().repaint();
             setStale(this.isStale);
         }
 
         public void redo(){
-            rotation.setCentrePoint(this.storedRotateNodeList);
-            rotation.rotateChanger(this.storedRotateNodeList, this.angle);
+            rotation.setCentrePointWorld(this.centrePointWorld);
+            rotation.rotateChanger(this.storedRotateNodeList, this.centrePointWorld, this.angle);
             getMapPanel().repaint();
             setStale(true);
         }

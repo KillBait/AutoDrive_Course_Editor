@@ -41,6 +41,7 @@ public abstract class LinerLineBaseButton extends BaseButton{
     protected abstract void setNormalStateIcons();
     protected abstract void setAlternateStateIcons();
 
+
     @Override
     public void setSelected(boolean selected) {
         if (selected) {
@@ -52,6 +53,7 @@ public abstract class LinerLineBaseButton extends BaseButton{
         }
     }
 
+    @Override
     public void mouseClicked(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON3 && e.getSource() == button) {
             if (button.isEnabled() && button.isSelected()) {
@@ -65,6 +67,7 @@ public abstract class LinerLineBaseButton extends BaseButton{
         }
     }
 
+    @Override
     public void mousePressed(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
             MapNode selected = getNodeAtScreenPosition(e.getX(), e.getY());
@@ -116,6 +119,7 @@ public abstract class LinerLineBaseButton extends BaseButton{
         }
     }
 
+    @Override
     public void mouseMoved(MouseEvent e) {
         if (startNode != null && isDraggingLine) {
             if (e.getX() > mapPanel.getWidth()) getMapPanel().moveMapBy( -10, 0);

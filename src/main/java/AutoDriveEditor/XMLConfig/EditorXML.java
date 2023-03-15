@@ -209,8 +209,8 @@ public class EditorXML {
                     }
                 }
             } else if (doc.getElementsByTagName("KnownMapSettings").getLength() != 0 ) {
-                LOG.info("<KnownMapSettings> key exists, EditorConfig.xml format is upto date");
-                LOG.info("  --> Parsing {} known maps for editor use", doc.getElementsByTagName("Map").getLength());
+                LOG.info("EditorConfig.xml format is upto date");
+                LOG.info("  --> <KnownMapSettings> key exists, parsing {} known maps for editor use", doc.getElementsByTagName("Map").getLength());
 
                 NodeList mapList = doc.getElementsByTagName("KnownMapSettings");
 
@@ -222,18 +222,34 @@ public class EditorXML {
                             Node knownMapsNode = knownMapsList.item(temp2);
                             Element eElement = (Element) knownMapsNode;
                             String mapName = eElement.getAttribute("Name");
+                            if (bDebugLogConfigInfo) LOG.info("  Checking <{}> key ( {} Entries )", mapName, doc.getElementsByTagName("Name").getLength());
 
                             // get Maps Scale
 
-                            NodeList nodeList = eElement.getElementsByTagName("MapScale").item(0).getChildNodes();
-                            Node node = nodeList.item(0);
-                            String mapScale = node.getNodeValue();
+                            String mapScale;
+
+                            if (eElement.getElementsByTagName("MapScale").getLength() != 0 ) {
+                                NodeList nodeList = eElement.getElementsByTagName("MapScale").item(0).getChildNodes();
+                                Node node = nodeList.item(0);
+                                mapScale = node.getNodeValue();
+                            } else {
+                                LOG.info("  --> <MapScale> key is missing from <Map Name='{}'> Entry, setting to default ( 1 )",mapName);
+                                mapScale = "1";
+                            }
 
                             // get Maps Scale
 
-                            nodeList = eElement.getElementsByTagName("NodeSize").item(0).getChildNodes();
-                            node = nodeList.item(0);
-                            String nodeSize = node.getNodeValue();
+                            String nodeSize;
+
+                            if (eElement.getElementsByTagName("NodeSize").getLength() != 0 ) {
+                                NodeList nodeList = eElement.getElementsByTagName("NodeSize").item(0).getChildNodes();
+                                Node node = nodeList.item(0);
+                                nodeSize = node.getNodeValue();
+                            } else {
+                                LOG.info("  --> <NodeSize> key is missing from <Map Name='{}'> Entry, setting to default ( 2.0 )",mapName);
+                                nodeSize = "2.0";
+                            }
+
 
                             if (bDebugLogConfigInfo) LOG.info("Map name = {}, Scale = {}, NodeSize = {}", mapName, mapScale, nodeSize);
                             knownMapList.add(new MapInfoStore(mapName, Integer.parseInt(mapScale), Float.parseFloat(nodeSize)));

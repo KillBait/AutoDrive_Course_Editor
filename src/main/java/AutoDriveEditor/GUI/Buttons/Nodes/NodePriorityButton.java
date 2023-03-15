@@ -17,6 +17,8 @@ import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
 
 public class NodePriorityButton extends BaseButton {
 
+    // TODO: For v1.1 - Make selection preview show the subprio change
+
     public NodePriorityButton(JPanel panel) {
         button = makeImageToggleButton("buttons/swappriority","buttons/swappriority_selected", null,"nodes_priority_tooltip","nodes_priority_alt", panel, false, false, null, false, this);
     }
@@ -34,7 +36,11 @@ public class NodePriorityButton extends BaseButton {
     public String getInfoText() { return getLocaleString("nodes_priority_tooltip"); }
 
     @Override
+    public Boolean ignoreMultiSelect() { return false; }
+
+    @Override
     public void mousePressed(MouseEvent e) {
+        super.mousePressed(e);
         if (e.getButton() == MouseEvent.BUTTON1) {
             MapNode changingNode = getNodeAtScreenPosition(e.getX(), e.getY());
             if (changingNode != null) {
@@ -43,26 +49,24 @@ public class NodePriorityButton extends BaseButton {
                 }
             }
         }
-        if (e.getButton() == MouseEvent.BUTTON3) {
-            startMultiSelect(e.getX(), e.getY());
-        }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        super.mouseReleased(e);
         if (e.getButton() == MouseEvent.BUTTON3) {
-            stopMultiSelect(e.getX(), e.getY());
-            getAllNodesInSelectedArea(rectangleStart, rectangleEnd);
+            //stopMultiSelect(e.getX(), e.getY());
+            //getAllNodesInSelectedArea(rectangleStart, rectangleEnd);
             changeAllNodesPriInScreenArea();
         }
     }
 
-    @Override
+    /*@Override
     public void mouseDragged(MouseEvent e) {
         if (rectangleStart != null && isMultiSelectDragging) {
             getMapPanel().repaint();
         }
-    }
+    }*/
 
     public void changeNodePriority(MapNode nodeToChange) {
         nodeToChange.flag = 1 - nodeToChange.flag;

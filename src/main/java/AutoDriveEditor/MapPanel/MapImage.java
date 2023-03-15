@@ -349,8 +349,8 @@ public class MapImage {
         URL url = AutoDriveEditor.class.getResource(fullPath);
         if (url != null) {
             try {
-                mapPanelImage = ImageIO.read(url);
-                setImage(mapPanelImage, false);
+                pdaImage = ImageIO.read(url);
+                setImage(pdaImage, false);
             } catch (IOException e) {
                 e.printStackTrace();
             }

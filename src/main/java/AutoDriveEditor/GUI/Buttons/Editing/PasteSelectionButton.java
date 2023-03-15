@@ -31,6 +31,9 @@ public class PasteSelectionButton extends CopyPasteBaseButton {
     public String getButtonPanel() { return "Edit"; }
 
     @Override
+    public Boolean ignoreDeselect() { return true; }
+
+    @Override
     public void actionPerformed(ActionEvent e) {
         super.actionPerformed(e);
         if (bDebugLogCopyPasteInfo) LOG.info("PasteSelectionButton > Button Pressed");

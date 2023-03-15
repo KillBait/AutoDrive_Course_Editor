@@ -23,32 +23,13 @@ public class Rotation {
 
     private Point2D centrePointWorld;
     private static MapNode controlNode;
-    private final LinkedList<MapNode> nodesToRotate;
     private int snapDegrees;
     private double lastAngle = 0;
 
     public Rotation() {
-        this.nodesToRotate = new LinkedList<>();
         // the control node coordinates specified here is just a placeholder
         // we have to specify something to create the control node.
         controlNode = createControlNode(0, 0);
-    }
-
-    public void setCentrePoint(LinkedList<MapNode> list) {
-        if (list != null && list.size() > 0) {
-            selectionAreaInfo selectionInfo = getSelectionBounds(list);
-            centrePointWorld = selectionInfo.getSelectionCentre(WORLD_COORDINATES);
-            lastAngle = 0;
-        }
-    }
-
-    public void setInitialControlNodePosition(LinkedList<MapNode> list) {
-        if (list != null && list.size() > 0) {
-            selectionAreaInfo selectionInfo = getSelectionBounds(list);
-            controlNode.x = selectionInfo.getSelectionCentre(WORLD_COORDINATES).getX();
-            Point2D screenY = selectionInfo.getSelectionCentre(SCREEN_COORDINATES);
-            controlNode.z = screenPosToWorldPos((int) screenY.getX(), (int) screenY.getY() - getSelectionRadius(list)).getY();
-        }
     }
 
     public void rotateSelected(LinkedList<MapNode> list, double angle) {
@@ -63,10 +44,11 @@ public class Rotation {
         getMapPanel().repaint();
     }
 
-    public void rotateChanger(LinkedList<MapNode> list, double degrees) {
-        setCentrePoint(list);
+    public void rotateChanger(LinkedList<MapNode> list, Point2D centrePointWorld, int degrees) {
+        setCentrePointWorld(centrePointWorld);
         rotatePoint(controlNode, centrePointWorld, degrees);
         rotateSelected(list, degrees);
+        lastAngle = 0;
     }
 
     public void rotatePoint(MapNode node, Point2D centre, double angle) {
@@ -93,6 +75,39 @@ public class Rotation {
         lastAngle = thetaRounded;
         return step;
     }
+
+    //
+    // setters
+    //
+
+    public void setCentrePoint(LinkedList<MapNode> list) {
+        if (list != null && list.size() > 0) {
+            selectionAreaInfo selectionInfo = getSelectionBounds(list);
+            centrePointWorld = selectionInfo.getSelectionCentre(WORLD_COORDINATES);
+            lastAngle = 0;
+        }
+    }
+
+    public void setCentrePointWorld(Point2D centrePoint) {
+        centrePointWorld = centrePoint;
+    }
+
+    public void setInitialControlNodePosition(LinkedList<MapNode> list) {
+        if (list != null && list.size() > 0) {
+            selectionAreaInfo selectionInfo = getSelectionBounds(list);
+            controlNode.x = selectionInfo.getSelectionCentre(WORLD_COORDINATES).getX();
+            Point2D screenY = selectionInfo.getSelectionCentre(SCREEN_COORDINATES);
+            controlNode.z = screenPosToWorldPos((int) screenY.getX(), (int) screenY.getY() - getSelectionRadius(list)).getY();
+        }
+    }
+
+    public void setRotationSnapDegree(int numDegrees) {
+        snapDegrees = numDegrees;
+    }
+
+    //
+    // Getters
+    //
 
     public MapNode getControlNode() {
         return controlNode;
@@ -142,7 +157,5 @@ public class Rotation {
         return maxNode;
     }
 
-    public void setRotationSnapDegree(int numDegrees) {
-        snapDegrees = numDegrees;
-    }
+
 }

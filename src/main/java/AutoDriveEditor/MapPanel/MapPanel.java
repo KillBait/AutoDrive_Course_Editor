@@ -91,8 +91,6 @@ public class MapPanel extends JPanel {
     public static RoadMap roadMap;
     public static MapNode hoveredNode = null;
     public static boolean isDraggingMap = false;
-    public static int moveDiffX, moveDiffY;
-    public static double preSnapX, preSnapY;
     public static CopyPasteManager cnpManager;
 
     public static boolean bIsShiftPressed;
@@ -295,13 +293,25 @@ public class MapPanel extends JPanel {
                                         backBufferGraphics.setColor(colourNodeSubprio);
                                     }
                                     backBufferGraphics.fillArc((int) (nodePos.getX() - nodeSizeScaledQuarter), (int) (nodePos.getY() - nodeSizeScaledQuarter), (int) nodeSizeScaledHalf, (int) nodeSizeScaledHalf, 0, 360);
+
                                     if (mapNode.isSelected) {
-                                        backBufferGraphics.setColor(colourNodeSelected);
-                                        Graphics2D g1 = (Graphics2D) backBufferGraphics.create();
-                                        BasicStroke bs = new BasicStroke((float) (nodeSizeScaledQuarter / 2.5));
-                                        g1.setStroke(bs);
-                                        g1.drawArc((int) (nodePos.getX() - nodeSizeScaledQuarter), (int) (nodePos.getY() - nodeSizeScaledQuarter), (int) nodeSizeScaledHalf, (int) nodeSizeScaledHalf, 0, 360);
-                                        g1.dispose();
+                                        if (!mapNode.isInSelectionArea) {
+                                            backBufferGraphics.setColor(colourNodeSelected);
+                                            Graphics2D g1 = (Graphics2D) backBufferGraphics.create();
+                                            BasicStroke bs = new BasicStroke((float) (nodeSizeScaledQuarter / 2.5));
+                                            g1.setStroke(bs);
+                                            g1.drawArc((int) (nodePos.getX() - nodeSizeScaledQuarter), (int) (nodePos.getY() - nodeSizeScaledQuarter), (int) nodeSizeScaledHalf, (int) nodeSizeScaledHalf, 0, 360);
+                                            g1.dispose();
+                                        }
+                                    } else {
+                                        if (mapNode.isInSelectionArea) {
+                                            backBufferGraphics.setColor(colourNodeSelected);
+                                            Graphics2D g1 = (Graphics2D) backBufferGraphics.create();
+                                            BasicStroke bs = new BasicStroke((float) (nodeSizeScaledQuarter / 2.5));
+                                            g1.setStroke(bs);
+                                            g1.drawArc((int) (nodePos.getX() - nodeSizeScaledQuarter), (int) (nodePos.getY() - nodeSizeScaledQuarter), (int) nodeSizeScaledHalf, (int) nodeSizeScaledHalf, 0, 360);
+                                            g1.dispose();
+                                        }
                                     }
 
                                     if (mapNode.hasWarning) {
@@ -479,16 +489,10 @@ public class MapPanel extends JPanel {
                             if (bDebugProfile) nodeDrawTimer.restartTimer();
                             CopyPasteManager.selectionAreaInfo selectionInfo = getSelectionBounds(multiSelectList/*, WORLD_COORDINATES*/);
                             Graphics2D gTemp = (Graphics2D) backBufferGraphics.create();
-                            //BasicStroke bsDash = new BasicStroke(1, BasicStroke.CAP_BUTT,
-                            //        BasicStroke.JOIN_ROUND, 1.0f, new float[]{4f, 0f, 2f}, 2f);
-                            //gTemp.setComposite(AlphaComposite.SrcOver.derive(0.5f));
-                            //gTemp.setStroke(bsDash);
-                            gTemp.setColor(Color.WHITE);
 
+                            gTemp.setColor(Color.WHITE);
                             Point2D topLeft = selectionInfo.getSelectionStart(SCREEN_COORDINATES);
                             Point2D bottomRight = selectionInfo.getSelectionEnd(SCREEN_COORDINATES);
-                            /*Point2D topLeft = worldPosToScreenPos(selectionInfo.getSelectionStart().getX(), selectionInfo.getSelectionStart().getY());
-                            Point2D bottomRight = worldPosToScreenPos(selectionInfo.getSelectionEnd().getX(), selectionInfo.getSelectionEnd().getY());*/
                             double rectSizeX = bottomRight.getX() - topLeft.getX();
                             double rectSizeY = bottomRight.getY() - topLeft.getY();
                             gTemp.drawRect((int) (topLeft.getX() - nodeSizeScaledQuarter), (int) (topLeft.getY() - nodeSizeScaledQuarter), (int) (rectSizeX + (nodeSizeScaledQuarter * 2)), (int) (rectSizeY + (nodeSizeScaledQuarter * 2)));
@@ -574,23 +578,26 @@ public class MapPanel extends JPanel {
                                 for (MapNode outgoing : mapNode.outgoing) {
                                     Point2D outPos = worldPosToScreenPos(outgoing.x, outgoing.z);
                                     if (RoadMap.isDual(mapNode, outgoing)) {
-                                        if ( mapNode.flag == 1) {
-                                            dualSubprioArrowDrawList.add(new DrawList(nodePos, outPos, true));
-                                        } else {
-                                            dualArrowDrawList.add(new DrawList(nodePos, outPos, true));
+                                        if (!bHideDualConnection) {
+                                            if ( mapNode.flag == 1) {
+                                                dualSubprioArrowDrawList.add(new DrawList(nodePos, outPos, true));
+                                            } else {
+                                                dualArrowDrawList.add(new DrawList(nodePos, outPos, true));
+                                            }
                                         }
                                     } else if (RoadMap.isReverse(mapNode, outgoing)) {
-                                        if ( mapNode.flag == 1) {
-                                            reverseSubprioArrowDrawList.add(new DrawList(nodePos, outPos, false));
-                                        } else {
-                                            reverseArrowDrawList.add(new DrawList(nodePos, outPos, false));
+                                        if (!bHideReverseConnection) {
+                                            if ( mapNode.flag == 1) {
+                                                reverseSubprioArrowDrawList.add(new DrawList(nodePos, outPos, false));
+                                            } else {
+                                                reverseArrowDrawList.add(new DrawList(nodePos, outPos, false));
+                                            }
                                         }
-
                                     } else {
                                         if (mapNode.flag == 1) {
-                                            subprioArrowDrawList.add(new DrawList(nodePos, outPos, false));
+                                            if (!bHideSubprioConnection) subprioArrowDrawList.add(new DrawList(nodePos, outPos, false));
                                         } else {
-                                            regularArrowDrawList.add(new DrawList(nodePos, outPos, false));
+                                            if (!bHideRegularConnection) regularArrowDrawList.add(new DrawList(nodePos, outPos, false));
                                         }
                                     }
                                 }
@@ -673,7 +680,6 @@ public class MapPanel extends JPanel {
         }
 
         if (mapPanelImage != null) {
-            //backBufferGraphics.clipRect(0, 0, this.getWidth(), this.getHeight());
             backBufferGraphics.drawImage(croppedImage, 0, 0, this.getWidth(), this.getHeight(), null);
 
             if (bShowGrid) drawGrid();
@@ -697,8 +703,10 @@ public class MapPanel extends JPanel {
 
     private void getResizedMap() throws RasterFormatException {
         if (mapPanelImage != null) {
-            widthScaled = (int) (this.getWidth() / zoomLevel);
-            heightScaled = (int) (this.getHeight() / zoomLevel);
+            widthScaled = (int) (this.getWidth() / zoomLevel) + 1;
+            heightScaled = (int) (this.getHeight() / zoomLevel) + 1;
+
+            //LOG.info("topLeft = {} , bottomRight = {}", screenPosToWorldPos(0,0), screenPosToWorldPos(this.getWidth(), this.getHeight()));
 
             // Part 1 of work around for map resize bug, increase the zoomLevel
             // if widthScaled and heightScaled are bigger than the map image dimensions
@@ -736,17 +744,12 @@ public class MapPanel extends JPanel {
             y = Math.min(y, 1 - calcY);
             y = Math.max(y, calcY);
 
-
             int centerX = (int) (x * mapPanelImage.getWidth());
             int centerY = (int) (y * mapPanelImage.getHeight());
 
-            offsetX = (centerX - (widthScaled / 2) );
-            offsetY = (centerY - (heightScaled / 2));
-
-            offsetX = Math.max(1, offsetX);
-            offsetY = Math.max(1, offsetY);
-            widthScaled = Math.max(1, widthScaled);
-            heightScaled = Math.max(1, heightScaled);
+            offsetX = Math.max(1, (centerX - (widthScaled / 2)));
+            offsetY = Math.max(1, (centerY - (heightScaled / 2)));
+            if (offsetY +  heightScaled > pdaImage.getWidth()) heightScaled = pdaImage.getHeight() - offsetY;
 
             if (offsetX != oldOffsetX || offsetY != oldOffsetY || widthScaled != oldWidthScaled || heightScaled != oldHeightScaled) {
                 try {
@@ -781,17 +784,20 @@ public class MapPanel extends JPanel {
             return;
         }
 
-        if (bDebugLogZoomScale) LOG.info("## before ## rotations = {}, zoomLevel = {}", rotations, zoomLevel);
-        if (bDebugLogZoomScale) LOG.info("    width = {}, height = {}", this.getWidth(), this.getHeight());
+
 
         if (((this.getWidth()/(zoomLevel - rotations)) > mapPanelImage.getWidth()) || ((this.getHeight()/(zoomLevel - rotations)) > mapPanelImage.getHeight())){
-            if (bDebugLogZoomScale) LOG.info("    Failed size check");
+            if (bDebugLogZoomScale) {
+                LOG.info("## increaseZoomLevelBy() ##  Failed size check");
+                if (((this.getWidth()/(zoomLevel - rotations)) > mapPanelImage.getWidth())) LOG.info("## new zoom level exceeds mapPanel width ({})", mapPanelImage.getWidth());
+                if (((this.getHeight()/(zoomLevel - rotations)) > mapPanelImage.getHeight())) LOG.info("## new zoom level exceeds mapPanel height ({})", mapPanelImage.getWidth());
+            }
             return;
         }
 
         if ((zoomLevel - rotations) >=0 && (zoomLevel - rotations) < maxZoomLevel) {
             zoomLevel = limitDoubleToDecimalPlaces(zoomLevel - rotations, 1, RoundingMode.UP);
-            if (bDebugLogZoomScale) LOG.info("## after ## zoomLevel = {}", zoomLevel);
+            if (bDebugLogZoomScale) LOG.info("new zoomLevel = {}", zoomLevel);
             getResizedMap();
             this.repaint();
         }
@@ -1009,22 +1015,22 @@ public class MapPanel extends JPanel {
 
     public static void batchDrawArrowBetween(Graphics g, Color colour, ArrayList<ConnectionDrawThread.DrawList> nodeList) {
         if (nodeList.size() >0 ) {
-            final double[] startX = new double[1];
-            final double[] startY = new double[1];
-            final double[] targetX = new double[1];
-            final double[] targetY = new double[1];
+            double startX;
+            double startY;
+            double targetX;
+            double targetY;
             final double relativeNodeSize = nodeSize * zoomLevel;
 
             g.setColor(colour);
 
-            nodeList.forEach(mapNode -> {
-                startX[0] = mapNode.startPos.getX();
-                startY[0] = mapNode.startPos.getY();
-                targetX[0] = mapNode.endPos.getX();
-                targetY[0] = mapNode.endPos.getY();
+            for (ConnectionDrawThread.DrawList mapNode : nodeList) {
+                startX = mapNode.startPos.getX();
+                startY = mapNode.startPos.getY();
+                targetX = mapNode.endPos.getX();
+                targetY = mapNode.endPos.getY();
 
-                double vecX = startX[0] - targetX[0];
-                double vecY = startY[0] - targetY[0];
+                double vecX = startX - targetX;
+                double vecY = startY - targetY;
 
                 double angleRad = Math.atan2(vecY, vecX);
 
@@ -1035,27 +1041,27 @@ public class MapPanel extends JPanel {
                 double distCos = (relativeNodeSize * 0.25) * Math.cos(angleRad);
                 double distSin = (relativeNodeSize * 0.25) * Math.sin(angleRad);
 
-                double lineStartX = startX[0] - distCos;
-                double lineStartY = startY[0] - distSin;
+                double lineStartX = startX - distCos;
+                double lineStartY = startY - distSin;
 
                 // calculate where to finish the line based around the circumference of the node
-                double lineEndX = targetX[0] + distCos;
-                double lineEndY = targetY[0] + distSin;
+                double lineEndX = targetX + distCos;
+                double lineEndY = targetY + distSin;
 
                 g.drawLine((int) lineStartX, (int) lineStartY, (int) lineEndX, (int) lineEndY);
 
-                // olny drawToScreen the arms of the arrow if the zoom level is high enough to be seen
+                // only draw the arms of the arrow if the zoom level is high enough to be seen
 
                 if (zoomLevel > 2.5) {
                     double arrowLength = relativeNodeSize * 0.70;
 
                     double arrowLeft = normalizeAngle(angleRad + Math.toRadians(-20));
-                    double arrowLeftX = targetX[0] + Math.cos(arrowLeft) * arrowLength;
-                    double arrowLeftY = targetY[0] + Math.sin(arrowLeft) * arrowLength;
+                    double arrowLeftX = targetX + Math.cos(arrowLeft) * arrowLength;
+                    double arrowLeftY = targetY + Math.sin(arrowLeft) * arrowLength;
 
                     double arrowRight = normalizeAngle(angleRad + Math.toRadians(20));
-                    double arrowRightX = targetX[0] + Math.cos(arrowRight) * arrowLength;
-                    double arrowRightY = targetY[0] + Math.sin(arrowRight) * arrowLength;
+                    double arrowRightX = targetX + Math.cos(arrowRight) * arrowLength;
+                    double arrowRightY = targetY + Math.sin(arrowRight) * arrowLength;
 
 
                     if (bFilledArrows) {
@@ -1075,10 +1081,10 @@ public class MapPanel extends JPanel {
                         arrowLeft = normalizeAngle(angleRad + Math.toRadians(-20));
                         arrowRight = normalizeAngle(angleRad + Math.toRadians(20));
 
-                        arrowLeftX = startX[0] + Math.cos(arrowLeft) * arrowLength;
-                        arrowLeftY = startY[0] + Math.sin(arrowLeft) * arrowLength;
-                        arrowRightX = startX[0] + Math.cos(arrowRight) * arrowLength;
-                        arrowRightY = startY[0] + Math.sin(arrowRight) * arrowLength;
+                        arrowLeftX = startX + Math.cos(arrowLeft) * arrowLength;
+                        arrowLeftY = startY + Math.sin(arrowLeft) * arrowLength;
+                        arrowRightX = startX + Math.cos(arrowRight) * arrowLength;
+                        arrowRightY = startY + Math.sin(arrowRight) * arrowLength;
 
                         if (bFilledArrows) {
                             Polygon p = new Polygon();
@@ -1092,7 +1098,7 @@ public class MapPanel extends JPanel {
                         }
                     }
                 }
-            });
+            }
         }
     }
 

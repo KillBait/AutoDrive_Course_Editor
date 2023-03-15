@@ -1,10 +1,14 @@
 package AutoDriveEditor.GUI.Buttons;
 
 import AutoDriveEditor.RoadNetwork.MapNode;
+import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
 
@@ -12,17 +16,19 @@ import static AutoDriveEditor.AutoDriveEditor.buttonManager;
 import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogGUIInfo;
 import static AutoDriveEditor.Managers.ButtonManager.ButtonNode;
 import static AutoDriveEditor.Managers.ButtonManager.ButtonState;
-import static AutoDriveEditor.Managers.MultiSelectManager.clearMultiSelection;
+import static AutoDriveEditor.Managers.MultiSelectManager.*;
+import static AutoDriveEditor.Managers.MultiSelectManager.rectangleEnd;
+import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.Utils.MathUtils.getNormalizedRectangleFor;
 
-public abstract class BaseButton implements ButtonState, ActionListener, MouseListener
-{
-
-    //protected abstract String getInfoText();
+public abstract class BaseButton implements ButtonState, ActionListener, MouseListener {
 
     private ButtonNode buttonNode;
     protected AbstractButton button;
+
+    ArrayList<MapNode> selectionNodes = new ArrayList<>();
 
     public String getButtonID() { return "BaseButton"; }
     public String getButtonAction() { return null; }
@@ -30,6 +36,7 @@ public abstract class BaseButton implements ButtonState, ActionListener, MouseLi
     public Boolean ignoreDeselect() {
         return false;
     }
+    public Boolean ignoreMultiSelect() { return true; }
 
     public void actionPerformed(ActionEvent e) {
         if (button.isSelected()) {
@@ -69,19 +76,52 @@ public abstract class BaseButton implements ButtonState, ActionListener, MouseLi
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON3) {
-            if (button.isSelected()) clearMultiSelection();
+        if (!buttonNode.button.ignoreMultiSelect()) {
+            if (e.getButton() == MouseEvent.BUTTON3) {
+                if (button.isSelected()) clearMultiSelection();
+            }
         }
     }
 
     @Override
-    public void mousePressed(MouseEvent e) {}
+    public void mousePressed(MouseEvent e) {
+        if (!buttonNode.button.ignoreMultiSelect()) {
+            if (e.getButton() == MouseEvent.BUTTON3) {
+                startMultiSelect(e.getX(), e.getY());
+            }
+        }
+    }
 
     @Override
-    public void mouseReleased(MouseEvent e) {}
+    public void mouseReleased(MouseEvent e) {
+        if (!buttonNode.button.ignoreMultiSelect()) {
+            if (e.getButton() == MouseEvent.BUTTON3) {
+                for (MapNode node : selectionNodes) { node.isInSelectionArea = false; }
+                selectionNodes.clear();
+                stopMultiSelect(e.getX(), e.getY());
+                getAllNodesInSelectedArea(rectangleStart, rectangleEnd);
+            }
+        }
+    }
 
     @Override
-    public void mouseDragged(MouseEvent e) {}
+    public void mouseDragged(MouseEvent e) {
+        if (!buttonNode.button.ignoreMultiSelect()) {
+            if (rectangleStart != null && isMultiSelectDragging) {
+                Point2D selectEnd = screenPosToWorldPos(e.getX(), e.getY());
+                Rectangle2D rectangle = getNormalizedRectangleFor(rectangleStart.getX(), rectangleStart.getY(), selectEnd.getX() - rectangleStart.getX(), selectEnd.getY() - rectangleStart.getY());
+                for (MapNode node : selectionNodes) { node.isInSelectionArea = false; }
+                selectionNodes.clear();
+                for (MapNode mapNode : RoadMap.networkNodesList) {
+                    if (mapNode.x > rectangle.getX() && mapNode.x < rectangle.getX() + rectangle.getWidth() && mapNode.z > rectangle.getY() && mapNode.z < rectangle.getY() + rectangle.getHeight()) {
+                        if (!selectionNodes.contains(mapNode)) selectionNodes.add(mapNode);
+                        mapNode.isInSelectionArea = true;
+                    }
+                }
+                getMapPanel().repaint();
+            }
+        }
+    }
 
     @Override
     public void mouseMoved(MouseEvent e) {}

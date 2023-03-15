@@ -3,6 +3,7 @@ package AutoDriveEditor.RoadNetwork;
 import java.util.LinkedList;
 
 import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogMarkerInfo;
+import static AutoDriveEditor.RoadNetwork.RoadMap.createMapNode;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.Utils.MathUtils.roundUpDoubleToDecimalPlaces;
 
@@ -32,6 +33,7 @@ public class MapNode {
     public LinkedList<MapNode> warningNodes;
     public int warningType;
     public boolean scheduledToBeDeleted;
+    public boolean isInSelectionArea;
 
     public MapNode(int id, double x, double y, double z, int flag, boolean isSelected, boolean isControlNode) {
 
@@ -54,6 +56,7 @@ public class MapNode {
         this.warningNodes = new LinkedList<>();
         this.warningType = NODE_WARNING_NONE;
         this.scheduledToBeDeleted = false;
+        this.isInSelectionArea = false;
     }
 
     public void createMapMarker(String newName, String newGroup) {
@@ -103,8 +106,49 @@ public class MapNode {
         this.isSelected = selected;
     }
 
+    public static int getConnectionsFor(MapNode mapNode) {
+        int result = 0;
+        for (MapNode outgoing : mapNode.outgoing) {
+            //Point2D outPos = worldPosToScreenPos(outgoing.x, outgoing.z);
+            if (RoadMap.isDual(mapNode, outgoing)) {
+                result = 3;
+            } else if (RoadMap.isReverse(mapNode, outgoing)) {
+                result = 4;
+            } else {
+                if (mapNode.flag == 1) {
+                    result = 2;
+                } else {
+                    result = 1;
+
+                }
+            }
+        }
+
+        if (result == 0) {
+            if (mapNode.incoming.size() > 0) {
+                for (MapNode incoming : mapNode.incoming) {
+                    //Point2D outPos = worldPosToScreenPos(outgoing.x, outgoing.z);
+                    if (RoadMap.isDual(mapNode, incoming)) {
+                        result = 3;
+                    } else if (mapNode.flag == 1) {
+                        result = 2;
+                    } else {
+                        result = 1;
+                    }
+                }
+            } else {
+                for (MapNode nodes : RoadMap.networkNodesList) {
+                    if (nodes.outgoing.contains(mapNode)) {
+                        result = 4;
+                        break;
+                    }
+                }
+            }
+        }
+        return result;
+    }
     public MapNode getCopyOfNode(MapNode oldNode) {
-        MapNode newNode = new MapNode(oldNode.id, oldNode.x, oldNode.y, oldNode.z, oldNode.flag, oldNode.isSelected, oldNode.isControlNode);
+        MapNode newNode = createMapNode(oldNode.id, oldNode.x, oldNode.y, oldNode.z, oldNode.flag, oldNode.isSelected, oldNode.isControlNode);
         newNode.incoming = new LinkedList<>();
         newNode.incoming.addAll(oldNode.incoming);
         newNode.outgoing = new LinkedList<>();

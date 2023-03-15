@@ -17,6 +17,7 @@ public class ButtonManager {
         String getButtonAction();
         String getButtonPanel();
         Boolean ignoreDeselect();
+        Boolean ignoreMultiSelect();
         void setNode(ButtonNode buttonNode);
         void setEnabled(boolean enabled);
         void setSelected(boolean selected);

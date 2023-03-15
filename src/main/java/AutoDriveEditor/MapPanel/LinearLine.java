@@ -2,7 +2,6 @@ package AutoDriveEditor.MapPanel;
 
 import AutoDriveEditor.GUI.Buttons.LinerLineBaseButton;
 import AutoDriveEditor.RoadNetwork.MapNode;
-import AutoDriveEditor.RoadNetwork.RoadMap;
 
 import java.awt.geom.Point2D;
 import java.util.LinkedList;
@@ -10,6 +9,8 @@ import java.util.LinkedList;
 import static AutoDriveEditor.AutoDriveEditor.changeManager;
 import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogLinearlineInfo;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
+import static AutoDriveEditor.RoadNetwork.RoadMap.createMapNode;
+import static AutoDriveEditor.RoadNetwork.RoadMap.createNewNetworkNode;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.linearLineNodeDistance;
 
@@ -49,12 +50,12 @@ public class LinearLine {
                 Point2D.Double point = new Point2D.Double();
                 point.x = this.lineStartNode.x * (1 - ((double)i / multiplier)) + lineEndWorldLocation.getX() * ((double)i / multiplier);
                 point.y = this.lineStartNode.z * (1 - ((double)i / multiplier)) + lineEndWorldLocation.getY() * ((double)i / multiplier);
-                this.lineNodeList.add(new MapNode(id, point.getX(), 0, point.getY(), this.nodeType, false, false));
+                this.lineNodeList.add(createMapNode(id, point.getX(), 0, point.getY(), this.nodeType, false, false));
                 id++;
             }
         } else {
-            this.lineNodeList.add(new MapNode(0, this.lineStartNode.x, 0, this.lineStartNode.z, this.nodeType, false, false));
-            this.lineNodeList.add(new MapNode(1, this.lineEndWorldLocation.getX(), 0, this.lineEndWorldLocation.getY(), this.nodeType, false, false));
+            this.lineNodeList.add(createMapNode(0, this.lineStartNode.x, 0, this.lineStartNode.z, this.nodeType, false, false));
+            this.lineNodeList.add(createMapNode(1, this.lineEndWorldLocation.getX(), 0, this.lineEndWorldLocation.getY(), this.nodeType, false, false));
         }
 
 
@@ -106,24 +107,21 @@ public class LinearLine {
         for (int j = 1; j < this.lineNodeList.size() - 1; j++) {
             MapNode tempNode = this.lineNodeList.get(j);
             heightMapY = lineStartNode.y + ( yInterpolation * j);
-            MapNode newNode = new MapNode(RoadMap.networkNodesList.size() + 1, tempNode.x, heightMapY, tempNode.z, nodeType, false, false);
-            RoadMap.networkNodesList.add(newNode);
+            MapNode newNode = createNewNetworkNode(tempNode.x, heightMapY, tempNode.z, nodeType, false, false);
             mergeNodesList.add(newNode);
             if (bDebugLogLinearlineInfo) LOG.info("## LinearLine.commit Debug ## creating node {} : ID {} at x {}, y {}, z {}", j, newNode.id, newNode.x, newNode.y, newNode.z);
         }
 
         if (selectedEndNode == null) {
             if (bDebugLogLinearlineInfo) LOG.info("## LinearLine.commit Debug ## Node does not exists at end location...Creating node");
-            //Point2D endNodeWorldLoc = screenPosToWorldPos((int)endConnectionScreenPos.getX(), (int)endConnectionScreenPos.getY());
             double lineEndHeightmapYValue = getYValueFromHeightMap(lineEndWorldLocation.getX(), lineEndWorldLocation.getY());
-            MapNode newEndNode = new MapNode(RoadMap.networkNodesList.size() + 1, lineEndWorldLocation.getX(), lineEndHeightmapYValue, lineEndWorldLocation.getY(), nodeType, false, false);
+            MapNode newEndNode = createNewNetworkNode(lineEndWorldLocation.getX(), lineEndHeightmapYValue, lineEndWorldLocation.getY(), nodeType, false, false);
+
             if (bDebugLogLinearlineInfo) LOG.info("## LinearLine.commit Debug ## Created end node at world co-ordinates {},{},{}",lineEndWorldLocation.getX(), lineEndHeightmapYValue, lineEndWorldLocation.getY());
-            RoadMap.networkNodesList.add(newEndNode);
             selectedEndNode = newEndNode;
             endNodeCreated = true;
         } else {
             if (bDebugLogLinearlineInfo) LOG.info("## LinearLine.commit Debug ## End node exists...skipping creation");
-            //RoadMap.networkNodesList.add(endNode);
         }
 
         if (bDebugLogLinearlineInfo) LOG.info("## LinearLine.commit Debug ## Start ID = {} : End ID = {} : EndNodeCreated = {} : mergeNodesList size = {} : connectionType = {}", this.lineStartNode.id, selectedEndNode.id, endNodeCreated, mergeNodesList.size()-1, connectionType);

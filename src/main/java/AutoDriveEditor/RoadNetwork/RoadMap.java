@@ -31,25 +31,29 @@ public class RoadMap {
         uuid = UUID.randomUUID();
     }
 
-    public static MapNode createNewMapNode(int id, double x, double z, int nodeType, boolean isSelected, boolean isControlNode) {
+    public static MapNode createMapNode(int id, double x, double z, int nodeType, boolean isSelected, boolean isControlNode) {
         double xPos = limitDoubleToDecimalPlaces(x,3, RoundingMode.HALF_UP);
         double yPos = limitDoubleToDecimalPlaces(getYValueFromHeightMap(x, z),3, RoundingMode.HALF_UP);
         double zPos = limitDoubleToDecimalPlaces(z,3, RoundingMode.HALF_UP);
         return new MapNode(id, xPos, yPos, zPos, nodeType, isSelected, isControlNode);
     }
 
-    @SuppressWarnings("unused")
-    public MapNode createNewMapNode(int id, double x, double y, double z, int nodeType, boolean isSelected, boolean isControlNode) {
+    public static MapNode createMapNode(int id, double x, double y, double z, int nodeType, boolean isSelected, boolean isControlNode) {
         double xPos = limitDoubleToDecimalPlaces(x,3, RoundingMode.HALF_UP);
         double yPos = limitDoubleToDecimalPlaces(y,3, RoundingMode.HALF_UP);
         double zPos = limitDoubleToDecimalPlaces(z,3, RoundingMode.HALF_UP);
         return new MapNode(id, xPos, yPos, zPos, nodeType, isSelected, isControlNode);
     }
 
-    @SuppressWarnings({"AccessStaticViaInstance", "unused"})
-    public static MapNode createNewNetworkNode(RoadMap roadMap, double x, double z, int nodeType, boolean isSelected, boolean isControlNode) {
-        MapNode createdNode = createNewMapNode(roadMap.networkNodesList.size() + 1, x, z, nodeType, isSelected, isControlNode);
-        roadMap.networkNodesList.add(createdNode);
+    public static MapNode createNewNetworkNode(double x, double z, int nodeType, boolean isSelected, boolean isControlNode) {
+        MapNode createdNode = createMapNode(RoadMap.networkNodesList.size() + 1, x, z, nodeType, isSelected, isControlNode);
+        RoadMap.networkNodesList.add(createdNode);
+        return createdNode;
+    }
+
+    public static MapNode createNewNetworkNode(double x, double y, double z, int nodeType, boolean isSelected, boolean isControlNode) {
+        MapNode createdNode = createMapNode(RoadMap.networkNodesList.size() + 1, x, y, z, nodeType, isSelected, isControlNode);
+        RoadMap.networkNodesList.add(createdNode);
         return createdNode;
     }
 

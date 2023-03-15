@@ -551,6 +551,22 @@ public class MenuListener implements ActionListener, ItemListener {
                 }
                 forceMapImageRedraw();
                 break;
+            case MENU_DISPLAY_HIDE_REGULAR:
+                bHideRegularConnection = menuItem.isSelected();
+                getMapPanel().repaint();
+                break;
+            case MENU_DISPLAY_HIDE_DUAL:
+                bHideDualConnection = menuItem.isSelected();
+                getMapPanel().repaint();
+                break;
+            case MENU_DISPLAY_HIDE_SUBPRIO:
+                bHideSubprioConnection = menuItem.isSelected();
+                getMapPanel().repaint();
+                break;
+            case MENU_DISPLAY_HIDE_REVERSE:
+                bHideReverseConnection = menuItem.isSelected();
+                getMapPanel().repaint();
+                break;
             case MENU_DEBUG_SHOWID:
                 bDebugShowID = menuItem.isSelected();
                 mapPanel.repaint();

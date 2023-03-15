@@ -38,6 +38,7 @@ import static AutoDriveEditor.Managers.MultiSelectManager.clearMultiSelection;
 import static AutoDriveEditor.Managers.ScanManager.scanNetworkForOverlapNodes;
 import static AutoDriveEditor.MapPanel.MapImage.*;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
+import static AutoDriveEditor.RoadNetwork.RoadMap.createMapNode;
 import static AutoDriveEditor.RoadNetwork.RoadMap.setRoadMapNodes;
 import static AutoDriveEditor.Utils.FileUtils.removeExtension;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
@@ -240,7 +241,6 @@ public class GameXML {
                     LOG.info("<waypoints> key = {} ID's", ids.length);
                     LOG.info("----------------------------");
 
-
                     nodeList = eElement.getElementsByTagName("x").item(0).getChildNodes();
                     node = nodeList.item(0);
                     String xString = node.getNodeValue();
@@ -303,7 +303,7 @@ public class GameXML {
                             }
                         }
 
-                        MapNode mapNode = new MapNode(id, x, y, z, flag, false, false);
+                        MapNode mapNode = createMapNode(id, x, y, z, flag, false, false);
                         nodes.add(mapNode);
                     }
 

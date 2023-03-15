@@ -27,21 +27,22 @@ public class GridSnapButton extends OptionsBaseButton {
         snapIconSelected = getImageIcon("editor/buttons/gridsnaptoggle_selected.png");
         subSnapIconSelected = getImageIcon("editor/buttons/gridsubtoggle_selected.png");
 
-        if (bGridSnapSubs) {
-            tooltip = "options_grid_snap_sub_enabled_tooltip";
-            icon = "buttons/gridsubtoggle_selected";
-            isSelected = true;
-        } else if (bGridSnap) {
-            tooltip = "options_grid_snap_enabled_tooltip";
-            icon = "buttons/gridsnaptoggle_selected";
+        if (bGridSnap) {
+            if (bGridSnapSubs) {
+                tooltip = "options_grid_snap_sub_enabled_tooltip";
+                icon = "buttons/gridsubtoggle_selected";
+            } else {
+                tooltip = "options_grid_snap_enabled_tooltip";
+                icon = "buttons/gridsnaptoggle_selected";
+            }
             isSelected = true;
         } else {
             tooltip = "options_grid_snap_disabled_tooltip";
-            icon = "buttons/gridsnaptoggle";
+            icon = "buttons/gridsnaptoggle_selected";
             isSelected = false;
         }
 
-        button = makeImageToggleButton("buttons/gridsnaptoggle", icon, null, tooltip, tooltip, panel, bGridSnap, false, null, false, this);
+        button = makeImageToggleButton("buttons/gridsnaptoggle", icon, null, tooltip, tooltip, panel, isSelected, false, null, false, this);
         InputMap iMap = getMapPanel().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap aMap = getMapPanel().getActionMap();
 

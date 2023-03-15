@@ -13,6 +13,7 @@ public abstract class CopyPasteBaseButton extends BaseButton {
         if (isMultipleSelected && multiSelectList.size() > 0 ) {
             cnpManager.CutSelection(multiSelectList);
             MapPanel.getMapPanel().repaint();
+
         } else {
             LOG.info("Nothing to Cut");
         }
@@ -24,10 +25,12 @@ public abstract class CopyPasteBaseButton extends BaseButton {
         } else {
             LOG.info("Nothing to Copy");
         }
+        MapPanel.getMapPanel().repaint();
     }
 
     public static void pasteSelected() {
         cnpManager.PasteSelection(false);
+        MapPanel.getMapPanel().repaint();
     }
 
     public static void pasteSelectedInOriginalLocation() {

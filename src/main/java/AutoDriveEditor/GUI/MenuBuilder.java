@@ -8,6 +8,7 @@ import java.awt.event.KeyEvent;
 
 import static AutoDriveEditor.AutoDriveEditor.DEBUG;
 import static AutoDriveEditor.AutoDriveEditor.EXPERIMENTAL;
+import static AutoDriveEditor.Managers.MultiSelectManager.multiSelectList;
 import static AutoDriveEditor.MapPanel.MapImage.heightMapImage;
 import static AutoDriveEditor.MapPanel.MapImage.setImage;
 import static AutoDriveEditor.MapPanel.MapPanel.*;
@@ -57,12 +58,20 @@ public class MenuBuilder {
     public static final String MENU_ZOOM_42km = "42km";
     public static final String MENU_ZOOM_44km = "44km";
     public static final String MENU_ZOOM_46km = "45km";
+
     public static final String MENU_HEIGHTMAP_LOAD = "Load HeightMap";
     public static final String MENU_HEIGHTMAP_SAVE = "Save Heightmap";
     public static final String MENU_HEIGHTMAP_SHOW = "Show HeightMap";
     public static final String MENU_HEIGHTMAP_FIX = "Fix Node Height";
+
     public static final String MENU_SCAN_OVERLAP="Scan Overlap";
     public static final String MENU_SCAN_MERGE="Merge Overlap";
+
+    public static final String MENU_DISPLAY_HIDE_REGULAR = "Hide Regular Connections";
+    public static final String MENU_DISPLAY_HIDE_DUAL = "Hide Dual Connections";
+    public static final String MENU_DISPLAY_HIDE_SUBPRIO = "Hide Subprio Connections";
+    public static final String MENU_DISPLAY_HIDE_REVERSE = "Hide Reverse Connections";
+
     public static final String MENU_ABOUT = "About";
     public static final String MENU_VERSION_HISTORY = "Version History";
     public static final String MENU_DEBUG_ENABLE = "Enable Debug";
@@ -94,8 +103,17 @@ public class MenuBuilder {
 
     public static MenuListener menuListener;
 
-    public static JMenu fileMenu, editMenu, mapMenu, routesMenu, heightmapMenu,
-                        helpMenu, subMenu, fixItMenu, loggingSubMenu, debugMenu;
+    public static JMenu fileMenu,
+            editMenu,
+            mapMenu,
+            routesMenu,
+            heightmapMenu,
+            helpMenu,
+            subMenu,
+            fixItMenu,
+            displayMenu,
+            loggingSubMenu,
+            debugMenu;
     public static JMenuBar menuBar;
     public static JMenuItem loadImageMenuItem;
     public static JMenuItem importFS19DDSMenuItem;
@@ -146,6 +164,10 @@ public class MenuBuilder {
     public static JMenuItem showHeightMapMenuItem;
     public static JMenuItem scanNetworkMenuItem;
     public static JMenuItem mergeNodesMenuItem;
+    public static boolean bHideRegularConnection;
+    public static boolean bHideDualConnection;
+    public static boolean bHideSubprioConnection;
+    public static boolean bHideReverseConnection;
 
     public static boolean bShowHeightMap;
     public static boolean bDebugEnable;
@@ -185,19 +207,16 @@ public class MenuBuilder {
         saveConfigAsMenuItem = makeMenuItem("menu_file_saveasconfig", "menu_file_saveasconfig_accstring",  KeyEvent.VK_A, InputEvent.ALT_DOWN_MASK,fileMenu, menuListener,MENU_SAVE_SAVEAS, false );
         makeMenuItem("menu_file_exit",  "menu_file_exit_accstring", KeyEvent.VK_Q, InputEvent.ALT_DOWN_MASK, fileMenu, menuListener, MENU_EXIT, true );
 
-        // Create the edit menu
+        // Create the routes menu
 
-        routesMenu = makeMenu("menu_routes", KeyEvent.VK_M, "menu_routes_accstring", menuBar);
+        routesMenu = makeMenu("menu_routes", KeyEvent.VK_R, "menu_routes_accstring", menuBar);
         loadRoutesConfig = makeMenuItem("menu_routes_load_config", "menu_routes_load_config_accstring", routesMenu, menuListener, MENU_LOAD_ROUTES_MANAGER_CONFIG, true);
         loadRoutesXML = makeMenuItem("menu_routes_load_xml", "menu_routes_load_xml_accstring", routesMenu, menuListener, MENU_LOAD_ROUTES_MANAGER_XML, true );
         saveRoutesXML = makeMenuItem("menu_routes_save_xml", "menu_routes_save_xml_accstring", routesMenu, menuListener, MENU_SAVE_ROUTES_MANAGER_XML, false );
 
-        // Create the edit menu
+        // Create the edit ( undo/redo ) menu
 
         editMenu = makeMenu("menu_edit", KeyEvent.VK_E, "menu_edit_accstring", menuBar);
-
-        // Create the Undo/Redo menu
-
         undoMenuItem = makeMenuItem("menu_edit_undo",  "menu_edit_undo_accstring", KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK, editMenu, menuListener, MENU_EDIT_UNDO, false );
         redoMenuItem = makeMenuItem("menu_edit_redo",  "menu_edit_redo_accstring", KeyEvent.VK_Z, InputEvent.SHIFT_DOWN_MASK, editMenu, menuListener, MENU_EDIT_REDO, false );
         cutMenuItem = makeMenuItem("menu_edit_cut",  "menu_edit_cut_accstring", KeyEvent.VK_X, InputEvent.CTRL_DOWN_MASK, editMenu, menuListener, MENU_EDIT_CUT, false );
@@ -256,6 +275,16 @@ public class MenuBuilder {
         scanNetworkMenuItem = makeMenuItem("menu_scan_overlap", "menu_scan_overlap_accstring", fixItMenu, menuListener, MENU_SCAN_OVERLAP, false);
         mergeNodesMenuItem = makeMenuItem("menu_scan_merge", "menu_scan_merge_accstring", fixItMenu, menuListener, MENU_SCAN_MERGE, false);
 
+        // Create the Display menu
+
+        if (EXPERIMENTAL) {
+            displayMenu = makeMenu("menu_display", KeyEvent.VK_I, "menu_display_accstring", menuBar);
+            makeCheckBoxMenuItem("menu_display_hide_regular", "menu_display_hide_regular", bHideRegularConnection, displayMenu, menuListener, MENU_DISPLAY_HIDE_REGULAR, true);
+            makeCheckBoxMenuItem("menu_display_hide_subprio", "menu_display_hide_subprio", bHideSubprioConnection, displayMenu, menuListener, MENU_DISPLAY_HIDE_SUBPRIO, true);
+            makeCheckBoxMenuItem("menu_display_hide_dual", "menu_display_hide_dual", bHideDualConnection, displayMenu, menuListener, MENU_DISPLAY_HIDE_DUAL, true);
+            makeCheckBoxMenuItem("menu_display_hide_reverse", "menu_display_hide_reverse", bHideReverseConnection, displayMenu, menuListener, MENU_DISPLAY_HIDE_REVERSE, true);
+        }
+
         // Create the Help menu
 
         helpMenu = makeMenu("menu_help", KeyEvent.VK_H, "menu_help_accstring", menuBar);
@@ -309,13 +338,22 @@ public class MenuBuilder {
         }
     }
 
-    public static void editMenuEnabled(boolean enabled) {
-        undoMenuItem.setEnabled(enabled);
-        redoMenuItem.setEnabled(enabled);
-        cutMenuItem.setEnabled(enabled);
-        copyMenuItem.setEnabled(enabled);
-        pasteMenuItem.setEnabled(enabled);
-        pasteOriginalLocationMenuItem.setEnabled(enabled);
+    public static void updateEditMenu() {
+        if (multiSelectList.size() > 0) {
+            cutMenuItem.setEnabled(true);
+            copyMenuItem.setEnabled(true);
+        } else {
+            cutMenuItem.setEnabled(false);
+            copyMenuItem.setEnabled(false);
+        }
+
+        if (!cnpManager.isCopyPasteBufferEmpty()) {
+            pasteMenuItem.setEnabled(true);
+            pasteOriginalLocationMenuItem.setEnabled(true);
+        } else {
+            pasteMenuItem.setEnabled(false);
+            pasteOriginalLocationMenuItem.setEnabled(false);
+        }
     }
 
     public static void mapMenuEnabled(boolean enabled) {

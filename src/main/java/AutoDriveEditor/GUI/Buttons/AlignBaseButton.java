@@ -18,6 +18,9 @@ public abstract class AlignBaseButton extends BaseButton {
     protected abstract void adjustNodesTo(MapNode toNode);
 
     @Override
+    public Boolean ignoreMultiSelect() { return false; }
+
+    @Override
     public void mouseClicked(MouseEvent e) {
         super.mouseClicked(e);
         if (e.getButton() == MouseEvent.BUTTON1) {
@@ -33,26 +36,6 @@ public abstract class AlignBaseButton extends BaseButton {
                 getMapPanel().repaint();
             }
         }
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON3) {
-            startMultiSelect(e.getX(), e.getY());
-        }
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON3) {
-            stopMultiSelect(e.getX(), e.getY());
-            getAllNodesInSelectedArea(rectangleStart, rectangleEnd);
-        }
-    }
-
-    @Override
-    public void mouseDragged(MouseEvent e) {
-        getMapPanel().repaint();
     }
 
     public static class AlignmentChanger implements ChangeManager.Changeable {
