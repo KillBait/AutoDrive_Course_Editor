@@ -1293,6 +1293,32 @@ public class MapPanel extends JPanel {
     public void mouseButton3Released(int ignoredMousePosX, int ignoredMousePosY) {}
 
 
+    public static void fixOutOfBoundsNodes() {
+        if (roadMap != null) {
+            int result = JOptionPane.showConfirmDialog(editor, getLocaleString("dialog_fix_out-of-bound_nodes"), "AutoDrive Editor", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (result == JOptionPane.OK_OPTION) {
+                MapNode firstMapNode = null;
+                double mapHeight = heightMapImage.getHeight()-1;
+                double mapWidth= heightMapImage.getWidth()-1;
+                for (MapNode node : RoadMap.networkNodesList) {
+                    if (node.x > mapWidth || node.x < -mapWidth || node.z > mapHeight || node.z < -mapHeight) {
+                        node.x = 0.0;
+                        node.z = 0.0;
+                        //store first node found
+                        if (firstMapNode==null)
+                            firstMapNode = node;
+                    }
+                }
+                // Centre screen on first node
+                if (firstMapNode != null)
+                    centreNodeInMapPanel(firstMapNode);
+            }
+             else {
+                LOG.info("Cancelled out-of-bound node fix.");
+            }
+        }
+    }
+
 
     public static void fixNodeHeight() {
         if (roadMap != null) {

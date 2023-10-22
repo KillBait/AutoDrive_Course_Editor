@@ -508,6 +508,9 @@ public class MenuListener implements ActionListener, ItemListener {
             case MENU_HEIGHTMAP_FIX:
                 fixNodeHeight();
                 break;
+            case MENU_OUTOFBOUNDS_FIX:
+                fixOutOfBoundsNodes();
+                break;
             case MENU_SCAN_OVERLAP:
                 mapPanel.showScanDialog();
                 break;

@@ -63,6 +63,7 @@ public class MenuBuilder {
     public static final String MENU_HEIGHTMAP_SAVE = "Save Heightmap";
     public static final String MENU_HEIGHTMAP_SHOW = "Show HeightMap";
     public static final String MENU_HEIGHTMAP_FIX = "Fix Node Height";
+    public static final String MENU_OUTOFBOUNDS_FIX = "Center Out-Of-Bounds Nodes";
 
     public static final String MENU_SCAN_OVERLAP="Scan Overlap";
     public static final String MENU_SCAN_MERGE="Merge Overlap";
@@ -164,6 +165,7 @@ public class MenuBuilder {
     public static JMenuItem showHeightMapMenuItem;
     public static JMenuItem scanNetworkMenuItem;
     public static JMenuItem mergeNodesMenuItem;
+    public static JMenuItem fixOutOfBoundNodesMenuItem;
     public static boolean bHideRegularConnection;
     public static boolean bHideDualConnection;
     public static boolean bHideSubprioConnection;
@@ -274,6 +276,7 @@ public class MenuBuilder {
         fixItMenu = makeMenu("menu_scan", KeyEvent.VK_S, "menu_scan_accstring", menuBar);
         scanNetworkMenuItem = makeMenuItem("menu_scan_overlap", "menu_scan_overlap_accstring", fixItMenu, menuListener, MENU_SCAN_OVERLAP, false);
         mergeNodesMenuItem = makeMenuItem("menu_scan_merge", "menu_scan_merge_accstring", fixItMenu, menuListener, MENU_SCAN_MERGE, false);
+        fixOutOfBoundNodesMenuItem = makeMenuItem("menu_heightmap_fix_oob_nodes", "menu_heightmap_fix_oob_nodes_accstring", fixItMenu, menuListener, MENU_OUTOFBOUNDS_FIX,false);
 
         // Create the Display menu
 
@@ -379,6 +382,7 @@ public class MenuBuilder {
             if (bShowHeightMap) setImage(heightMapImage, true);
         }
         fixNodesHeightMenuItem.setEnabled(enabled);
+        fixOutOfBoundNodesMenuItem.setEnabled(enabled);
     }
 
     public static void scanMenuEnabled(boolean enabled) {
