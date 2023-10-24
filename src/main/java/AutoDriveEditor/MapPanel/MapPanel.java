@@ -1298,8 +1298,8 @@ public class MapPanel extends JPanel {
             int result = JOptionPane.showConfirmDialog(editor, getLocaleString("dialog_fix_out-of-bound_nodes"), "AutoDrive Editor", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (result == JOptionPane.OK_OPTION) {
                 MapNode firstMapNode = null;
-                double mapHeight = heightMapImage.getHeight()-1;
-                double mapWidth= heightMapImage.getWidth()-1;
+                double mapHeight = mapPanelImage.getHeight() / 2F;
+                double mapWidth= mapPanelImage.getWidth() / 2F;
                 for (MapNode node : RoadMap.networkNodesList) {
                     if (node.x > mapWidth || node.x < -mapWidth || node.z > mapHeight || node.z < -mapHeight) {
                         node.x = 0.0;
