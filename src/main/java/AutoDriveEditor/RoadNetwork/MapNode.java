@@ -61,7 +61,11 @@ public class MapNode {
 
     public void createMapMarker(String newName, String newGroup) {
         if (bDebugLogMarkerInfo) LOG.info("Creating Map Marker for Node ID {} ( Name = {}, Group = {} )", this.id, newName, newGroup);
-        this.mapMarker = new MapMarker(newName, newGroup);
+        this.mapMarker = new MapMarker(newName, newGroup, 0);
+    }
+    public void createMapMarker(String newName, String newGroup, int newParkDestinationVehicleId) {
+        if (bDebugLogMarkerInfo) LOG.info("Creating Map Marker for Node ID {} ( Name = {}, Group = {}, ParkingDestinationVehicleID = {} )", this.id, newName, newGroup, newParkDestinationVehicleId);
+        this.mapMarker = new MapMarker(newName, newGroup, newParkDestinationVehicleId);
     }
 
     public void removeMapMarker() {
@@ -77,6 +81,7 @@ public class MapNode {
     public boolean hasMapMarker() {
         return this.mapMarker != null;
     }
+    public boolean isParkDestination() {return ( this.mapMarker != null && this.mapMarker.parkedVehicleId > 0 ); }
 
     public boolean isControlNode() {
         return this.isControlNode;
@@ -93,11 +98,17 @@ public class MapNode {
     public String getMarkerGroup() {
         return this.mapMarker.group;
     }
+    public int getParkedVehicleId() {
+        return this.mapMarker.parkedVehicleId;
+    }
     public void setMarkerName(String markerName) {
         this.mapMarker.name = markerName;
     }
     public void setMarkerGroup(String markerGroup) {
         this.mapMarker.group = markerGroup;
+    }
+    public int setParkedVehicleId(int parkedVehicleId) {
+        return this.mapMarker.parkedVehicleId = parkedVehicleId;
     }
     public void setControlNode(boolean isControlNode) {
         this.isControlNode = isControlNode;
@@ -154,7 +165,7 @@ public class MapNode {
         newNode.outgoing = new LinkedList<>();
         newNode.outgoing.addAll(oldNode.outgoing);
         if (oldNode.hasMapMarker()) {
-            newNode.createMapMarker(oldNode.getMarkerName(), oldNode.getMarkerGroup());
+            newNode.createMapMarker(oldNode.getMarkerName(), oldNode.getMarkerGroup(),0);
         }
         newNode.hasWarning = oldNode.hasWarning;
         newNode.warningNodes.addAll(oldNode.warningNodes);
@@ -166,10 +177,12 @@ public class MapNode {
     private static class MapMarker {
         public String name;
         public String group;
+        public int parkedVehicleId;
 
-        public MapMarker (String name, String group) {
+        public MapMarker (String name, String group, int parkedVehicleId) {
             this.name = name;
             this.group = group;
+            this.parkedVehicleId = parkedVehicleId;
         }
     }
 }

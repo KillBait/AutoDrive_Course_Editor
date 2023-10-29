@@ -309,7 +309,7 @@ public class RoutesXML {
                 String markerGroup = eElement.getAttribute("g");
                 if (bDebugLogRouteManager) LOG.info("Marker {} : ID {} , name '{}' , group '{}'", temp+1, markerNodeId, markerName, markerGroup);
                 MapNode node = nodes.get(Integer.parseInt(markerNodeId) -1);
-                node.createMapMarker(markerName, markerGroup);
+                node.createMapMarker(markerName, markerGroup, 0);
             }
         }
         RoadMap roadMap = new RoadMap();
