@@ -168,7 +168,7 @@ public class MapNode {
         newNode.outgoing = new LinkedList<>();
         newNode.outgoing.addAll(oldNode.outgoing);
         if (oldNode.hasMapMarker()) {
-            newNode.createMapMarker(oldNode.getMarkerName(), oldNode.getMarkerGroup(),null);
+            newNode.createMapMarker(oldNode.getMarkerName(), oldNode.getMarkerGroup());
         }
         newNode.hasWarning = oldNode.hasWarning;
         newNode.warningNodes.addAll(oldNode.warningNodes);
