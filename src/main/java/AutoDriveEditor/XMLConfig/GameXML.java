@@ -329,7 +329,7 @@ public class GameXML {
 
 
         NodeList markerList = doc.getElementsByTagName("mapmarker");
-        HashMap<Integer, Integer> vehicleParkingMap = loadVehiclesXMLParking(fXmlFile);
+        HashMap<Integer, List<Integer>> vehicleParkingMap = loadVehiclesXMLParking(fXmlFile);
 
         for (int temp = 0; temp < markerList.getLength(); temp++) {
             Node markerNode = markerList.item(temp);
@@ -352,9 +352,9 @@ public class GameXML {
                     node = groupNodeList.item(markerIndex).getChildNodes().item(0);
                     String markerGroup = node.getNodeValue();
 
-                    Integer markerVehicleParked = vehicleParkingMap.get(markerIndex + 1);
-                    if (markerVehicleParked == null)
-                        markerVehicleParked = 0;
+                    List<Integer> markerVehiclesParked = vehicleParkingMap.get(markerIndex + 1);
+                  /*  if (markerVehiclesParked == null)
+                        markerVehiclesParked = 0; */
 
                     // AD 6.0.0.4 config fix for Node ID's being Long Format
                     float num = Float.parseFloat(markerNodeId);
@@ -362,7 +362,7 @@ public class GameXML {
 
                     // add the marker info to the node
                     MapNode mapNode = nodes.get(id - 1);
-                    mapNode.createMapMarker(markerName, markerGroup, markerVehicleParked);
+                    mapNode.createMapMarker(markerName, markerGroup, markerVehiclesParked);
                     if (bDebugLogConfigInfo)
                         LOG.info("created marker - index {} ( ID {} ) , name {} , group {} , Parking Index {}", id - 1, id, markerName, markerGroup, markerIndex + 1);
                 }
@@ -534,7 +534,7 @@ public class GameXML {
 
         NodeList markerList = doc.getElementsByTagName("mapmarker");
         Node markerNode = markerList.item(0);
-        HashMap<Integer,Integer> parkDestinations = new HashMap<>();
+        HashMap<Integer, Integer> parkDestinations = new HashMap<>();
         int mapMarkerCount = 1;
         for (MapNode mapNode : RoadMap.networkNodesList) {
             if (mapNode.hasMapMarker()) {
@@ -553,8 +553,14 @@ public class GameXML {
                 newMarkerElement.appendChild(markerGroup);
 
                 // store maker id & vehicle ID for parkDestination in vehicles.xml
-                if (mapNode.isParkDestination())
-                    parkDestinations.put(mapNode.getParkedVehicleId(),mapMarkerCount);
+                if (mapNode.isParkDestination()) {
+                    List<Integer> parkedVehiclesList = mapNode.getParkedVehiclesList();
+                    // create entry for each vehicle
+                    for (int i=0; i < parkedVehiclesList.size(); i++) {
+                        parkDestinations.put(parkedVehiclesList.get(i), mapMarkerCount);
+                    }
+                }
+
 
                 markerNode.appendChild(newMarkerElement);
                 mapMarkerCount += 1;
@@ -562,7 +568,7 @@ public class GameXML {
 
         }
 
-        Transformer transformer  = TransformerFactory.newInstance().newTransformer();
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
@@ -623,9 +629,9 @@ public class GameXML {
      * @throws SAXException
      * @throws XPathExpressionException
      */
-    private static HashMap<Integer, Integer> loadVehiclesXMLParking(File gameXmlFile) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
+    private static HashMap<Integer, List<Integer>> loadVehiclesXMLParking(File gameXmlFile) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
         File vehicleXMLPath = new File(removeFilenameFromString(gameXmlFile.toString()) + "vehicles.xml");
-        HashMap<Integer, Integer> vehicleParkingMap = new HashMap<>();
+        HashMap<Integer, List<Integer>> vehicleParkingMap = new HashMap<>();
 
         if (configVersion == FS22_CONFIG) {
 
@@ -642,12 +648,17 @@ public class GameXML {
             XPath xPath = XPathFactory.newInstance().newXPath();
             NodeList vehicleParking = (NodeList) xPath.evaluate("//vehicle[./AutoDrive[@parkDestination]]", doc, XPathConstants.NODESET);
 
-            // Add to grid
+            // Add to map
             for (int idx = 0; idx < vehicleParking.getLength(); idx++) {
-                vehicleParkingMap.put(
-                        Integer.valueOf(((Element) vehicleParking.item(idx)).getElementsByTagName("AutoDrive").item(0).getAttributes().getNamedItem("parkDestination").getNodeValue()),
-                        Integer.valueOf(vehicleParking.item(idx).getAttributes().getNamedItem("id").getNodeValue())
-                );
+                Integer key = Integer.valueOf(((Element) vehicleParking.item(idx)).getElementsByTagName("AutoDrive").item(0).getAttributes().getNamedItem("parkDestination").getNodeValue());
+
+                // check for existing entry
+                List<Integer> value = vehicleParkingMap.get(key);
+                if (value == null)
+                    value = new ArrayList<>();
+                value.add(Integer.valueOf(vehicleParking.item(idx).getAttributes().getNamedItem("id").getNodeValue()));
+
+                vehicleParkingMap.put(key, value);
             }
             LOG.info("Found {} Parking Destinations", vehicleParkingMap.size());
             LOG.info("Finished loadVehiclesXMLParking");
@@ -661,7 +672,7 @@ public class GameXML {
     }
 
 
-    private static void saveVehiclesXMLParking(File gameXmlFile, HashMap<Integer,Integer> parkDestinations) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException, TransformerException {
+    private static void saveVehiclesXMLParking(File gameXmlFile, HashMap<Integer, Integer> parkDestinations) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException, TransformerException {
         File vehicleXMLFile = new File(removeFilenameFromString(gameXmlFile.toString()) + "vehicles.xml");
         if (vehicleXMLFile.exists()) {
             if (configVersion == FS22_CONFIG) {
@@ -677,14 +688,19 @@ public class GameXML {
                 // Locate vehicles with park destination using XPath
                 XPath xPath = XPathFactory.newInstance().newXPath();
 
-                //TODO: Remove all parkDestinations first (or at least, if nodes were removed)
+                //Remove all parkDestinations first
+                NodeList vehiclesWithParking = (NodeList) xPath.evaluate("//vehicle/AutoDrive[@parkDestination]", doc, XPathConstants.NODESET);
+                for (int idx = 0; idx < vehiclesWithParking.getLength(); idx++) {
+                    Element autoDriveElement = (Element) vehiclesWithParking.item(idx);
+                    autoDriveElement.removeAttribute("parkDestination");
+                }
 
-                // Update parkDestinations
-                for (Map.Entry<Integer,Integer> entry : parkDestinations.entrySet()) {
-                    String xPathToVehicle = String.format("//vehicle[@id = '%d']",entry.getKey());
+                // Add current parkDestinations
+                for (Map.Entry<Integer, Integer> entry : parkDestinations.entrySet()) {
+                    String xPathToVehicle = String.format("//vehicle[@id = '%d']", entry.getKey());
                     Element vehicleElement = (Element) xPath.evaluate(xPathToVehicle, doc, XPathConstants.NODE);
                     Element autodriveElement = (Element) vehicleElement.getElementsByTagName("AutoDrive").item(0);
-                    autodriveElement.setAttribute("parkDestination",entry.getValue().toString());
+                    autodriveElement.setAttribute("parkDestination", entry.getValue().toString());
                 }
 
                 // Clean all the empty whitespaces from XML before save
@@ -711,7 +727,7 @@ public class GameXML {
                 LOG.info("Can only save vehicles.xml for FS22");
             }
         } else {
-            LOG.info("vehicle.xml not found in {}. Skipping.",vehicleXMLFile.getAbsolutePath());
+            LOG.info("vehicle.xml not found in {}. Skipping.", vehicleXMLFile.getAbsolutePath());
         }
     }
 }
