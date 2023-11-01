@@ -4,6 +4,7 @@ import AutoDriveEditor.Listeners.MouseListener;
 import AutoDriveEditor.Managers.CopyPasteManager;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
+import AutoDriveEditor.Utils.Classes.CoordinateChanger;
 import AutoDriveEditor.Utils.Classes.LabelNumberFilter;
 import AutoDriveEditor.Utils.Classes.NameableThread;
 import AutoDriveEditor.Utils.ProfileUtils;
@@ -1292,16 +1293,29 @@ public class MapPanel extends JPanel {
 
     public void mouseButton3Released(int ignoredMousePosX, int ignoredMousePosY) {}
 
-
+    /**
+     * Loops over all nodes in network and moves out-of-bounds nodes to the centre (x,z)=(0,0). The bounds are based
+     * on the dimensions of MapPanel.MapPanelImage and the current mapZoomFactor.
+     */
     public static void fixOutOfBoundsNodes() {
+        final boolean DEBUG = false;
+
         if (roadMap != null) {
-            int result = JOptionPane.showConfirmDialog(editor, getLocaleString("dialog_fix_out-of-bound_nodes"), "AutoDrive Editor", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+
+            //determine bounds
+            int centerPointOffsetX = (mapPanelImage.getWidth() / 2) * mapZoomFactor;
+            int centerPointOffsetY = (mapPanelImage.getHeight() / 2) * mapZoomFactor;
+
+            String bounds = String.format("\n    %d <= X <= %d\n    %d <= Z <= %d",-centerPointOffsetX,centerPointOffsetX,-centerPointOffsetY,centerPointOffsetY);
+            int result = JOptionPane.showConfirmDialog(editor, getLocaleString("dialog_fix_out-of-bound_nodes") + bounds, "AutoDrive Editor", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (result == JOptionPane.OK_OPTION) {
+
+                CoordinateChanger coordChanger = new CoordinateChanger();
                 MapNode firstMapNode = null;
-                double mapHeight = mapPanelImage.getHeight() / 2F;
-                double mapWidth= mapPanelImage.getWidth() / 2F;
                 for (MapNode node : RoadMap.networkNodesList) {
-                    if (node.x > mapWidth || node.x < -mapWidth || node.z > mapHeight || node.z < -mapHeight) {
+                    if ((node.x > centerPointOffsetX) || (node.x < -centerPointOffsetX) || (node.z > centerPointOffsetY) || (node.z < -centerPointOffsetY)) {
+                        if (DEBUG) LOG.info("## fixOutOfBoundsNodes() ## found out-of-bounds node: ID={}, X={}, Y={}, Z={}", node.id, node.x, node.z, node.z );
+                        coordChanger.addCoordinateChange(node, 0, node.y, 0);
                         node.x = 0.0;
                         node.z = 0.0;
                         //store first node found
@@ -1309,9 +1323,11 @@ public class MapPanel extends JPanel {
                             firstMapNode = node;
                     }
                 }
-                // Centre screen on first node
-                if (firstMapNode != null)
+                // Centre screen on first node found and add changes to change manager
+                if (firstMapNode != null) {
                     centreNodeInMapPanel(firstMapNode);
+                    changeManager.addChangeable(coordChanger);
+                }
             }
              else {
                 LOG.info("Cancelled out-of-bound node fix.");
