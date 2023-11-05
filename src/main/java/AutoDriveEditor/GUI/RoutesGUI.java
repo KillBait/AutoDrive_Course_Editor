@@ -60,7 +60,7 @@ public class RoutesGUI extends JFrame {
         buttons.add(Box.createRigidArea(new Dimension(30, 0)));
 
         loadButton.addActionListener(e -> {
-            String routeFile = routesFile.getParentFile() + "\\routes\\" + fileName;
+            String routeFile = routesFile.getParentFile() + File.separator + "routes" + File.separator + fileName;
             LOG.info("Full path = {} - {}", routeFile, mapName);
             if (MapPanel.isStale()) {
                 int response = JOptionPane.showConfirmDialog(editor, getLocaleString("dialog_exit_unsaved"), "AutoDrive", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
