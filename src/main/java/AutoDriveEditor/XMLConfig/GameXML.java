@@ -328,8 +328,10 @@ public class GameXML {
         }
 
 
-        NodeList markerList = doc.getElementsByTagName("mapmarker");
         HashMap<Integer, List<Integer>> vehicleParkingMap = loadVehiclesXMLParking(fXmlFile);
+        LOG.info("---------------------------------");
+
+        NodeList markerList = doc.getElementsByTagName("mapmarker");
 
         for (int temp = 0; temp < markerList.getLength(); temp++) {
             Node markerNode = markerList.item(temp);
@@ -352,19 +354,19 @@ public class GameXML {
                     node = groupNodeList.item(markerIndex).getChildNodes().item(0);
                     String markerGroup = node.getNodeValue();
 
-                    List<Integer> markerVehiclesParked = vehicleParkingMap.get(markerIndex + 1);
-                  /*  if (markerVehiclesParked == null)
-                        markerVehiclesParked = 0; */
-
                     // AD 6.0.0.4 config fix for Node ID's being Long Format
                     float num = Float.parseFloat(markerNodeId);
                     int id = (int) num;
+
+                    // Add any vehicles using marker as parking destination
+                    Integer markerId = markerIndex + 1;
+                    List<Integer> markerVehiclesParked = vehicleParkingMap.get(markerId);
 
                     // add the marker info to the node
                     MapNode mapNode = nodes.get(id - 1);
                     mapNode.createMapMarker(markerName, markerGroup, markerVehiclesParked);
                     if (bDebugLogConfigInfo)
-                        LOG.info("created marker - index {} ( ID {} ) , name {} , group {} , Parking Index {}", id - 1, id, markerName, markerGroup, markerIndex + 1);
+                        LOG.info("created marker - index {} ( ID {} ) , name '{}' , group '{}' , marker id {} , Parked Vehicles {}", id - 1, id, markerName, markerGroup, markerId, markerVehiclesParked);
                 }
             }
         }
@@ -556,8 +558,8 @@ public class GameXML {
                 if (mapNode.isParkDestination()) {
                     List<Integer> parkedVehiclesList = mapNode.getParkedVehiclesList();
                     // create entry for each vehicle
-                    for (int i=0; i < parkedVehiclesList.size(); i++) {
-                        parkDestinations.put(parkedVehiclesList.get(i), mapMarkerCount);
+                    for (Integer vehicleId : parkedVehiclesList) {
+                        parkDestinations.put(vehicleId, mapMarkerCount);
                     }
                 }
 
@@ -614,6 +616,7 @@ public class GameXML {
         // NOTE: We only do this when the original AD GameConfig is saved (i.e. not for backups or autosave)
         if (!isAutoSave && !isBackup) {
             saveVehiclesXMLParking(xmlConfigFile, parkDestinations);
+            LOG.info("---------------------------------");
         }
     }
 
@@ -622,112 +625,133 @@ public class GameXML {
      * parkDestination (corresponds to the marker ID - i.e. the number after "mm" in the marker tag) as key and
      * the vehicle ID configured to use this parking destination.
      *
-     * @param gameXmlFile AutoDrive configuration XML
-     * @return HashMap with parkDestination as key and Vehicle ID as value
-     * @throws ParserConfigurationException
-     * @throws IOException
-     * @throws SAXException
-     * @throws XPathExpressionException
+     * @param gameXmlFile AutoDrive configuration XML file
+     * @return HashMap with parkDestination as key and a list Vehicle IDs as value
+     * @throws ParserConfigurationException XML Parser Exceptions
+     * @throws IOException                  (XML) File I/O exception
+     * @throws SAXException                 SAX error or warning
+     * @throws XPathExpressionException     Error in XPath expression
      */
     private static HashMap<Integer, List<Integer>> loadVehiclesXMLParking(File gameXmlFile) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
+        String methodLogPrefix = "Load Parking Destinations - ";
+
         File vehicleXMLPath = new File(removeFilenameFromString(gameXmlFile.toString()) + "vehicles.xml");
         HashMap<Integer, List<Integer>> vehicleParkingMap = new HashMap<>();
 
-        if (configVersion == FS22_CONFIG) {
-
-            LOG.info("----------------------------");
-            LOG.info("loadVehiclesXMLParking Parsing {}", vehicleXMLPath.getAbsolutePath());
-
-            // Build Doc from XML
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            Document doc = db.parse(vehicleXMLPath);
-            doc.getDocumentElement().normalize();
-
-            // Locate vehicles with park destination using XPath
-            XPath xPath = XPathFactory.newInstance().newXPath();
-            NodeList vehicleParking = (NodeList) xPath.evaluate("//vehicle[./AutoDrive[@parkDestination]]", doc, XPathConstants.NODESET);
-
-            // Add to map
-            for (int idx = 0; idx < vehicleParking.getLength(); idx++) {
-                Integer key = Integer.valueOf(((Element) vehicleParking.item(idx)).getElementsByTagName("AutoDrive").item(0).getAttributes().getNamedItem("parkDestination").getNodeValue());
-
-                // check for existing entry
-                List<Integer> value = vehicleParkingMap.get(key);
-                if (value == null)
-                    value = new ArrayList<>();
-                value.add(Integer.valueOf(vehicleParking.item(idx).getAttributes().getNamedItem("id").getNodeValue()));
-
-                vehicleParkingMap.put(key, value);
-            }
-            LOG.info("Found {} Parking Destinations", vehicleParkingMap.size());
-            LOG.info("Finished loadVehiclesXMLParking");
-            LOG.info("----------------------------");
-
-        } else {
-            LOG.info("Can only load vehicles.xml for FS22");
+        // Check if applicable
+        if (configVersion != FS22_CONFIG) {
+            LOG.info(methodLogPrefix + "Only supported for FS22 - exiting.");
+            return vehicleParkingMap;
+        } else if (!vehicleXMLPath.exists()) {
+            LOG.warn(methodLogPrefix + "vehicles.xml not found in {} - exiting.", vehicleXMLPath.getAbsolutePath());
+            return vehicleParkingMap;
         }
+
+        LOG.info(methodLogPrefix + "Parsing {}", vehicleXMLPath.getAbsolutePath());
+
+        // Build Doc from XML
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document doc = db.parse(vehicleXMLPath);
+        doc.getDocumentElement().normalize();
+
+        // Locate vehicles with park destination using XPath
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        NodeList vehicleParking = (NodeList) xPath.evaluate("//vehicle[./AutoDrive[@parkDestination]]", doc, XPathConstants.NODESET);
+
+        // Add vehicleId assigned for each marker
+        for (int idx = 0; idx < vehicleParking.getLength(); idx++) {
+
+            Integer parkDestinationMarkerId = Integer.valueOf(((Element) vehicleParking.item(idx)).getElementsByTagName("AutoDrive").item(0).getAttributes().getNamedItem("parkDestination").getNodeValue());
+            Integer vehicleId = (Integer) Integer.valueOf(vehicleParking.item(idx).getAttributes().getNamedItem("id").getNodeValue());
+
+            // check for existing vehicle list
+            List<Integer> vehicleList = vehicleParkingMap.get(parkDestinationMarkerId);
+            if (vehicleList == null)
+                vehicleList = new ArrayList<>();
+
+            vehicleList.add(vehicleId);
+            vehicleParkingMap.put(parkDestinationMarkerId, vehicleList);
+
+            if (bDebugLogConfigInfo) LOG.info(methodLogPrefix + "vehicle ID {} parks at marker ID {}", vehicleId, parkDestinationMarkerId);
+        }
+        LOG.info(methodLogPrefix + "Loaded {} Parking Destinations", vehicleParking.getLength());
 
         return vehicleParkingMap;
     }
 
-
+    /**
+     * Saves the vehicles.xml file, if found in the same location as the configuration XML
+     *
+     * @param gameXmlFile      AutoDrive configuration XML file
+     * @param parkDestinations HashMap with Vehicle ID as key and parkDestination (sequence index of marker in gameXmlFile) as value
+     * @throws ParserConfigurationException XML Parser Exceptions
+     * @throws IOException                  (XML) File I/O exception
+     * @throws SAXException                 SAX error or warning
+     * @throws XPathExpressionException     Error in XPath expression
+     * @throws TransformerException         Error creating XML tree for saving
+     */
     private static void saveVehiclesXMLParking(File gameXmlFile, HashMap<Integer, Integer> parkDestinations) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException, TransformerException {
+        String methodLogPrefix = "Save Parking Destinations - ";
+
         File vehicleXMLFile = new File(removeFilenameFromString(gameXmlFile.toString()) + "vehicles.xml");
-        if (vehicleXMLFile.exists()) {
-            if (configVersion == FS22_CONFIG) {
 
-                LOG.info("----------------------------");
-                LOG.info("saveVehiclesXMLParking to {}", vehicleXMLFile.getAbsolutePath());
-
-                // Build Doc from XML
-                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-                DocumentBuilder db = dbf.newDocumentBuilder();
-                Document doc = db.parse(vehicleXMLFile);
-
-                // Locate vehicles with park destination using XPath
-                XPath xPath = XPathFactory.newInstance().newXPath();
-
-                //Remove all parkDestinations first
-                NodeList vehiclesWithParking = (NodeList) xPath.evaluate("//vehicle/AutoDrive[@parkDestination]", doc, XPathConstants.NODESET);
-                for (int idx = 0; idx < vehiclesWithParking.getLength(); idx++) {
-                    Element autoDriveElement = (Element) vehiclesWithParking.item(idx);
-                    autoDriveElement.removeAttribute("parkDestination");
-                }
-
-                // Add current parkDestinations
-                for (Map.Entry<Integer, Integer> entry : parkDestinations.entrySet()) {
-                    String xPathToVehicle = String.format("//vehicle[@id = '%d']", entry.getKey());
-                    Element vehicleElement = (Element) xPath.evaluate(xPathToVehicle, doc, XPathConstants.NODE);
-                    Element autodriveElement = (Element) vehicleElement.getElementsByTagName("AutoDrive").item(0);
-                    autodriveElement.setAttribute("parkDestination", entry.getValue().toString());
-                }
-
-                // Clean all the empty whitespaces from XML before save
-                NodeList nl = (NodeList) xPath.evaluate("//text()[normalize-space(.)='']", doc, XPathConstants.NODESET);
-                for (int i = 0; i < nl.getLength(); ++i) {
-                    Node node = nl.item(i);
-                    node.getParentNode().removeChild(node);
-                }
-
-                // save vehicles.xml
-                TransformerFactory transformerFactory = TransformerFactory.newInstance();
-                Transformer transformer = transformerFactory.newTransformer();
-                transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-                transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-                transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-
-                transformer.transform(new DOMSource(doc), new StreamResult(vehicleXMLFile));
-
-                LOG.info("Updated {} Parking Destinations", parkDestinations.size());
-                LOG.info("Finished saveVehiclesXMLParking");
-                LOG.info("----------------------------");
-
-            } else {
-                LOG.info("Can only save vehicles.xml for FS22");
-            }
-        } else {
-            LOG.info("vehicle.xml not found in {}. Skipping.", vehicleXMLFile.getAbsolutePath());
+        // Check if saving applicable
+        if (parkDestinations.isEmpty()) {
+            LOG.info(methodLogPrefix + "No Parking Destinations defined.");
+            return;
+        } else if (configVersion != FS22_CONFIG) {
+            LOG.info(methodLogPrefix + "Can only save vehicles.xml for FS22");
+            return;
+        } else if (!vehicleXMLFile.exists()) {
+            LOG.warn(methodLogPrefix + "vehicle.xml not found in {}. Skipping.", vehicleXMLFile.getAbsolutePath());
+            return;
         }
+
+        LOG.info(methodLogPrefix + "Saving to {}", vehicleXMLFile.getAbsolutePath());
+
+        // Build Doc from XML
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document doc = db.parse(vehicleXMLFile);
+
+        // Locate vehicles with park destination using XPath
+        XPath xPath = XPathFactory.newInstance().newXPath();
+
+        //Remove all parkDestinations first
+        NodeList vehiclesWithParking = (NodeList) xPath.evaluate("//vehicle/AutoDrive[@parkDestination]", doc, XPathConstants.NODESET);
+        for (int idx = 0; idx < vehiclesWithParking.getLength(); idx++) {
+            Element autoDriveElement = (Element) vehiclesWithParking.item(idx);
+            autoDriveElement.removeAttribute("parkDestination");
+        }
+
+        // Add current parkDestinations
+        for (Map.Entry<Integer, Integer> entry : parkDestinations.entrySet()) {
+            String xPathToVehicle = String.format("//vehicle[@id = '%d']", entry.getKey());
+            Element vehicleElement = (Element) xPath.evaluate(xPathToVehicle, doc, XPathConstants.NODE);
+            Element autodriveElement = (Element) vehicleElement.getElementsByTagName("AutoDrive").item(0);
+            autodriveElement.setAttribute("parkDestination", entry.getValue().toString());
+
+            if (bDebugLogConfigInfo) LOG.info(methodLogPrefix + "vehicle ID {} parks at marker ID {}",entry.getKey(),entry.getValue());
+        }
+
+        // Clean all the empty whitespaces from XML before save
+        NodeList nl = (NodeList) xPath.evaluate("//text()[normalize-space(.)='']", doc, XPathConstants.NODESET);
+        for (int i = 0; i < nl.getLength(); ++i) {
+            Node node = nl.item(i);
+            node.getParentNode().removeChild(node);
+        }
+
+        // save vehicles.xml
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+
+        transformer.transform(new DOMSource(doc), new StreamResult(vehicleXMLFile));
+
+        LOG.info(methodLogPrefix + "Updated {} Parking Destinations", parkDestinations.size());
+
     }
 }
