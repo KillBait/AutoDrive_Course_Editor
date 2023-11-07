@@ -329,7 +329,6 @@ public class GameXML {
             }
         }
 
-
         HashMap<Integer, List<Integer>> vehicleParkingMap = loadVehiclesXMLParking(fXmlFile);
         LOG.info("---------------------------------");
 
@@ -369,7 +368,7 @@ public class GameXML {
                     // add the marker info to the node
                     MapNode mapNode = nodes.get(id - 1);
                     mapNode.createMapMarker(markerName, markerGroup);
-                    if (bDebugLogConfigInfo) LOG.info("created marker - index {} ( ID {} ) , name {} , group {}", id-1, id, markerName, markerGroup);
+                    if (bDebugLogConfigInfo) LOG.info("created marker - index {} ( ID {} ) , name '{}' , group '{}' , marker id {} , Parked Vehicles {}", id - 1, id, markerName, markerGroup, markerId, markerVehiclesParked);
                 }
             }
         }
@@ -531,7 +530,7 @@ public class GameXML {
 
         NodeList testWaypoints = doc.getElementsByTagName("mapmarker");
 
-        if (totalMarkers > 0 && testWaypoints.getLength() == 0) {
+        if (totalMarkers > 0 && testWaypoints.getLength() == 0 ) {
             LOG.info("{}", getLocaleString("console_markers_new"));
             Element test = doc.createElement("mapmarker");
             AutoDrive.appendChild(test);
@@ -566,14 +565,14 @@ public class GameXML {
                     }
                 }
 
-
                 markerNode.appendChild(newMarkerElement);
                 mapMarkerCount += 1;
             }
 
         }
 
-        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
@@ -585,7 +584,7 @@ public class GameXML {
         XPath xp = XPathFactory.newInstance().newXPath();
         NodeList nl = (NodeList) xp.evaluate("//text()[normalize-space(.)='']", doc, XPathConstants.NODESET);
 
-        for (int i = 0; i < nl.getLength(); ++i) {
+        for (int i=0; i < nl.getLength(); ++i) {
             Node node = nl.item(i);
             node.getParentNode().removeChild(node);
         }
@@ -598,7 +597,7 @@ public class GameXML {
             result = new StreamResult(xmlConfigFile);
         } else {
             File newFile = new File(newName);
-            LOG.info("Saving config as {}", newName);
+            LOG.info("Saving config as {}",newName);
             result = new StreamResult(newFile);
             if (!isAutoSave && !isBackup) {
                 xmlConfigFile = newFile;

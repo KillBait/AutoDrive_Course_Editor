@@ -105,11 +105,9 @@ public class MapNode {
     public void setMarkerName(String markerName) {
         this.mapMarker.name = markerName;
     }
-
     public void setMarkerGroup(String markerGroup) {
         this.mapMarker.group = markerGroup;
     }
-
     public void setParkedVehiclesList(List<Integer> parkedVehiclesList) {
         this.mapMarker.parkedVehiclesList = parkedVehiclesList;
     }
