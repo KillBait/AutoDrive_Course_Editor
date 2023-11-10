@@ -52,7 +52,7 @@ public class RoutesXML {
 
         try {
             if (bDebugLogRouteManager) LOG.info("Parent = {}", fXmlFile.getParentFile().getParent());
-            String routeFile = fXmlFile.getParentFile().getParent() + "\\routes.xml";
+            String routeFile = fXmlFile.getParentFile().getParent() + File.separator + "routes.xml";
 
 
             RoadMap roadMap = loadRouteXML(fXmlFile);
