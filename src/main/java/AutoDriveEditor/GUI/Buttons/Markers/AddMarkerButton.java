@@ -17,13 +17,14 @@ import java.util.LinkedList;
 import java.util.Objects;
 
 import static AutoDriveEditor.AutoDriveEditor.changeManager;
-import static AutoDriveEditor.GUI.GUIImages.getMarkerIcon;
-import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogMarkerInfo;
+import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
+import static AutoDriveEditor.GUI.EditorImages.getMarkerIcon;
+import static AutoDriveEditor.GUI.MapPanel.*;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogMarkerInfoMenu.bDebugLogMarkerInfo;
+import static AutoDriveEditor.GUI.TextPanel.showInTextArea;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.Locale.LocaleManager.locale;
-import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
-import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.RoutesXML.markerGroup;
 

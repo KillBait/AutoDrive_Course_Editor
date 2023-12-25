@@ -150,6 +150,7 @@ public class SimpleImageInfo {
         return height;
     }
 
+    @SuppressWarnings("unused")
     public void setHeight(int height) {
         this.height = height;
     }

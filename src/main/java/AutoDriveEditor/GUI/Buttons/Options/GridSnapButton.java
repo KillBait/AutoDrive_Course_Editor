@@ -6,10 +6,10 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 
+import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.MapPanel.MapPanel.getMapPanel;
 import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
-import static AutoDriveEditor.Utils.ImageUtils.getImageIcon;
+import static AutoDriveEditor.Utils.ImageUtils.loadImageIcon;
 import static AutoDriveEditor.XMLConfig.EditorXML.bGridSnap;
 import static AutoDriveEditor.XMLConfig.EditorXML.bGridSnapSubs;
 
@@ -24,8 +24,8 @@ public class GridSnapButton extends OptionsBaseButton {
         String icon;
         boolean isSelected;
 
-        snapIconSelected = getImageIcon("editor/buttons/gridsnaptoggle_selected.png");
-        subSnapIconSelected = getImageIcon("editor/buttons/gridsubtoggle_selected.png");
+        snapIconSelected = loadImageIcon("editor/buttons/gridsnaptoggle_selected.png");
+        subSnapIconSelected = loadImageIcon("editor/buttons/gridsubtoggle_selected.png");
 
         if (bGridSnap) {
             if (bGridSnapSubs) {
@@ -91,7 +91,7 @@ public class GridSnapButton extends OptionsBaseButton {
     public String getButtonID() { return "GridSnapToggleButton"; }
 
     @Override
-    public Boolean ignoreDeselect() { return true; }
+    public Boolean ignoreButtonDeselect() { return true; }
 
     @Override
     public void actionPerformed(ActionEvent e) {

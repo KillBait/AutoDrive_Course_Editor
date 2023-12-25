@@ -1,25 +1,23 @@
 package AutoDriveEditor.GUI.Buttons.Curves;
 
+import AutoDriveEditor.Classes.CubicCurve;
 import AutoDriveEditor.GUI.Buttons.CurveBaseButton;
-import AutoDriveEditor.GUI.GUIBuilder;
-import AutoDriveEditor.MapPanel.CubicCurve;
 import AutoDriveEditor.RoadNetwork.MapNode;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
-import java.util.concurrent.locks.Lock;
 
+import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
-import static AutoDriveEditor.GUI.GUIBuilder.*;
+import static AutoDriveEditor.GUI.Curves.CurvePanel.*;
+import static AutoDriveEditor.GUI.MapPanel.*;
+import static AutoDriveEditor.GUI.TextPanel.showInTextArea;
 import static AutoDriveEditor.Listeners.MouseListener.*;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_STANDARD;
+import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_REGULAR;
 import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
-import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
-import static AutoDriveEditor.Utils.ImageUtils.backBufferGraphics;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
@@ -48,18 +46,18 @@ public final class CubicCurveButton extends CurveBaseButton {
     }
 
     @Override
-    protected void setCurveStartNode(MapNode startNode) {
+    protected void setCurvePreviewStartNode(MapNode startNode) {
         curveStartNode = startNode;
         showInTextArea(getLocaleString("infopanel_curve_select_end"), true, false);
         showConnectingLine = true;
     }
 
     @Override
-    protected void setCurveEndAndCreate(MapNode endNode) {
+    protected void setCurvePreviewEndAndDisplay(MapNode endNode) {
         if (!isCubicCurveCreated) {
             showInTextArea(getLocaleString("infopanel_curve_created"), true, false);
             cubicCurve = new CubicCurve(curveStartNode, endNode);
-            cubicCurve.setNumInterpolationPoints(GUIBuilder.numIterationsSlider.getValue() + 1);
+            cubicCurve.setNumInterpolationPoints(numIterationsSlider.getValue() + 1);
             isCubicCurveCreated = true;
             showConnectingLine = false;
         }
@@ -156,7 +154,7 @@ public final class CubicCurveButton extends CurveBaseButton {
         showConnectingLine = false;
         cubicCurve = null;
         curveStartNode = null;
-        if (quadCurve == null) GUIBuilder.curveOptionsPanel.setVisible(false);
+        if (quadCurve == null) curveOptionsPanel.setVisible(false);
         getMapPanel().repaint();
     }
 
@@ -167,31 +165,23 @@ public final class CubicCurveButton extends CurveBaseButton {
         showConnectingLine = false;
         cubicCurve = null;
         curveStartNode = null;
-        if (quadCurve == null) GUIBuilder.curveOptionsPanel.setVisible(false);
+        if (quadCurve == null) curveOptionsPanel.setVisible(false);
         getMapPanel().repaint();
     }
 
     @Override
-    public void drawToScreen(Graphics2D g, Lock drawLock, double scaledSizeQuarter, double scaledSizeHalf) {
+    public void drawToScreen(Graphics g) {
 
-        //
         // draw the initial connection arrow
-        //
-
         if (cubicCurve == null && showConnectingLine) {
             Point2D startNodePos = worldPosToScreenPos(curveStartNode.x, curveStartNode.z);
             Point2D mousePos = new Point2D.Double(currentMouseX,currentMouseY);
-
-            backBufferGraphics.setColor(Color.WHITE);
-            drawArrowBetween(backBufferGraphics, startNodePos, mousePos, false);
+            drawArrowBetween(g, startNodePos, mousePos, false, Color.WHITE, false);
         }
 
         if (cubicCurve!= null && isCubicCurveCreated) {
 
-            //
-            //draw interpolation points for curve
-            //
-
+            //draw the interpolation points for curve
             Color colour;
             for (int j = 0; j < cubicCurve.curveNodesList.size() - 1; j++) {
 
@@ -201,32 +191,29 @@ public final class CubicCurveButton extends CurveBaseButton {
                 Point2D currentNodePos = worldPosToScreenPos(currentNode.x, currentNode.z);
                 Point2D nextNodePos = worldPosToScreenPos(nextNode.x, nextNode.z);
 
-                //
                 //don't draw the first node as it already been drawn
-                //
-
                 if (j != 0) {
-                    Shape oldClip = backBufferGraphics.getClip();
-                    Graphics2D g2d = (Graphics2D) backBufferGraphics.create();
+                    Shape oldClip = g.getClip();
+                    Graphics2D g2d = (Graphics2D) g.create();
                     g2d.setComposite(AlphaComposite.SrcOver.derive(0.5f));
-                    if (currentNode.flag == NODE_FLAG_STANDARD) {
+                    if (currentNode.flag == NODE_FLAG_REGULAR) {
                         g2d.setColor(Color.WHITE);
                     } else {
                         g2d.setColor(colourNodeSubprio);
                     }
-                    g2d.fillArc((int) (currentNodePos.getX() - scaledSizeQuarter), (int) (currentNodePos.getY() - scaledSizeQuarter), (int) scaledSizeHalf, (int) scaledSizeHalf, 0, 360);
+                    g2d.fillArc((int) (currentNodePos.getX() - nodeSizeScaledHalf), (int) (currentNodePos.getY() - nodeSizeScaledHalf), (int) nodeSizeScaled, (int) nodeSizeScaled, 0, 360);
                     g2d.setClip(oldClip);
                     g2d.dispose();
                 }
 
                 if (cubicCurve.isReversePath()) {
-                    if (cubicCurve.getNodeType() == NODE_FLAG_STANDARD) {
+                    if (cubicCurve.getNodeType() == NODE_FLAG_REGULAR) {
                         colour = colourConnectReverse;
                     } else {
                         colour = colourConnectReverseSubprio;
                     }
                 } else if (cubicCurve.isDualPath()) {
-                    if (cubicCurve.getNodeType() == NODE_FLAG_STANDARD) {
+                    if (cubicCurve.getNodeType() == NODE_FLAG_REGULAR) {
                         colour = colourConnectDual;
                     } else {
                         colour = colourConnectDualSubprio;
@@ -236,31 +223,23 @@ public final class CubicCurveButton extends CurveBaseButton {
                 } else {
                     colour = colourConnectRegular;
                 }
-
-                //
                 // draw the connection arrows between the interpolation points
-                //
-
-                backBufferGraphics.setColor(colour);
-                drawArrowBetween(backBufferGraphics, currentNodePos, nextNodePos, cubicCurve.isDualPath()) ;
+                drawArrowBetween(g, currentNodePos, nextNodePos, cubicCurve.isDualPath(), colour, false) ;
             }
 
-            //
             // draw the control nodes, this is done last to make them visible at all times
-            //
-
             Polygon p = new Polygon();
 
             Point2D nodePos = worldPosToScreenPos(cubicCurve.getControlPoint1().x, cubicCurve.getControlPoint1().z);
-            p.addPoint((int) (nodePos.getX() - scaledSizeQuarter), (int) (nodePos.getY() - scaledSizeQuarter));
-            p.addPoint((int) (nodePos.getX() + scaledSizeQuarter), (int) (nodePos.getY() - scaledSizeQuarter));
-            p.addPoint((int) nodePos.getX(), (int) (nodePos.getY() + scaledSizeQuarter));
+            p.addPoint((int) (nodePos.getX() - nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf));
+            p.addPoint((int) (nodePos.getX() + nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf));
+            p.addPoint((int) nodePos.getX(), (int) (nodePos.getY() + nodeSizeScaledHalf));
             g.setColor(colourNodeControl);
             g.fillPolygon(p);
 
-            if (cubicCurve.getControlPoint1().isSelected || hoveredNode == cubicCurve.getControlPoint1()) {
-                Graphics2D g2 = (Graphics2D) backBufferGraphics.create();
-                BasicStroke bs = new BasicStroke((float) (scaledSizeHalf / 5));
+            if (cubicCurve.getControlPoint1().isSelected() || hoveredNode == cubicCurve.getControlPoint1()) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                BasicStroke bs = new BasicStroke((float) (nodeSizeScaled / 5));
                 g2.setStroke(bs);
                 g2.setColor(colourNodeSelected);
                 g2.drawPolygon(p);
@@ -270,15 +249,15 @@ public final class CubicCurveButton extends CurveBaseButton {
             p.reset();
 
             nodePos = worldPosToScreenPos(cubicCurve.getControlPoint2().x, cubicCurve.getControlPoint2().z);
-            p.addPoint((int) (nodePos.getX() - scaledSizeQuarter), (int) (nodePos.getY() - scaledSizeQuarter));
-            p.addPoint((int) (nodePos.getX() + scaledSizeQuarter), (int) (nodePos.getY() - scaledSizeQuarter));
-            p.addPoint((int) nodePos.getX(), (int) (nodePos.getY() + scaledSizeQuarter));
+            p.addPoint((int) (nodePos.getX() - nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf));
+            p.addPoint((int) (nodePos.getX() + nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf));
+            p.addPoint((int) nodePos.getX(), (int) (nodePos.getY() + nodeSizeScaledHalf));
             g.setColor(colourNodeControl);
             g.fillPolygon(p);
 
-            if (cubicCurve.getControlPoint2().isSelected || hoveredNode == cubicCurve.getControlPoint2()) {
-                Graphics2D g2 = (Graphics2D) backBufferGraphics.create();
-                BasicStroke bs = new BasicStroke((float) (scaledSizeHalf / 5));
+            if (cubicCurve.getControlPoint2().isSelected() || hoveredNode == cubicCurve.getControlPoint2()) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                BasicStroke bs = new BasicStroke((float) (nodeSizeScaled / 5));
                 g2.setStroke(bs);
                 g2.setColor(colourNodeSelected);
                 g2.drawPolygon(p);

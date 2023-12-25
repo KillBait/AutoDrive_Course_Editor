@@ -7,9 +7,9 @@ import javax.swing.*;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 
+import static AutoDriveEditor.GUI.MapPanel.screenPosToWorldPos;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.Managers.ScanManager.checkAreaForNodeOverlap;
-import static AutoDriveEditor.MapPanel.MapPanel.screenPosToWorldPos;
 import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_SUBPRIO;
 import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
 

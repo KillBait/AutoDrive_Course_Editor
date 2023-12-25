@@ -5,9 +5,9 @@ import AutoDriveEditor.GUI.Buttons.OptionsBaseButton;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 
+import static AutoDriveEditor.GUI.TextPanel.showInTextArea;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
-import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
 import static AutoDriveEditor.XMLConfig.EditorXML.bContinuousConnections;
 
 public class ContinuousConnectionButton extends OptionsBaseButton {

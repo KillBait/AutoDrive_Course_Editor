@@ -28,30 +28,40 @@ import java.util.LinkedList;
 import java.util.Objects;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
-import static AutoDriveEditor.GUI.MenuBuilder.*;
+import static AutoDriveEditor.Classes.MapImage.loadHeightMap;
+import static AutoDriveEditor.Classes.MapImage.loadMapImage;
+import static AutoDriveEditor.GUI.MapPanel.*;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogRouteManagerMenu.bDebugLogRouteManager;
+import static AutoDriveEditor.GUI.Menus.EditorMenu.*;
+import static AutoDriveEditor.GUI.Menus.FileMenu.RecentFilesMenu.addToRecentFiles;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
+import static AutoDriveEditor.Managers.ImportManager.setEditorUsingImportedImage;
 import static AutoDriveEditor.Managers.MultiSelectManager.clearMultiSelection;
 import static AutoDriveEditor.Managers.ScanManager.scanNetworkForOverlapNodes;
-import static AutoDriveEditor.MapPanel.MapImage.*;
-import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.RoadNetwork.RoadMap.setRoadMapNodes;
 import static AutoDriveEditor.Utils.FileUtils.removeExtension;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.XMLConfig.AutoSave.canAutoSave;
+import static AutoDriveEditor.XMLConfig.AutoSave.resumeAutoSaving;
+import static AutoDriveEditor.XMLConfig.EditorXML.checkStoredMapInfoFor;
 import static AutoDriveEditor.XMLConfig.EditorXML.maxAutoSaveSlots;
 import static AutoDriveEditor.XMLConfig.GameXML.autoSaveLastUsedSlot;
 import static AutoDriveEditor.XMLConfig.GameXML.xmlConfigFile;
 
 public class RoutesXML {
 
-    public static LinkedList<MarkerGroup> markerGroup = new LinkedList<>();
+    public static final LinkedList<MarkerGroup> markerGroup = new LinkedList<>();
 
     public static boolean loadRouteManagerXML(File fXmlFile, boolean skipRoutesCheck, String mapName) {
         LOG.info("RouteManager loadFile: {}", fXmlFile.getAbsolutePath());
 
-        canAutoSave = false;
+        //suspendAutoSaving();
 
         try {
             if (bDebugLogRouteManager) LOG.info("Parent = {}", fXmlFile.getParentFile().getParent());
+            // Bug fix Commit by @rheational ( https://github.com/rhaetional )
+            // Replaced "//" file separator for system supported call
+            // Fixes issue #70 ( https://github.com/KillBait/AutoDrive_Course_Editor/issues/70 )
             String routeFile = fXmlFile.getParentFile().getParent() + File.separator + "routes.xml";
 
 
@@ -85,33 +95,35 @@ public class RoutesXML {
                     RoadMap.mapName = mapName;
                 }
                 if (bDebugLogRouteManager) LOG.info("map = {}", RoadMap.mapName);
-                configType = CONFIG_ROUTEMANAGER;
                 loadMapImage(RoadMap.mapName);
                 loadHeightMap(RoadMap.mapName);
-                checkStoredMapInfoFor(mapName);
+                checkStoredMapInfoFor(RoadMap.mapName);
                 LOG.info("Session UUID = {}", RoadMap.uuid);
                 updateWindowTitle();
+                // initialize a new changeManager so undo/redo system won't throw errors
+                // when we try to undo/redo something on a config that is no longer loaded
                 changeManager = new ChangeManager();
                 forceMapImageRedraw();
-                isUsingImportedImage = false;
+                setEditorUsingImportedImage(false);
                 saveImageEnabled(false);
                 setStale(false);
                 scanNetworkForOverlapNodes();
                 clearMultiSelection();
                 gameXMLSaveEnabled(false);
                 routesXMLSaveEnabled(true);
-                canAutoSave = true;
+                resumeAutoSaving();
                 buttonManager.enableAllButtons();
+                addToRecentFiles(xmlConfigFile.getAbsolutePath(), configType);
                 return true;
             } else {
                 JOptionPane.showMessageDialog(editor, getLocaleString("dialog_config_route_unknown"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
-                canAutoSave = true;
+                //resumeAutoSaving();
                 return false;
             }
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
             JOptionPane.showMessageDialog(editor, getLocaleString("dialog_config_load_route_failed"), "AutoDrive", JOptionPane.ERROR_MESSAGE);
-            canAutoSave = true;
+            //resumeAutoSaving();
             return false;
         }
     }
@@ -140,7 +152,7 @@ public class RoutesXML {
     }
 
     public static void autoSaveRouteManagerXML() {
-        while (!canAutoSave) {
+        while (!canAutoSave()) {
             try {
                 LOG.info("canAutoSave = false --- Waiting 5 seconds to try again");
                 //noinspection BusyWait
@@ -542,12 +554,12 @@ public class RoutesXML {
 
     public static class Route {
 
-        public String name;
-        public String fileName;
-        public String map;
-        public int revision;
-        public String date;
-        public String serverId;
+        public final String name;
+        public final String fileName;
+        public final String map;
+        public final int revision;
+        public final String date;
+        public final String serverId;
 
         private Route(String name, String fileName, String map, int revision, String date, String serverId) {
             this.name = name;

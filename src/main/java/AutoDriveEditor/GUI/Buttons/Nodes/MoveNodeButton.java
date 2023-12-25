@@ -1,29 +1,35 @@
 package AutoDriveEditor.GUI.Buttons.Nodes;
 
 import AutoDriveEditor.GUI.Buttons.BaseButton;
+import AutoDriveEditor.GUI.MapPanel;
 import AutoDriveEditor.Managers.ChangeManager;
-import AutoDriveEditor.MapPanel.MapPanel;
 import AutoDriveEditor.RoadNetwork.MapNode;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
+import java.math.RoundingMode;
 import java.util.LinkedList;
 
-import static AutoDriveEditor.AutoDriveEditor.changeManager;
+import static AutoDriveEditor.AutoDriveEditor.*;
 import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.cubicCurve;
 import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.isCubicCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.isQuadCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
-import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogUndoRedo;
+import static AutoDriveEditor.GUI.MapPanel.*;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogUndoRedoMenu.bDebugLogUndoRedo;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.Managers.MultiSelectManager.*;
-import static AutoDriveEditor.Managers.ScanManager.checkAllNodesForOverlap;
+import static AutoDriveEditor.Managers.MultiSelectManager.multiSelectList;
 import static AutoDriveEditor.Managers.ScanManager.checkAreaForNodeOverlap;
-import static AutoDriveEditor.MapPanel.MapPanel.*;
+import static AutoDriveEditor.Managers.ScanManager.checkNodeOverlap;
 import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.Utils.MathUtils.limitDoubleToDecimalPlaces;
 import static AutoDriveEditor.Utils.MathUtils.roundUpDoubleToDecimalPlaces;
+import static AutoDriveEditor.XMLConfig.AutoSave.resumeAutoSaving;
+import static AutoDriveEditor.XMLConfig.AutoSave.suspendAutoSaving;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
 public class MoveNodeButton extends BaseButton {
@@ -37,6 +43,19 @@ public class MoveNodeButton extends BaseButton {
 
     public MoveNodeButton(JPanel panel) {
         button = makeImageToggleButton("buttons/movenode", "buttons/movenode_selected", null,"nodes_move_tooltip","nodes_move_alt", panel, false, false,  null, false, this);
+        InputMap iMap = getMapPanel().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap aMap = getMapPanel().getActionMap();
+        iMap.put(KeyStroke.getKeyStroke("M"), "MoveToggle");
+        aMap.put("MoveToggle", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (button.isEnabled() && !button.isSelected()) {
+                    buttonManager.makeCurrent(buttonNode);
+                } else {
+                    buttonManager.deSelectAll();
+                }
+            }
+        });
     }
 
     @Override
@@ -52,27 +71,30 @@ public class MoveNodeButton extends BaseButton {
     public String getInfoText() { return getLocaleString("nodes_move_tooltip"); }
 
     @Override
-    public Boolean ignoreMultiSelect() { return false; }
+    public Boolean useMultiSelection() { return true; }
 
     @Override
     public void mousePressed(MouseEvent e) {
         super.mousePressed(e);
         if (e.getButton() == MouseEvent.BUTTON1) {
-            selectedNode = getNodeAtScreenPosition(e.getX(), e.getY());
 
+            selectedNode = getNodeAtScreenPosition(e.getX(), e.getY());
             if (selectedNode != null) {
-                if (bGridSnap || bGridSnapSubs) {
-                    preMoveX = selectedNode.x;
-                    preMoveZ = selectedNode.z;
-                }
-                selectedX = selectedNode.x;
-                selectedZ = selectedNode.z;
-                moveDiffX = 0;
-                moveDiffY = 0;
-                isDraggingNode = true;
-                if (!multiSelectList.contains(selectedNode)) {
-                    multiSelectList.add(selectedNode);
-                    removeSelectedOnComplete = true;
+                if (selectedNode.isSelectable()) {
+                    if (bGridSnap || bGridSnapSubs) {
+                        preMoveX = selectedNode.x;
+                        preMoveZ = selectedNode.z;
+                    }
+                    selectedX = selectedNode.x;
+                    selectedZ = selectedNode.z;
+                    moveDiffX = 0;
+                    moveDiffY = 0;
+                    isDraggingNode = true;
+                    if (!multiSelectList.contains(selectedNode)) {
+                        multiSelectList.add(selectedNode);
+                        removeSelectedOnComplete = true;
+                    }
+                    getMapPanel().setCursor(new Cursor(Cursor.MOVE_CURSOR));
                 }
             }
         }
@@ -106,12 +128,13 @@ public class MoveNodeButton extends BaseButton {
                 }
                 changeManager.addChangeable( new MoveNodeChanger(multiSelectList, moveDiffX, moveDiffY));
                 MapPanel.setStale(true);
-                checkAllNodesForOverlap(multiSelectList);
+                //checkAllNodesForOverlap(multiSelectList);
                 if (removeSelectedOnComplete) {
                     multiSelectList.remove(selectedNode);
                     removeSelectedOnComplete = false;
                 }
                 isDraggingNode = false;
+                getMapPanel().setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
             }
         }
     }
@@ -137,14 +160,14 @@ public class MoveNodeButton extends BaseButton {
             scaledDiffY = diffY;
         }
 
-        canAutoSave = false;
+        suspendAutoSaving();
 
         for (MapNode node : nodeList) {
-            if (!node.isControlNode) {
-                if (node.x + scaledDiffX > -1024 * mapZoomFactor && node.x + scaledDiffX < 1024 * mapZoomFactor) {
+            if (!node.isControlNode()) {
+                if (node.x + scaledDiffX > -1024 * mapScale && node.x + scaledDiffX < 1024 * mapScale) {
                     node.x = roundUpDoubleToDecimalPlaces(node.x + scaledDiffX, 3);
                 }
-                if (node.z + scaledDiffY > -1024 * mapZoomFactor && node.z + scaledDiffY < 1024 * mapZoomFactor) {
+                if (node.z + scaledDiffY > -1024 * mapScale && node.z + scaledDiffY < 1024 * mapScale) {
                    node.z = roundUpDoubleToDecimalPlaces(node.z + scaledDiffY, 3);
                 }
             }
@@ -172,9 +195,10 @@ public class MoveNodeButton extends BaseButton {
                     cubicCurve.updateControlPoint2(scaledDiffX, scaledDiffY);
                 }
             }
+            checkNodeOverlap(node);
         }
-        canAutoSave = true;
         getMapPanel().repaint();
+        resumeAutoSaving();
     }
 
     //
@@ -190,12 +214,11 @@ public class MoveNodeButton extends BaseButton {
         public MoveNodeChanger(LinkedList<MapNode> mapNodesMoved, double movedX, double movedY){
             super();
             this.moveNodes = new LinkedList<>();
-            if (bDebugLogUndoRedo) LOG.info("node moved = {} , {}", movedX, movedY);
-            this.diffX = movedX;
-            this.diffY = movedY;
-
+            this.diffX = limitDoubleToDecimalPlaces(movedX, 3, RoundingMode.HALF_UP);
+            this.diffY = limitDoubleToDecimalPlaces(movedY, 3, RoundingMode.HALF_UP);
             this.moveNodes.addAll(mapNodesMoved);
             this.isStale = isStale();
+            if (bDebugLogUndoRedo) LOG.info("## MoveNodeChanger ## node moved X = {} Y = {}", this.diffX, this.diffY);
         }
 
         public void undo(){

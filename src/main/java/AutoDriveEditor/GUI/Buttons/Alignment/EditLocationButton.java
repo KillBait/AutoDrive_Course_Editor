@@ -10,8 +10,10 @@ import javax.swing.text.PlainDocument;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 
+import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
+import static AutoDriveEditor.GUI.MapPanel.getNodeAtScreenPosition;
+import static AutoDriveEditor.GUI.MapPanel.mapScale;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
 import static AutoDriveEditor.Utils.MathUtils.roundUpDoubleToDecimalPlaces;
 
@@ -48,12 +50,12 @@ public class EditLocationButton extends BaseButton {
         JTextField posX = new JTextField(String.valueOf((float)node.x));
         JLabel labelPosX = new JLabel(" ");
         PlainDocument docX = (PlainDocument) posX.getDocument();
-        docX.setDocumentFilter(new LabelNumberFilter(labelPosX, -1024 * mapZoomFactor, 1024 * mapZoomFactor, true, true));
+        docX.setDocumentFilter(new LabelNumberFilter(labelPosX, -1024 * mapScale, 1024 * mapScale, true, true));
 
         JTextField posZ = new JTextField(String.valueOf((float)node.z));
         JLabel labelPosZ = new JLabel(" ");
         PlainDocument docZ = (PlainDocument) posZ.getDocument();
-        docZ.setDocumentFilter(new LabelNumberFilter(labelPosZ, -1024 * mapZoomFactor, 1024 * mapZoomFactor, true, true));
+        docZ.setDocumentFilter(new LabelNumberFilter(labelPosZ, -1024 * mapScale, 1024 * mapScale, true, true));
 
         JTextField posY = new JTextField(String.valueOf((float)node.y));
         JLabel labelPosY = new JLabel(" ");
@@ -62,7 +64,7 @@ public class EditLocationButton extends BaseButton {
             labelPosY.setText("* Invalid Y location");
         }
         PlainDocument docY = (PlainDocument) posY.getDocument();
-        docY.setDocumentFilter(new LabelNumberFilter(labelPosY, 0, 1024 * mapZoomFactor, true, false));
+        docY.setDocumentFilter(new LabelNumberFilter(labelPosY, 0, 1024 * mapScale, true, false));
 
 
         Object[] inputFields = {getLocaleString("dialog_node_position_x"), posX, labelPosX,

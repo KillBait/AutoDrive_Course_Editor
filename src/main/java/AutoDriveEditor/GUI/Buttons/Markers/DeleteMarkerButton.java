@@ -8,9 +8,12 @@ import javax.swing.*;
 import java.awt.event.MouseEvent;
 
 import static AutoDriveEditor.AutoDriveEditor.changeManager;
+import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
+import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
+import static AutoDriveEditor.XMLConfig.AutoSave.resumeAutoSaving;
+import static AutoDriveEditor.XMLConfig.AutoSave.suspendAutoSaving;
 
 public class DeleteMarkerButton extends MarkerBaseButton {
 
@@ -43,12 +46,12 @@ public class DeleteMarkerButton extends MarkerBaseButton {
     }
 
     public void removeMarkerFromNode(MapNode fromMapNode) {
-        canAutoSave = false;
+        suspendAutoSaving();
         changeManager.addChangeable( new MarkerRemoveChanger(fromMapNode));
         fromMapNode.removeMapMarker();
         setStale(true);
         getMapPanel().repaint();
-        canAutoSave = true;
+        resumeAutoSaving();
     }
 
     public static class MarkerRemoveChanger implements ChangeManager.Changeable {

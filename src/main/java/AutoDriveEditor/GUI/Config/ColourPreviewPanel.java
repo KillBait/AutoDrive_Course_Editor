@@ -5,7 +5,8 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 
-import static AutoDriveEditor.MapPanel.MapPanel.getMapPanel;
+import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
+import static AutoDriveEditor.GUI.MapPanel.updateNodeScaling;
 import static AutoDriveEditor.Utils.ImageUtils.getNewBufferImage;
 import static AutoDriveEditor.Utils.MathUtils.normalizeAngle;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
@@ -88,6 +89,7 @@ public class ColourPreviewPanel extends JPanel {
         if (!isControlNodePreview) {
             nodeColour = newColor;
             isSelected = false;
+            updateNodeScaling();
             getMapPanel().repaint();
         }
     }

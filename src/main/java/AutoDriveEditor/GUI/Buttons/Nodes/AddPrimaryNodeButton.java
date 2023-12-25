@@ -7,10 +7,10 @@ import javax.swing.*;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 
+import static AutoDriveEditor.GUI.MapPanel.screenPosToWorldPos;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.Managers.ScanManager.checkAreaForNodeOverlap;
-import static AutoDriveEditor.MapPanel.MapPanel.screenPosToWorldPos;
-import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_STANDARD;
+import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_REGULAR;
 import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
 
 public class AddPrimaryNodeButton extends AddNodeBaseButton {
@@ -35,7 +35,7 @@ public class AddPrimaryNodeButton extends AddNodeBaseButton {
     public void mouseReleased(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
             Point2D worldPos = screenPosToWorldPos(e.getX(), e.getY());
-            MapNode newNode = createNode(worldPos.getX(), worldPos.getY(), NODE_FLAG_STANDARD);
+            MapNode newNode = createNode(worldPos.getX(), worldPos.getY(), NODE_FLAG_REGULAR);
             checkAreaForNodeOverlap(newNode);
         }
     }

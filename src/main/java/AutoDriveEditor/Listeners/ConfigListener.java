@@ -7,10 +7,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
-import static AutoDriveEditor.AutoDriveEditor.editor;
 import static AutoDriveEditor.GUI.Config.ColourPreviewPanel.*;
-import static AutoDriveEditor.GUI.Config.ConfigGUI.*;
-import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogGUIInfo;
+import static AutoDriveEditor.GUI.Config.ConfigGUI.getConfigGUI;
+import static AutoDriveEditor.GUI.Config.Tabs.ColourSelectorTab.*;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogGUIInfoMenu.bDebugLogGUIInfo;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
@@ -23,7 +23,7 @@ public class ConfigListener implements ItemListener, ActionListener {
         AbstractButton selectionPanelButton = (AbstractButton) e.getSource();
         if (bDebugLogGUIInfo) LOG.info("Config ActionPerformed: {}", selectionPanelButton.getActionCommand());
         if ("RESET COLOURS".equals(selectionPanelButton.getActionCommand())) {
-            int response = JOptionPane.showConfirmDialog(editor, getLocaleString("dialog_reset_colours"), getLocaleString("dialog_reset_colours_title"), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            int response = JOptionPane.showConfirmDialog(getConfigGUI(), getLocaleString("dialog_reset_colours"), getLocaleString("dialog_reset_colours_title"), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (response == JOptionPane.YES_OPTION) {
                 colourNodeRegular = Color.RED;
                 colourNodeSubprio = Color.ORANGE;
@@ -37,7 +37,7 @@ public class ConfigListener implements ItemListener, ActionListener {
                 colourConnectReverseSubprio = Color.CYAN;
                 setPreviewNodeColour(colourNodeRegular);
                 setPreviewConnectionColour(colourConnectRegular, false);
-                regularNode.setSelected(true);
+                resetNodePanelSelection();
                 LOG.info("Colours reset");
             }
         }
@@ -135,6 +135,6 @@ public class ConfigListener implements ItemListener, ActionListener {
                 }
                 break;
         }
-        previewPanel.repaint();
+        refreshPreviewPanel();
     }
 }

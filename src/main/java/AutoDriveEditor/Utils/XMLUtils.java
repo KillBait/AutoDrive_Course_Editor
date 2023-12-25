@@ -96,4 +96,26 @@ public class XMLUtils {
         }
         return color;
     }
+
+    //
+    // Custom Exceptions
+    //
+
+    public static class EntryTotalException extends Exception {
+        private final String errorValue;
+        private final String errorMessage;
+
+        public EntryTotalException(String errorValue, String errorMessage) {
+            this.errorValue = errorValue;
+            this.errorMessage = errorMessage;
+        }
+
+        public String getErrorValue() {
+            return errorValue;
+        }
+
+        public String getErrorMessage() {
+            return errorMessage;
+        }
+    }
 }

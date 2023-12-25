@@ -6,34 +6,37 @@ import AutoDriveEditor.RoadNetwork.MapNode;
 import java.awt.event.MouseEvent;
 import java.util.LinkedList;
 
+import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
 import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.cubicCurve;
 import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.isCubicCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.isQuadCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
+import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.Managers.MultiSelectManager.*;
-import static AutoDriveEditor.MapPanel.MapPanel.*;
+import static AutoDriveEditor.XMLConfig.AutoSave.resumeAutoSaving;
+import static AutoDriveEditor.XMLConfig.AutoSave.suspendAutoSaving;
 
 public abstract class AlignBaseButton extends BaseButton {
 
     protected abstract void adjustNodesTo(MapNode toNode);
 
     @Override
-    public Boolean ignoreMultiSelect() { return false; }
+    public Boolean useMultiSelection() { return true; }
 
     @Override
     public void mouseClicked(MouseEvent e) {
         super.mouseClicked(e);
         if (e.getButton() == MouseEvent.BUTTON1) {
             MapNode clickedNode = getNodeAtScreenPosition(e.getX(), e.getY());
-            if (multiSelectList != null && isMultipleSelected &&  clickedNode != null) {
-                canAutoSave = false;
+            if (multiSelectList.size() > 0 && isMultipleSelected &&  clickedNode != null) {
+                suspendAutoSaving();
                 adjustNodesTo(clickedNode);
                 if (quadCurve != null && isQuadCurveCreated) quadCurve.updateCurve();
                 if (cubicCurve != null && isCubicCurveCreated) cubicCurve.updateCurve();
-                canAutoSave = true;
                 setStale(true);
                 clearMultiSelection();
                 getMapPanel().repaint();
+                resumeAutoSaving();
             }
         }
     }

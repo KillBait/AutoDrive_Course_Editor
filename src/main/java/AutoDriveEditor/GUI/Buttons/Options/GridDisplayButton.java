@@ -8,11 +8,11 @@ import javax.swing.text.PlainDocument;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 
+import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
+import static AutoDriveEditor.GUI.MapPanel.mapScale;
+import static AutoDriveEditor.GUI.TextPanel.showInTextArea;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.MapPanel.MapPanel.getMapPanel;
-import static AutoDriveEditor.MapPanel.MapPanel.mapZoomFactor;
 import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
-import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
 public class GridDisplayButton extends OptionsBaseButton {
@@ -82,12 +82,12 @@ public class GridDisplayButton extends OptionsBaseButton {
         JTextField cordX = new JTextField(String.valueOf(gridSpacingX));
         JLabel labelX = new JLabel(" ");
         PlainDocument docX = (PlainDocument) cordX.getDocument();
-        docX.setDocumentFilter(new LabelNumberFilter(labelX, 1, 2048 * mapZoomFactor, true, false));
+        docX.setDocumentFilter(new LabelNumberFilter(labelX, 1, 2048 * mapScale, true, false));
 
         JTextField cordY = new JTextField(String.valueOf(gridSpacingY));
         JLabel labelY = new JLabel(" ");
         PlainDocument docY = (PlainDocument) cordY.getDocument();
-        docY.setDocumentFilter(new LabelNumberFilter(labelY, 1, 2048 * mapZoomFactor, true, false));
+        docY.setDocumentFilter(new LabelNumberFilter(labelY, 1, 2048 * mapScale, true, false));
 
         JTextField subDivisions = new JTextField(String.valueOf(gridSubDivisions));
         JLabel subLabel = new JLabel(" ");
@@ -101,9 +101,7 @@ public class GridDisplayButton extends OptionsBaseButton {
         int option = JOptionPane.showConfirmDialog( getMapPanel(), inputFields, ""+ getLocaleString("dialog_grid_title"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 
         if (option == JOptionPane.OK_OPTION) {
-            gridSpacingX = Float.parseFloat(cordX.getText());
-            gridSpacingY = Float.parseFloat(cordY.getText());
-            gridSubDivisions = Integer.parseInt(subDivisions.getText());
+            setNewGridValues(Float.parseFloat(cordX.getText()), Float.parseFloat(cordY.getText()), Integer.parseInt(subDivisions.getText()));
             getMapPanel().repaint();
         }
     }

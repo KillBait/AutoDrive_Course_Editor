@@ -3,12 +3,11 @@ package AutoDriveEditor.GUI.Buttons.Nodes;
 import AutoDriveEditor.GUI.Buttons.LinerLineBaseButton;
 
 import javax.swing.*;
-import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.Utils.GUIUtils.makeStateChangeImageToggleButton;
-import static AutoDriveEditor.Utils.ImageUtils.getImageIcon;
+import static AutoDriveEditor.Utils.ImageUtils.loadImageIcon;
 
 public class NormalConnectionButton extends LinerLineBaseButton implements MouseListener {
 
@@ -19,10 +18,10 @@ public class NormalConnectionButton extends LinerLineBaseButton implements Mouse
 
 
     public NormalConnectionButton(JPanel panel) {
-        normalConnectionIcon = getImageIcon("editor/buttons/connectregular.png");
-        normalConnectionSelectedIcon = getImageIcon("editor/buttons/connectregular_selected.png");
-        normalConnectionSubPrioIcon = getImageIcon("editor/buttons/connectregular_subprio.png");
-        normalConnectionSubPrioSelectedIcon = getImageIcon("editor/buttons/connectregular_subprio_selected.png");
+        normalConnectionIcon = loadImageIcon("editor/buttons/connectregular.png");
+        normalConnectionSelectedIcon = loadImageIcon("editor/buttons/connectregular_selected.png");
+        normalConnectionSubPrioIcon = loadImageIcon("editor/buttons/connectregular_subprio.png");
+        normalConnectionSubPrioSelectedIcon = loadImageIcon("editor/buttons/connectregular_subprio_selected.png");
 
         button = makeStateChangeImageToggleButton("buttons/connectregular", "buttons/connectregular_selected", null,"nodes_create_regular_connection_tooltip","nodes_create_regular_connection_alt", panel, false, false, null, false, this);
         //add Mouse Listener to detect right click on button to change between normal/subprio nodes
@@ -53,10 +52,4 @@ public class NormalConnectionButton extends LinerLineBaseButton implements Mouse
         button.setIcon(normalConnectionSubPrioIcon);
         button.setSelectedIcon(normalConnectionSubPrioSelectedIcon);
     }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {}
-
-    @Override
-    public void mouseExited(MouseEvent e) {}
 }

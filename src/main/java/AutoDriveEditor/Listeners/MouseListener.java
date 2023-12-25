@@ -1,6 +1,6 @@
 package AutoDriveEditor.Listeners;
 
-import AutoDriveEditor.MapPanel.MapPanel;
+import AutoDriveEditor.GUI.MapPanel;
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
@@ -8,7 +8,8 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
 import static AutoDriveEditor.AutoDriveEditor.buttonManager;
-import static AutoDriveEditor.MapPanel.MapPanel.bIsShiftPressed;
+import static AutoDriveEditor.AutoDriveEditor.multiSelectManager;
+import static AutoDriveEditor.GUI.MapPanel.bIsShiftPressed;
 
 public class MouseListener implements MouseMotionListener, MouseWheelListener, java.awt.event.MouseListener {
 
@@ -25,6 +26,7 @@ public class MouseListener implements MouseMotionListener, MouseWheelListener, j
     @Override
     public void mouseClicked(MouseEvent e) {
         storeCurrentMousePos(e.getX(), e.getY());
+        multiSelectManager.mouseClicked(e);
         buttonManager.mouseClicked(e);
         if (e.getButton() == MouseEvent.BUTTON1) {
             previewPanel.mouseButton1Clicked(e.getX(), e.getY());
@@ -42,6 +44,7 @@ public class MouseListener implements MouseMotionListener, MouseWheelListener, j
     @Override
     public void mousePressed(MouseEvent e) {
         storeCurrentMousePos(e.getX(), e.getY());
+        multiSelectManager.mousePressed(e);
         buttonManager.mousePressed(e);
         if (e.getButton() == MouseEvent.BUTTON1) {
             previewPanel.mouseButton1Pressed(e.getX(), e.getY());
@@ -58,6 +61,7 @@ public class MouseListener implements MouseMotionListener, MouseWheelListener, j
     @Override
     public void mouseReleased(MouseEvent e) {
         storeCurrentMousePos(e.getX(), e.getY());
+        multiSelectManager.mouseReleased(e);
         buttonManager.mouseReleased(e);
         if (e.getButton() == MouseEvent.BUTTON1) {
             previewPanel.mouseButton1Released(e.getX(), e.getY());
@@ -80,6 +84,7 @@ public class MouseListener implements MouseMotionListener, MouseWheelListener, j
     @Override
     public void mouseDragged(MouseEvent e) {
         storeCurrentMousePos(e.getX(), e.getY());
+        multiSelectManager.mouseDragged(e);
         buttonManager.mouseDragged(e);
         previewPanel.mouseDragged(e.getX(), e.getY());
         storePreviousMousePos(e.getX(), e.getY());
@@ -88,6 +93,7 @@ public class MouseListener implements MouseMotionListener, MouseWheelListener, j
     @Override
     public void mouseMoved(MouseEvent e) {
         storeCurrentMousePos(e.getX(), e.getY());
+        multiSelectManager.mouseMoved(e);
         buttonManager.mouseMoved(e);
         previewPanel.mouseMoved(e.getX(), e.getY());
         storePreviousMousePos(e.getX(), e.getY());
@@ -95,7 +101,10 @@ public class MouseListener implements MouseMotionListener, MouseWheelListener, j
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        if (!bIsShiftPressed)  previewPanel.increaseZoomLevelBy(e.getWheelRotation());
+        int num = Math.min(Math.max(e.getWheelRotation(), -1), 1);
+        //if (!bIsShiftPressed)  previewPanel.adjustZoomLevelBy(num);
+        if (!bIsShiftPressed)  previewPanel.setNewZoomLevel(num);
+
         buttonManager.mouseWheelMoved(e);
     }
 

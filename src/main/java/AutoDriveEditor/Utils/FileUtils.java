@@ -3,6 +3,7 @@ package AutoDriveEditor.Utils;
 import AutoDriveEditor.AutoDriveEditor;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -11,8 +12,10 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogFileIO;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogFileIOMenu.bDebugLogFileIO;
+import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.XMLConfig.GameXML.lastUsedLocation;
 
 
 public class FileUtils {
@@ -134,7 +137,7 @@ public class FileUtils {
         }
     }
 
-    public static int indexOfExtension(String filename) {
+    private static int indexOfExtension(String filename) {
         if (filename == null) {
             return -1;
         }
@@ -144,12 +147,36 @@ public class FileUtils {
         return extensionPos;
     }
 
-    public static int indexOfLastSeparator(String filename) {
+    private static int indexOfLastSeparator(String filename) {
         if (filename == null) {
             return -1;
         }
         int lastUnixPos = filename.lastIndexOf(UNIX_SEPARATOR);
         int lastWindowsPos = filename.lastIndexOf(WINDOWS_SEPARATOR);
         return Math.max(lastUnixPos, lastWindowsPos);
+    }
+
+    public static JFileChooser createFileChooser(String title, int fileSelectionMode, boolean readOnly, String path, FileFilter filter) {
+
+        JFileChooser fc;
+
+        if (readOnly) {
+
+            // It's hacky to UIManager.
+            //
+            // But don't have much choice, since FileChoosers don't have an in-built read only flag to set
+
+            Boolean old = UIManager.getBoolean("FileChooser.readOnly");
+            UIManager.put("FileChooser.readOnly", Boolean.TRUE);
+            fc = new JFileChooser(lastUsedLocation);
+            UIManager.put("FileChooser.readOnly", old);
+        } else {
+            fc = new JFileChooser(lastUsedLocation);
+        }
+
+        fc.setDialogTitle(getLocaleString(title));
+        fc.setFileSelectionMode(fileSelectionMode);
+        if (filter != null) fc.setFileFilter(filter);
+        return fc;
     }
 }

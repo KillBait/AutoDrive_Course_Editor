@@ -1,23 +1,26 @@
 package AutoDriveEditor.Managers;
 
-import AutoDriveEditor.GUI.Buttons.Editing.PasteSelectionButton;
+import AutoDriveEditor.GUI.Buttons.Edit.PasteSelectionButton;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
 
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.LinkedList;
 
 import static AutoDriveEditor.AutoDriveEditor.changeManager;
+import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
 import static AutoDriveEditor.GUI.Buttons.Nodes.DeleteNodeButton.*;
-import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogCopyPasteInfo;
-import static AutoDriveEditor.GUI.MenuBuilder.updateEditMenu;
+import static AutoDriveEditor.GUI.MapPanel.*;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogCopyPasteMenu.bDebugLogCopyPasteInfo;
+import static AutoDriveEditor.GUI.Menus.EditorMenu.updateEditMenu;
 import static AutoDriveEditor.Managers.MultiSelectManager.*;
-import static AutoDriveEditor.Managers.ScanManager.checkNodeOverlap;
-import static AutoDriveEditor.MapPanel.MapImage.mapPanelImage;
-import static AutoDriveEditor.MapPanel.MapPanel.*;
+import static AutoDriveEditor.RoadNetwork.RoadMap.addNodeToNetwork;
 import static AutoDriveEditor.RoadNetwork.RoadMap.createMapNode;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.Utils.MathUtils.roundUpDoubleToDecimalPlaces;
+import static AutoDriveEditor.XMLConfig.AutoSave.resumeAutoSaving;
+import static AutoDriveEditor.XMLConfig.AutoSave.suspendAutoSaving;
 
 
 public class CopyPasteManager {
@@ -32,10 +35,10 @@ public class CopyPasteManager {
     // when they are added to the node network
 
     private static class NodeTransform {
-        MapNode originalNode;
-        MapNode newNode;
-        LinkedList<MapNode> incoming;
-        LinkedList<MapNode> outgoing;
+        final MapNode originalNode;
+        final MapNode newNode;
+        final LinkedList<MapNode> incoming;
+        final LinkedList<MapNode> outgoing;
 
         public NodeTransform(MapNode origNode, MapNode newNode) {
             this.originalNode = origNode;
@@ -99,7 +102,7 @@ public class CopyPasteManager {
 
         int n = 1;
         for (MapNode node : list) {
-            if (!node.isControlNode) {
+            if (!node.isControlNode()) {
                 MapNode workBufferNode = createMapNode(n++, node.x, node.y, node.z, node.flag, true, false);
                 if (node.hasMapMarker()) {
                     workBufferNode.createMapMarker(node.getMarkerName(), node.getMarkerGroup());
@@ -156,49 +159,45 @@ public class CopyPasteManager {
         double diffX = 0;
         double diffY = 0;
 
-        if ((roadMap == null) || (mapPanelImage == null)) {
-            return;
-        }
+        if (roadMap != null) {
 
-        if (!inOriginalLocation) {
-            selectionCentre = screenPosToWorldPos(getMapPanel().getWidth() / 2, getMapPanel().getHeight() / 2);
-            selectionAreaInfo areaInfo = getSelectionBounds(newNodes);
-            diffX = areaInfo.selectionCentre.getX() - selectionCentre.getX();
-            diffY = areaInfo.selectionCentre.getY() - selectionCentre.getY();
-            if (bDebugLogCopyPasteInfo) {
-                LOG.info("World coordinates of viewport Centre = {}", selectionCentre);
-                LOG.info("Move distance = {},{}", diffX, diffY);
-            }
+            suspendAutoSaving();
 
-        }
-        clearMultiSelection();
-
-        canAutoSave = false;
-
-        int startID = RoadMap.networkNodesList.size() + 1;
-        for (MapNode node : newNodes) {
-            node.id = startID++;
             if (!inOriginalLocation) {
-                node.x = roundUpDoubleToDecimalPlaces(node.x - diffX, 3);
-                //node.x -= diffX;
-                node.z = roundUpDoubleToDecimalPlaces(node.z - diffY, 3);
-                //node.z -= diffY;
-                double yValue = getYValueFromHeightMap(node.x, node.z);
-                if (yValue != -1) node.y = yValue;
+                selectionCentre = screenPosToWorldPos(getMapPanel().getWidth() / 2, getMapPanel().getHeight() / 2);
+                selectionAreaInfo areaInfo = getSelectionBounds(newNodes);
+                diffX = areaInfo.selectionCentre.getX() - selectionCentre.getX();
+                diffY = areaInfo.selectionCentre.getY() - selectionCentre.getY();
+                if (bDebugLogCopyPasteInfo) {
+                    LOG.info("World coordinates of viewport Centre = {}", selectionCentre);
+                    LOG.info("Move distance = {},{}", diffX, diffY);
+                }
+
             }
-            node.isSelected = true;
-            RoadMap.networkNodesList.add(node);
-            checkNodeOverlap(node);
-            multiSelectList.add(node);
+            clearMultiSelection();
+            int startID = RoadMap.networkNodesList.size() + 1;
+            for (MapNode node : newNodes) {
+                node.id = startID++;
+                if (!inOriginalLocation) {
+                    node.x = roundUpDoubleToDecimalPlaces(node.x - diffX, 3);
+                    //node.x -= diffX;
+                    node.z = roundUpDoubleToDecimalPlaces(node.z - diffY, 3);
+                    //node.z -= diffY;
+                    double yValue = getYValueFromHeightMap(node.x, node.z);
+                    if (yValue != -1) node.y = yValue;
+                }
+                node.setSelected(true);
+                addNodeToNetwork(node);
+                multiSelectList.add(node);
+            }
+
+            isMultipleSelected = true;
+
+            changeManager.addChangeable( new PasteSelectionButton.PasteSelectionChanger(newNodes) );
+            setStale(true);
+            getMapPanel().repaint();
+            resumeAutoSaving();
         }
-
-        canAutoSave = true;
-
-        isMultipleSelected = true;
-
-        changeManager.addChangeable( new PasteSelectionButton.PasteSelectionChanger(newNodes) );
-        setStale(true);
-        getMapPanel().repaint();
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -274,7 +273,9 @@ public class CopyPasteManager {
             if (coordType == WORLD_COORDINATES) {
                 return this.selectionSize;
             } else {
-                return worldPosToScreenPos(this.selectionSize.getX(), this.selectionSize.getY());
+                Point2D topLeft = getSelectionStart(SCREEN_COORDINATES);
+                Point2D bottomRight = getSelectionEnd(SCREEN_COORDINATES);
+                return new Point((int) (bottomRight.getX() - topLeft.getX()), (int) (bottomRight.getY() - topLeft.getY()));
             }
         }
 
