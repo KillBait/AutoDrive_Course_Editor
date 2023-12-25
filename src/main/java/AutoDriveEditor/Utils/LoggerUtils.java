@@ -6,5 +6,5 @@ import org.slf4j.LoggerFactory;
 
 public class LoggerUtils {
 
-    public static Logger LOG = LoggerFactory.getLogger(AutoDriveEditor.class);
+    public static final Logger LOG = LoggerFactory.getLogger(AutoDriveEditor.class);
 }

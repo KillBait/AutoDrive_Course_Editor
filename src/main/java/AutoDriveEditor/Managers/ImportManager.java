@@ -1,8 +1,6 @@
 package AutoDriveEditor.Managers;
 
-import AutoDriveEditor.GUI.MenuBuilder;
 import AutoDriveEditor.Import.DDSReader;
-import AutoDriveEditor.MapPanel.MapPanel;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -13,29 +11,31 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import static AutoDriveEditor.AutoDriveEditor.editor;
+import static AutoDriveEditor.Classes.MapImage.setImage;
+import static AutoDriveEditor.GUI.MapPanel.forceMapImageRedraw;
+import static AutoDriveEditor.GUI.Menus.EditorMenu.saveImageEnabled;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.MapPanel.MapImage.setImage;
-import static AutoDriveEditor.MapPanel.MapPanel.forceMapImageRedraw;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public class ImportManager {
 
     public static final int FS19_IMAGE = 0;
     public static final int FS22_IMAGE = 1;
+    private static boolean isUsingImportedImage = false;
 
     public static Boolean  importFromFS19(String filename) {
         boolean success = createBufferImageFromDDS(filename, FS19_IMAGE);
         if (!success) return false;
-        MapPanel.isUsingImportedImage = true;
-        MenuBuilder.saveImageEnabled(true);
+        setEditorUsingImportedImage(true);
+        saveImageEnabled(true);
         return true;
     }
 
     public static Boolean importFromFS22(String filename) {
         boolean success = createBufferImageFromDDS(filename, FS22_IMAGE);
         if (!success) return false;
-        MapPanel.isUsingImportedImage = true;
-        MenuBuilder.saveImageEnabled(true);
+        setEditorUsingImportedImage(true);
+        saveImageEnabled(true);
         return true;
     }
 
@@ -103,7 +103,7 @@ public class ImportManager {
 
         setImage(scaledImage, false);
         forceMapImageRedraw();
-        MapPanel.isUsingImportedImage = true;
+        setEditorUsingImportedImage(true);
         return true;
     }
 
@@ -129,5 +129,20 @@ public class ImportManager {
             e.printStackTrace();
             return false;
         }
+    }
+
+    //
+    // Getters
+    //
+
+    public static boolean getEditorUsingImportedImage() { return isUsingImportedImage; }
+
+
+    //
+    // Setters
+    //
+
+    public static void setEditorUsingImportedImage(boolean result) {
+        isUsingImportedImage = result;
     }
 }

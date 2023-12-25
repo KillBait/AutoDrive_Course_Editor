@@ -12,7 +12,7 @@ public abstract class OptionsBaseButton extends BaseButton{
     public String getInfoText() { return null; }
 
     @Override
-    public Boolean ignoreDeselect() { return true; }
+    public Boolean ignoreButtonDeselect() { return true; }
 
     @Override
     public void setSelected(boolean selected) {}

@@ -1,8 +1,11 @@
 package AutoDriveEditor.Managers;
 
-import static AutoDriveEditor.GUI.MenuBuilder.*;
-import static AutoDriveEditor.MapPanel.MapPanel.canAutoSave;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogUndoRedoMenu.bDebugLogUndoRedo;
+import static AutoDriveEditor.GUI.Menus.EditMenu.RedoMenu.menu_Redo;
+import static AutoDriveEditor.GUI.Menus.EditMenu.UndoMenu.menu_Undo;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.XMLConfig.AutoSave.resumeAutoSaving;
+import static AutoDriveEditor.XMLConfig.AutoSave.suspendAutoSaving;
 
 /**
  * Manages a Queue of Changables to perform undo and/or redo operations. Clients can add implementations of the Changeable
@@ -34,8 +37,8 @@ public class ChangeManager {
      */
     public ChangeManager(){
         LOG.info("Initializing new ChangeManager");
-        undoMenuItem.setEnabled(false);
-        redoMenuItem.setEnabled(false);
+        menu_Undo.setEnabled(false);
+        menu_Redo.setEnabled(false);
         currentIndex = parentNode;
     }
 
@@ -62,7 +65,7 @@ public class ChangeManager {
         node.left = currentIndex;
         currentIndex = node;
         if (bDebugLogUndoRedo) LOG.info("addChangeable");
-        undoMenuItem.setEnabled(true);
+        menu_Undo.setEnabled(true);
     }
 
      // Return if undo can be performed.
@@ -77,11 +80,12 @@ public class ChangeManager {
 
     public void undo(){
         //validate
-        canAutoSave = false;
+        suspendAutoSaving();
+
         if ( !canUndo() ){
             LOG.info("Reached Beginning of Undo History.");
-            undoMenuItem.setEnabled(false);
-            canAutoSave = true;
+            menu_Undo.setEnabled(false);
+            resumeAutoSaving();
             return;
             //throw new IllegalStateException("Cannot undo. Index is out of range.");
         }
@@ -93,7 +97,7 @@ public class ChangeManager {
         }
         //set index
         moveLeft();
-        canAutoSave = true;
+        resumeAutoSaving();
     }
 
     /**
@@ -106,8 +110,8 @@ public class ChangeManager {
             throw new IllegalStateException("Internal index set to null.");
         }
         currentIndex = currentIndex.left;
-        undoMenuItem.setEnabled(canUndo());
-        redoMenuItem.setEnabled(canRedo());
+        menu_Undo.setEnabled(canUndo());
+        menu_Redo.setEnabled(canRedo());
 
     }
 
@@ -121,8 +125,8 @@ public class ChangeManager {
             throw new IllegalStateException("Internal index set to null.");
         }
         currentIndex = currentIndex.right;
-        undoMenuItem.setEnabled(canUndo());
-        redoMenuItem.setEnabled(canRedo());
+        menu_Undo.setEnabled(canUndo());
+        menu_Redo.setEnabled(canRedo());
     }
 
     /**
@@ -132,11 +136,11 @@ public class ChangeManager {
 
     public void redo(){
         //validate
-        canAutoSave = false;
+        suspendAutoSaving();
         if ( !canRedo() ){
             LOG.info("Reached End of Undo History.");
-            redoMenuItem.setEnabled(false);
-            canAutoSave = true;
+            menu_Redo.setEnabled(false);
+            resumeAutoSaving();
             return;
         }
         //reset index
@@ -148,7 +152,7 @@ public class ChangeManager {
             LOG.info("Unable to Redo");
         }
 
-        canAutoSave = true;
+        resumeAutoSaving();
     }
 
     /**

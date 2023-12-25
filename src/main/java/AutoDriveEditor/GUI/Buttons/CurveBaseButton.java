@@ -3,15 +3,19 @@ package AutoDriveEditor.GUI.Buttons;
 import AutoDriveEditor.Managers.ChangeManager;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
+import AutoDriveEditor.Utils.ExceptionUtils;
 
 import java.awt.event.MouseEvent;
 import java.util.LinkedList;
 
-import static AutoDriveEditor.GUI.GUIBuilder.curveOptionsPanel;
-import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogUndoRedo;
+import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
+import static AutoDriveEditor.GUI.Buttons.LinerLineBaseButton.*;
+import static AutoDriveEditor.GUI.Curves.CurvePanel.*;
+import static AutoDriveEditor.GUI.MapPanel.*;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogUndoRedoMenu.bDebugLogUndoRedo;
+import static AutoDriveEditor.GUI.TextPanel.showInTextArea;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
+import static AutoDriveEditor.RoadNetwork.RoadMap.showMismatchedIDError;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.curveSliderDefault;
 
@@ -24,8 +28,9 @@ public abstract class CurveBaseButton extends BaseButton {
     public boolean curvePanelDualStore = false;
     public int curvePanelIntPointsStore = curveSliderDefault;
 
-    protected abstract void setCurveStartNode(MapNode startNode);
-    protected abstract void setCurveEndAndCreate(MapNode endNode);
+
+    protected abstract void setCurvePreviewStartNode(MapNode startNode);
+    protected abstract void setCurvePreviewEndAndDisplay(MapNode endNode);
     protected abstract boolean isCurveCreated();
     protected abstract void storeCurvePanelSettings();
     protected abstract void restoreCurvePanelSettings();
@@ -33,27 +38,29 @@ public abstract class CurveBaseButton extends BaseButton {
     @Override
     public void setSelected(boolean selected) {
         if (selected) {
+            curvePathRegular.setEnabled(true);
             restoreCurvePanelSettings();
             button.setSelected(true);
             showInTextArea(getInfoText(), true, false);
-            curveOptionsPanel.repaint();
+            setCurvePanelCurrentButton(this);
         } else {
             storeCurvePanelSettings();
             button.setSelected(false);
         }
+        curveOptionsPanel.repaint();
     }
 
     public String getInfoText() {  return button.getToolTipText(); }
 
     public void commitCurve() {}
     public void cancelCurve() {}
-    @SuppressWarnings("unused")
+
     public void setNodeType(int nodeType) {}
-    @SuppressWarnings("unused")
+
     public void setReversePath(boolean isSelected) {}
-    @SuppressWarnings("unused")
+
     public void setDualPath(boolean isDualPath) {}
-    @SuppressWarnings("unused")
+
     public void setNumInterpolationPoints(int numPoints) {}
 
     public void mouseReleased(MouseEvent e) {
@@ -61,13 +68,13 @@ public abstract class CurveBaseButton extends BaseButton {
             MapNode selected = getNodeAtScreenPosition(e.getX(), e.getY());
             if (selected != null && !selected.isControlNode()) {
                 if (curveStartNode == null) {
-                    setCurveStartNode(selected);
+                    setCurvePreviewStartNode(selected);
                 } else if (selected == curveStartNode && !isCurveCreated()) {
                     curveStartNode = null;
                     cancelCurve();
                     showInTextArea(getLocaleString("infopanel_curve_canceled"), true, false);
                 } else {
-                    setCurveEndAndCreate(selected);
+                    setCurvePreviewEndAndDisplay(selected);
                 }
                 getMapPanel().repaint();
             }
@@ -117,16 +124,21 @@ public abstract class CurveBaseButton extends BaseButton {
         }
 
         public void redo(){
-            for (int i = 1; i <= this.storedCurveNodeList.size() - 2 ; i++) {
-                MapNodeStore curveNode = this.storedCurveNodeList.get(i);
-                curveNode.clearConnections();
-                if (bDebugLogUndoRedo) LOG.info("## QuadCurveChanger ## Inserting mapNode ID {}", curveNode.getMapNode().id);
-                roadMap.insertMapNode(curveNode.getMapNode(), null,null);
-                if (curveNode.hasChangedID()) curveNode.resetID();
+            try {
+                for (int i = 1; i <= this.storedCurveNodeList.size() - 2 ; i++) {
+                    MapNodeStore curveNode = this.storedCurveNodeList.get(i);
+                    curveNode.clearConnections();
+                    if (bDebugLogUndoRedo) LOG.info("## QuadCurveChanger ## Inserting mapNode ID {}", curveNode.getMapNode().id);
+                    roadMap.insertMapNode(curveNode.getMapNode(), null,null);
+                    if (curveNode.hasChangedID()) curveNode.resetID();
+                }
+                connectNodes(getCurveLinkedList(), this.isReversePath, this.isDualPath);
+                getMapPanel().repaint();
+                setStale(true);
+            } catch (ExceptionUtils.MismatchedIdException e) {
+                showMismatchedIDError("CurveChanger redo()", e);
             }
-            connectNodes(getCurveLinkedList(), this.isReversePath, this.isDualPath);
-            getMapPanel().repaint();
-            setStale(true);
+
         }
 
         public static void connectNodes(LinkedList<MapNode> mergeNodesList, boolean reversePath, boolean dualPath)  {

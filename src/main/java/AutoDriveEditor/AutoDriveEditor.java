@@ -1,11 +1,16 @@
 package AutoDriveEditor;
 
-import AutoDriveEditor.GUI.GUIBuilder;
-import AutoDriveEditor.GUI.MenuBuilder;
+import AutoDriveEditor.GUI.ButtonToolbar;
+import AutoDriveEditor.GUI.MapPanel;
+import AutoDriveEditor.GUI.Menus.EditorMenu;
+import AutoDriveEditor.GUI.RenderThreads.ConnectionDrawThread;
+import AutoDriveEditor.GUI.RenderThreads.NodeDrawThread;
+import AutoDriveEditor.GUI.TextPanel;
 import AutoDriveEditor.Handlers.GlobalExceptionHandler;
 import AutoDriveEditor.Locale.LocaleManager;
 import AutoDriveEditor.Managers.ButtonManager;
 import AutoDriveEditor.Managers.ChangeManager;
+import AutoDriveEditor.Managers.MultiSelectManager;
 import AutoDriveEditor.Managers.VersionManager;
 import AutoDriveEditor.RoadNetwork.RoadMap;
 
@@ -15,34 +20,38 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Objects;
 
-import static AutoDriveEditor.GUI.GUIImages.getTractorImage;
-import static AutoDriveEditor.GUI.GUIImages.loadIcons;
+import static AutoDriveEditor.GUI.EditorImages.getTractorImage;
+import static AutoDriveEditor.GUI.EditorImages.loadIcons;
+import static AutoDriveEditor.GUI.MapPanel.isStale;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.MapPanel.MapPanel.*;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.XMLConfig.AutoSave.scheduledExecutorService;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 import static AutoDriveEditor.XMLConfig.GameXML.saveGameConfig;
 import static AutoDriveEditor.XMLConfig.GameXML.xmlConfigFile;
 
 public class AutoDriveEditor extends JFrame {
 
-    public static final String COURSE_EDITOR_VERSION = "1.0.6";
+    public static final String COURSE_EDITOR_VERSION = "1.0.7";
     public static final String COURSE_EDITOR_NAME = "AutoDrive Course Editor";
     public static final String COURSE_EDITOR_TITLE = COURSE_EDITOR_NAME + " " + COURSE_EDITOR_VERSION;
     public static final String COURSE_EDITOR_BUILD_INFO = "Java 11 SDK + IntelliJ IDEA 2022.2.3 Community Edition";
 
     public static AutoDriveEditor editor;
 
+    public static MapPanel mapPanel;
+
     public static ChangeManager changeManager;
     public static ButtonManager buttonManager;
+    public static MultiSelectManager multiSelectManager;
 
-    public static boolean DEBUG = false;
+
     public static boolean EXPERIMENTAL = false;
-
+    public static boolean bIsDebugEnabled = false;
     public AutoDriveEditor() {
         super();
         LOG.info("Starting AutoDrive Editor v{} .....", COURSE_EDITOR_VERSION);
-        LOG.info("Java Runtime Version {}", Runtime.version().feature());
+        LOG.info("Using Java Runtime Version {}", Runtime.version().feature());
         LocaleManager.setLocale();
         setTitle(createWindowTitleString());
         loadIcons();
@@ -89,9 +98,7 @@ public class AutoDriveEditor extends JFrame {
         BorderLayout mainLayout = new BorderLayout();
         setLayout(mainLayout);
 
-        // init menu bar
-        MenuBuilder.createMenu();
-        setJMenuBar(MenuBuilder.menuBar);
+
 
         String layoutPosition = BorderLayout.PAGE_START;
 
@@ -114,12 +121,18 @@ public class AutoDriveEditor extends JFrame {
         }
 
         buttonManager = new ButtonManager();
+        multiSelectManager = new MultiSelectManager();
 
-        this.add(GUIBuilder.createMapPanel(), BorderLayout.CENTER);
-        this.add(GUIBuilder.createButtonPanel(mainLayout, layoutPosition), layoutPosition);
-        this.add(GUIBuilder.initTextPanel(), BorderLayout.PAGE_END);
+        mapPanel = new MapPanel();
 
-        //MenuBuilder.editMenuEnabled(false);
+        // Init menu bar
+
+        setJMenuBar(new EditorMenu());
+
+        add(mapPanel, BorderLayout.CENTER);
+        add(new ButtonToolbar(mainLayout, layoutPosition), layoutPosition);
+        add(new TextPanel(), BorderLayout.PAGE_END);
+
         setIconImage(getTractorImage());
         editor = this;
         pack();
@@ -138,7 +151,7 @@ public class AutoDriveEditor extends JFrame {
 
         // set look and feel to the system look and feel
         try {
-
+            //UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ex) {
             LOG.error(ex.getMessage(), ex);
@@ -146,15 +159,9 @@ public class AutoDriveEditor extends JFrame {
 
 
         for (String arg : args) {
-            if (Objects.equals(arg, "-DEBUG")) {
-                DEBUG = true;
-                LOG.info("##");
-                LOG.info("## WARNING ..... Debug Mode is enabled, a lot of logging may occur, performance will be effected!!");
-                LOG.info("##");
-            }
             if (Objects.equals(arg, "-EXPERIMENTAL")) {
                 EXPERIMENTAL = true;
-                DEBUG = true;
+                bIsDebugEnabled = true;
                 LOG.info("##");
                 LOG.info("## WARNING ..... Experimental features are unlocked, config corruption is possible.. USE --ONLY-- ON BACKUP CONFIGS!!");
                 LOG.info("##");
@@ -169,6 +176,10 @@ public class AutoDriveEditor extends JFrame {
         });
     }
 
+    public static void updateWindowTitle() {
+        editor.setTitle(createWindowTitleString());
+    }
+
     public static String createWindowTitleString() {
         StringBuilder sb = new StringBuilder();
         sb.append(COURSE_EDITOR_TITLE);
@@ -180,14 +191,19 @@ public class AutoDriveEditor extends JFrame {
         }
         if (EXPERIMENTAL) {
             sb.append(" ( EXPERIMENTAL MODE )");
-        } else if (DEBUG) {
+        } else if (bIsDebugEnabled) {
             sb.append(" ( DEBUG MODE )");
         }
 
         return sb.toString();
     }
 
-    public static void updateWindowTitle() {
-        editor.setTitle(createWindowTitleString());
+    //
+    // Getters
+    //
+
+    public static AutoDriveEditor getEditor() { return editor; }
+    public static MapPanel getMapPanel() {
+        return mapPanel;
     }
 }

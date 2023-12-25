@@ -16,7 +16,7 @@ The log file has a maximum size of 20MB and a maximum of 3 files are then create
 
 ## Bug Reports
 
-Please use the "Issues" section to report any bugs, i will try to respond as soon as humanly possible, but bear in mind
+Please use the "Issues" section to report any bugs, I will try to respond as soon as humanly possible, but bear in mind
 real life doesn't always allow for quick answers.
 
 ## Map Images
@@ -40,4 +40,4 @@ The Editor does not currently have a license attached to it.
 
 ## Credits
 
-**@Stephan_S** - The creator of the AutoDrive mod and original editor. With his permission i have taken over maintaining this editor.
+**@Stephan_S** - The creator of the AutoDrive mod and original editor, with his permission, I have taken over maintaining this editor.

@@ -1,25 +1,23 @@
 package AutoDriveEditor.GUI.Buttons.Curves;
 
+import AutoDriveEditor.Classes.QuadCurve;
 import AutoDriveEditor.GUI.Buttons.CurveBaseButton;
-import AutoDriveEditor.GUI.GUIBuilder;
-import AutoDriveEditor.MapPanel.QuadCurve;
 import AutoDriveEditor.RoadNetwork.MapNode;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
-import java.util.concurrent.locks.Lock;
 
+import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
 import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.cubicCurve;
-import static AutoDriveEditor.GUI.GUIBuilder.*;
+import static AutoDriveEditor.GUI.Curves.CurvePanel.*;
+import static AutoDriveEditor.GUI.MapPanel.*;
+import static AutoDriveEditor.GUI.TextPanel.showInTextArea;
 import static AutoDriveEditor.Listeners.MouseListener.*;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.MapPanel.MapPanel.*;
-import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_STANDARD;
+import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_REGULAR;
 import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
-import static AutoDriveEditor.Utils.GUIUtils.showInTextArea;
-import static AutoDriveEditor.Utils.ImageUtils.backBufferGraphics;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
@@ -48,21 +46,21 @@ public final class QuadCurveButton extends CurveBaseButton {
     }
 
     @Override
-    protected void setCurveStartNode(MapNode startNode) {
+    protected void setCurvePreviewStartNode(MapNode startNode) {
         curveStartNode = startNode;
         showInTextArea(getLocaleString("infopanel_curve_select_end"), true, false);
         showConnectingLine = true;
     }
 
     @Override
-    protected void setCurveEndAndCreate(MapNode endNode) {
+    protected void setCurvePreviewEndAndDisplay(MapNode endNode) {
         if (!isQuadCurveCreated) {
             showInTextArea(getLocaleString("infopanel_curve_created"), true, false);
             quadCurve = new QuadCurve(curveStartNode, endNode);
-            quadCurve.setNumInterpolationPoints(GUIBuilder.numIterationsSlider.getValue() + 1);
+            quadCurve.setNumInterpolationPoints(numIterationsSlider.getValue() + 1);
             isQuadCurveCreated = true;
             showConnectingLine = false;
-            GUIBuilder.curveOptionsPanel.setVisible(true);
+            curveOptionsPanel.setVisible(true);
         }
     }
 
@@ -149,7 +147,7 @@ public final class QuadCurveButton extends CurveBaseButton {
         showConnectingLine = false;
         quadCurve = null;
         curveStartNode = null;
-        if (cubicCurve == null) GUIBuilder.curveOptionsPanel.setVisible(false);
+        if (cubicCurve == null) curveOptionsPanel.setVisible(false);
         getMapPanel().repaint();
     }
 
@@ -160,31 +158,23 @@ public final class QuadCurveButton extends CurveBaseButton {
         showConnectingLine = false;
         quadCurve = null;
         curveStartNode = null;
-        if (cubicCurve == null) GUIBuilder.curveOptionsPanel.setVisible(false);
+        if (cubicCurve == null) curveOptionsPanel.setVisible(false);
         getMapPanel().repaint();
     }
 
     @Override
-    public void drawToScreen(Graphics2D g, Lock drawLock, double scaledSizeQuarter, double scaledSizeHalf) {
+    public void drawToScreen(Graphics g) {
 
-        //
         // draw connection line
-        //
-
         if (quadCurve == null && showConnectingLine) {
             Point2D startNodePos = worldPosToScreenPos(curveStartNode.x, curveStartNode.z);
             Point2D mousePos = new Point2D.Double(currentMouseX,currentMouseY);
-
-            backBufferGraphics.setColor(Color.WHITE);
-            drawArrowBetween(backBufferGraphics, startNodePos, mousePos, false);
+            drawArrowBetween(g, startNodePos, mousePos, false, Color.WHITE, false);
         }
 
         if (quadCurve!= null && isQuadCurveCreated) {
 
-            //
-            // draw interpolation points for curve
-            //
-
+            // draw the interpolation points for curve
             Color colour;
             for (int j = 0; j < quadCurve.curveNodesList.size() - 1; j++) {
 
@@ -194,32 +184,29 @@ public final class QuadCurveButton extends CurveBaseButton {
                 Point2D currentNodePos = worldPosToScreenPos(currentNode.x, currentNode.z);
                 Point2D nextNodePos = worldPosToScreenPos(nextNode.x, nextNode.z);
 
-                //
                 //don't draw the first node as it already been drawn
-                //
-
                 if (j != 0) {
-                    Shape oldClip = backBufferGraphics.getClip();
-                    Graphics2D g2d = (Graphics2D) backBufferGraphics.create();
+                    Shape oldClip = g.getClip();
+                    Graphics2D g2d = (Graphics2D) g.create();
                     g2d.setComposite(AlphaComposite.SrcOver.derive(0.5f));
-                    if (currentNode.flag == NODE_FLAG_STANDARD) {
+                    if (currentNode.flag == NODE_FLAG_REGULAR) {
                         g2d.setColor(Color.WHITE);
                     } else {
                         g2d.setColor(colourNodeSubprio);
                     }
-                    g2d.fillArc((int) (currentNodePos.getX() - scaledSizeQuarter), (int) (currentNodePos.getY() - scaledSizeQuarter), (int) scaledSizeHalf, (int) scaledSizeHalf, 0, 360);
+                    g2d.fillArc((int) (currentNodePos.getX() - nodeSizeScaledHalf), (int) (currentNodePos.getY() - nodeSizeScaledHalf), (int) nodeSizeScaled, (int) nodeSizeScaled, 0, 360);
                     g2d.setClip(oldClip);
                     g2d.dispose();
                 }
 
                 if (quadCurve.isReversePath()) {
-                    if (quadCurve.getNodeType() == NODE_FLAG_STANDARD) {
+                    if (quadCurve.getNodeType() == NODE_FLAG_REGULAR) {
                         colour = colourConnectReverse;
                     } else {
                         colour = colourConnectReverseSubprio;
                     }
                 } else if (quadCurve.isDualPath()) {
-                    if (quadCurve.getNodeType() == NODE_FLAG_STANDARD) {
+                    if (quadCurve.getNodeType() == NODE_FLAG_REGULAR) {
                         colour = colourConnectDual;
                     } else {
                         colour = colourConnectDualSubprio;
@@ -229,25 +216,21 @@ public final class QuadCurveButton extends CurveBaseButton {
                 } else {
                     colour = colourConnectRegular;
                 }
-                backBufferGraphics.setColor(colour);
-                drawArrowBetween(backBufferGraphics, currentNodePos, nextNodePos, quadCurve.isDualPath()) ;
+                drawArrowBetween(g, currentNodePos, nextNodePos, quadCurve.isDualPath(), colour, true) ;
             }
 
-            //
             // draw the control nodes, this is done last to make them visible at all times
-            //
-
             Point2D nodePos = worldPosToScreenPos(quadCurve.getControlPoint().x, quadCurve.getControlPoint().z);
             Polygon p = new Polygon();
-            p.addPoint((int) (nodePos.getX() - scaledSizeQuarter), (int) (nodePos.getY() - scaledSizeQuarter));
-            p.addPoint((int) (nodePos.getX() + scaledSizeQuarter), (int) (nodePos.getY() - scaledSizeQuarter));
-            p.addPoint((int) nodePos.getX(), (int) (nodePos.getY() + scaledSizeQuarter));
+            p.addPoint((int) (nodePos.getX() - nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf));
+            p.addPoint((int) (nodePos.getX() + nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf));
+            p.addPoint((int) nodePos.getX(), (int) (nodePos.getY() + nodeSizeScaledHalf));
             g.setColor(colourNodeControl);
             g.fillPolygon(p);
 
-            if (quadCurve.getControlPoint().isSelected || hoveredNode == quadCurve.getControlPoint()) {
-                Graphics2D g2 = (Graphics2D) backBufferGraphics.create();
-                BasicStroke bs = new BasicStroke((float) (scaledSizeHalf / 5));
+            if (quadCurve.getControlPoint().isSelected() || hoveredNode == quadCurve.getControlPoint()) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                BasicStroke bs = new BasicStroke((float) (nodeSizeScaled / 5));
                 g2.setStroke(bs);
                 g2.setColor(colourNodeSelected);
                 g2.drawPolygon(p);

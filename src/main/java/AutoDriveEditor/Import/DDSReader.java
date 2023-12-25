@@ -571,15 +571,16 @@ public class DDSReader {
     private DDSReader() {}
 
     private static final class Order {
+        @SuppressWarnings("SameParameterValue")
         Order(int redShift, int greenShift, int blueShift, int alphaShift) {
             this.redShift = redShift;
             this.greenShift = greenShift;
             this.blueShift = blueShift;
             this.alphaShift = alphaShift;
         }
-        public int redShift;
-        public int greenShift;
-        public int blueShift;
-        public int alphaShift;
+        public final int redShift;
+        public final int greenShift;
+        public final int blueShift;
+        public final int alphaShift;
     }
 }

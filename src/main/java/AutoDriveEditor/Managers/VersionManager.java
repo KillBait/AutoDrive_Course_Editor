@@ -21,7 +21,7 @@ import java.net.URL;
 
 import static AutoDriveEditor.AutoDriveEditor.COURSE_EDITOR_VERSION;
 import static AutoDriveEditor.AutoDriveEditor.editor;
-import static AutoDriveEditor.GUI.GUIImages.getUpdateIcon;
+import static AutoDriveEditor.GUI.EditorImages.getUpdateIcon;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.Utils.XMLUtils.getTextValue;
 import static AutoDriveEditor.XMLConfig.EditorXML.bShowUpdateMessage;

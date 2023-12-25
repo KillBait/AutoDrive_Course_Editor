@@ -7,8 +7,8 @@ package AutoDriveEditor.RoadNetwork;
 @SuppressWarnings("rawtypes")
 public class MarkerGroup implements Comparable{
 
-    public int groupIndex;
-    public String groupName;
+    public final int groupIndex;
+    public final String groupName;
 
     public MarkerGroup(int index, String name) {
         this.groupIndex = index;

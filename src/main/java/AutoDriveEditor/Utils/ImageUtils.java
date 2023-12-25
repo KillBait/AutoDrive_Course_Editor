@@ -9,13 +9,10 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 
-import static AutoDriveEditor.GUI.MenuBuilder.bDebugLogRenderInfo;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogRenderInfoMenu.bDebugLogRenderInfo;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public class ImageUtils {
-
-    public static Image backBufferImage = null;
-    public static Graphics2D backBufferGraphics = null;
 
     public static BufferedImage getNewBufferImage(int width, int height, int transparency) {
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -25,26 +22,6 @@ public class ImageUtils {
         bufferImage.setAccelerationPriority(1);
         if (bDebugLogRenderInfo) LOG.info("Accelerated bufferImage = {}", bufferImage.getAccelerationPriority());
         return bufferImage;
-    }
-
-    public static void getNewBackBufferImage(int width, int height) {
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        GraphicsDevice gd = ge.getDefaultScreenDevice();
-        GraphicsConfiguration gc = gd.getDefaultConfiguration();
-
-        backBufferImage = gc.createCompatibleImage(width, height, Transparency.OPAQUE);
-        if (bDebugLogRenderInfo) LOG.info("Accelerated BackBufferImage = {}", gc.getImageCapabilities().isAccelerated());
-        backBufferImage.setAccelerationPriority(1);
-        backBufferGraphics = (Graphics2D) backBufferImage.getGraphics();
-        backBufferGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        backBufferGraphics.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
-        backBufferGraphics.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_SPEED);
-        backBufferGraphics.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_DISABLE);
-        backBufferGraphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_OFF);
-        backBufferGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        backBufferGraphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
-        backBufferGraphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-        backBufferGraphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
     }
 
     public static BufferedImage loadImage(String fileName) {
@@ -74,7 +51,7 @@ public class ImageUtils {
         return null;
     }
 
-    public static ImageIcon getImageIcon(String name) {
+    public static ImageIcon loadImageIcon(String name) {
         String fileName = "/" + name;
         try {
             URL url = AutoDriveEditor.class.getResource(fileName);
@@ -82,7 +59,7 @@ public class ImageUtils {
                 BufferedImage newImage = ImageIO.read(url);
                 return new ImageIcon(newImage);
             } else {
-                LOG.info("## getImageIcon Error ## Unable to load image {}", fileName);
+                LOG.info("## loadImageIcon Error ## Unable to load image {}", fileName);
             }
         } catch (IOException ignored) {}
         return null;

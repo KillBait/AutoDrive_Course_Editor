@@ -1,7 +1,6 @@
 package AutoDriveEditor.Utils;
 
 import AutoDriveEditor.AutoDriveEditor;
-import AutoDriveEditor.Listeners.MenuListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,12 +8,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
 import java.net.URL;
 
-import static AutoDriveEditor.GUI.GUIBuilder.textArea;
-import static AutoDriveEditor.GUI.GUIBuilder.textPanel;
-import static AutoDriveEditor.GUI.MenuBuilder.InputEvent_NONE;
-import static AutoDriveEditor.GUI.MenuBuilder.KeyEvent_NONE;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public class GUIUtils {
 
@@ -59,10 +53,21 @@ public class GUIUtils {
         }
     }
 
+    public static final int InputEvent_NONE = 0;
+    public static final int KeyEvent_NONE = 0;
+
     //
     // Button Creation functions
     //
 
+    /**
+     * @param actionCommand Unique string to associate to this button
+     * @param toolTipText String for tooltip
+     * @param altText String for alt text
+     * @param panel Which JPanel this should be added to.
+     * @param enabled Is button enabled upon creation.
+     * @return Reference to the button
+     */
     public static JButton makeBasicButton(String actionCommand, String toolTipText, String altText, JPanel panel, boolean enabled, boolean useLocale) {
         JButton button = new JButton();
         if (actionCommand != null) button.setActionCommand(actionCommand);
@@ -73,31 +78,56 @@ public class GUIUtils {
             button.setToolTipText(toolTipText);
             button.setText(altText);
         }
-        panel.add(button);
+        if (panel != null) panel.add(button);
         button.setEnabled(enabled);
 
         return button;
     }
 
-    public static JButton makeButton(String actionCommand,String toolTipText,String altText, JPanel panel, ButtonGroup group, boolean isGroupDefault, ActionListener actionListener, boolean enabled) {
+    /**
+     * @param actionCommand Unique string to associate to this button
+     * @param toolTipText String for tooltip
+     * @param altText String for alt text
+     * @param panel Which JPanel this should be added to.
+     * @param buttonGroup Which ButtonGroup to add this to. (can be null)
+     * @param isGroupDefault is it the default button. (ignored if buttonGroup = null)
+     * @param actionListener ActionListener the button should use.
+     * @param enabled Is button enabled upon creation.
+     * @return Reference to the button
+     */
+    public static JButton makeButton(String actionCommand,String toolTipText,String altText, JPanel panel, ButtonGroup buttonGroup, boolean isGroupDefault, ActionListener actionListener, boolean enabled) {
         JButton button = new JButton();
         button.setActionCommand(actionCommand);
         button.setToolTipText(getLocaleString(toolTipText));
-        button.addActionListener(actionListener);
         button.setText(getLocaleString(altText));
+        button.addActionListener(actionListener);
         button.setFocusable(false);
         panel.add(button);
-        if (group != null) {
-            group.add(button);
+        if (buttonGroup != null) {
+            buttonGroup.add(button);
             if (isGroupDefault) {
                 //ButtonModel groupDefault = menuItem.getModel();
-                group.setSelected(button.getModel(), true);
+                buttonGroup.setSelected(button.getModel(), true);
             }
         }
         button.setEnabled(enabled);
 
         return button;
     }
+
+    /**
+     * @param imageName name of the file for the regular icon
+     * @param selectedImageName name of file for the selected icon
+     * @param actionCommand Unique string to associate to this button
+     * @param toolTipText String for tooltip
+     * @param altText String for alt text
+     * @param panel Which JPanel this should be added to.
+     * @param enabled Is button enabled upon creation.
+     * @param actionListener ActionListener the button should use.
+     * <br><br>if no image can be loaded, the altText string will be used
+     * for the button instead.
+     * @return Reference to the button
+     */
 
     public static JButton makeImageButton(String imageName, String selectedImageName, String actionCommand, String toolTipText, String altText, JPanel panel, boolean enabled, ActionListener actionListener) {
 
@@ -230,51 +260,6 @@ public class GUIUtils {
         return radioButton;
     }
 
-
-    //
-    // Menu Creation Functions
-    //
-
-    public static JMenu makeMenu(String menuName, int keyEvent, String accString, JMenuBar parentMenu) {
-        JMenu newMenu = new JMenu(getLocaleString(menuName));
-        newMenu.setMnemonic(keyEvent);
-        newMenu.getAccessibleContext().setAccessibleDescription(getLocaleString(accString));
-        parentMenu.add(newMenu);
-        return newMenu;
-    }
-
-    public static JMenu makeSubMenu(String menuName, String accString, JMenu parentMenu) {
-        JMenu newMenu = new JMenu(getLocaleString(menuName));
-        newMenu.getAccessibleContext().setAccessibleDescription(getLocaleString(accString));
-        parentMenu.add(newMenu);
-        return newMenu;
-    }
-
-    public static JMenu makeSubMenu(String menuName, int keyEvent, String accString, JMenu parentMenu) {
-        JMenu newMenu = new JMenu(getLocaleString(menuName));
-        newMenu.setMnemonic(keyEvent);
-        newMenu.getAccessibleContext().setAccessibleDescription(getLocaleString(accString));
-        parentMenu.add(newMenu);
-        return newMenu;
-    }
-
-    public static JMenuItem makeMenuItem(String menuName, String accString, JMenu menu, MenuListener listener, String actionCommand, Boolean enabled) {
-        return makeMenuItem(menuName, accString, KeyEvent_NONE, InputEvent_NONE, menu, listener, actionCommand, enabled);
-    }
-
-    public static JMenuItem makeMenuItem(String menuName, String accString, int keyEvent, int inputEvent, JMenu menu, MenuListener listener, String actionCommand, Boolean enabled) {
-        JMenuItem menuItem = new JMenuItem(getLocaleString(menuName));
-        if (keyEvent != 0) {
-            menuItem.setAccelerator(KeyStroke.getKeyStroke(keyEvent, inputEvent));
-        }
-        menuItem.getAccessibleContext().setAccessibleDescription(getLocaleString(accString));
-        menuItem.setEnabled(enabled);
-        if (actionCommand != null) menuItem.setActionCommand(actionCommand);
-        menuItem.addActionListener(listener);
-        menu.add(menuItem);
-        return menuItem;
-    }
-
     public static JCheckBox makeCheckBox(JLabel label, String name, ItemListener itemListener, boolean enabled, boolean isSelected) {
 
         JCheckBox checkBox = new JCheckBox(" ", isSelected);
@@ -290,74 +275,6 @@ public class GUIUtils {
         label.setLabelFor(checkBox);
 
         return checkBox;
-    }
-
-    public static JCheckBoxMenuItem makeCheckBoxMenuItem (String text, String accString, Boolean isSelected, JMenu menu, MenuListener itemListener, String actionCommand, Boolean enabled) {
-        return makeCheckBoxMenuItem(text, accString, KeyEvent_NONE, InputEvent_NONE, isSelected, menu, itemListener, actionCommand, enabled);
-    }
-    @SuppressWarnings("unused")
-    public static JCheckBoxMenuItem makeCheckBoxMenuItem (String text, String accString, int keyEvent, Boolean isSelected, JMenu menu, MenuListener itemListener, String actionCommand, Boolean enabled) {
-        return makeCheckBoxMenuItem(text, accString, keyEvent, InputEvent_NONE, isSelected, menu, itemListener, actionCommand, enabled);
-    }
-
-    public static JCheckBoxMenuItem makeCheckBoxMenuItem (String text, String accString, int keyEvent, int inputEvent, Boolean isSelected, JMenu menu, MenuListener itemListener, String actionCommand, Boolean enabled) {
-        JCheckBoxMenuItem cbMenuItem = new JCheckBoxMenuItem(getLocaleString(text), isSelected);
-        cbMenuItem.setActionCommand(actionCommand);
-        if (inputEvent != 0 && keyEvent != 0) {
-            cbMenuItem.setAccelerator(KeyStroke.getKeyStroke(keyEvent, inputEvent));
-            cbMenuItem.setMnemonic(keyEvent);
-        } else if (inputEvent == InputEvent_NONE && keyEvent != 0){
-            cbMenuItem.setAccelerator(KeyStroke.getKeyStroke(keyEvent, 0));
-        }
-        cbMenuItem.setSelected(isSelected);
-        cbMenuItem.getAccessibleContext().setAccessibleDescription(getLocaleString(accString));
-        cbMenuItem.addItemListener(itemListener);
-        cbMenuItem.setEnabled(enabled);
-        menu.add(cbMenuItem);
-
-        return cbMenuItem;
-    }
-
-    public static JRadioButtonMenuItem makeSimpleRadioButtonMenuItem(String text, String accString, JMenu menu,MenuListener itemListener, String actionCommand, Boolean enabled, ButtonGroup buttonGroup, boolean isGroupDefault) {
-        JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(text);
-        menuItem.getAccessibleContext().setAccessibleDescription(getLocaleString(accString) + " " + text);
-        menuItem.setEnabled(enabled);
-        if (actionCommand != null) menuItem.setActionCommand(actionCommand);
-        menuItem.addActionListener(itemListener);
-        if (buttonGroup != null) {
-            buttonGroup.add(menuItem);
-            if (isGroupDefault) {
-                buttonGroup.setSelected(menuItem.getModel(), true);
-            }
-        }
-        menu.add(menuItem);
-        return menuItem;
-    }
-
-    @SuppressWarnings("unused")
-    public static JRadioButtonMenuItem makeRadioButtonMenuItem(String menuName, String accString, JMenu menu, MenuListener itemListener, String actionCommand, Boolean enabled, ButtonGroup buttonGroup, boolean isGroupDefault) {
-        return makeRadioButtonMenuItem(menuName, accString, 0, 0, menu, itemListener, actionCommand, enabled, buttonGroup, isGroupDefault);
-    }
-
-    // if no button group is required, set buttonGroup to null and isGroupDefault will be ignored
-
-    public static JRadioButtonMenuItem makeRadioButtonMenuItem(String menuName, String accString, int keyEvent, int inputEvent, JMenu menu, MenuListener itemListener, String actionCommand, Boolean enabled, ButtonGroup buttonGroup, boolean isGroupDefault) {
-        JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(getLocaleString(menuName));
-        if (keyEvent != 0 && inputEvent != 0) {
-            menuItem.setAccelerator(KeyStroke.getKeyStroke(keyEvent, inputEvent));
-        }
-        menuItem.getAccessibleContext().setAccessibleDescription(getLocaleString(accString));
-        menuItem.setEnabled(enabled);
-        if (actionCommand != null) menuItem.setActionCommand(actionCommand);
-        menuItem.addActionListener(itemListener);
-        if (buttonGroup != null) {
-            buttonGroup.add(menuItem);
-            if (isGroupDefault) {
-                buttonGroup.setSelected(menuItem.getModel(), true);
-            }
-        }
-        menu.add(menuItem);
-        return menuItem;
     }
 
     private static SpringLayout.Constraints getConstraintsForCell(
@@ -509,15 +426,5 @@ public class GUIUtils {
         SpringLayout.Constraints pCons = layout.getConstraints(parent);
         pCons.setConstraint(SpringLayout.SOUTH, y);
         pCons.setConstraint(SpringLayout.EAST, x);
-    }
-
-    public static void showInTextArea(String text, boolean clearAll, boolean outputToLogFile) {
-        if (clearAll) {
-            textArea.selectAll();
-            textArea.replaceSelection(null);
-        }
-        if (outputToLogFile) LOG.info(text);
-        textArea.append(text + "\n");
-        textPanel.repaint();
     }
 }
