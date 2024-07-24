@@ -43,7 +43,7 @@ public class EditorXML {
     public static int x = -99; // x + y are negative on purpose
     public static int y = -99;
     public static int width = 1280;
-    public static int height = 950;
+    public static int height = 955;
     public static float nodeSize = 2;
     public static String toolbarPosition = "Left";
     public static final ArrayList<MapInfoStore> knownMapList = new ArrayList<>();

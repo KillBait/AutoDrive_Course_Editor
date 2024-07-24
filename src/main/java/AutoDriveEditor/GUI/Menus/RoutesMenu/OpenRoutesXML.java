@@ -11,7 +11,7 @@ import static AutoDriveEditor.AutoDriveEditor.editor;
 import static AutoDriveEditor.GUI.MapPanel.isStale;
 import static AutoDriveEditor.GUI.Menus.EditorMenu.saveImageEnabled;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.Managers.ImportManager.setEditorUsingImportedImage;
+import static AutoDriveEditor.Managers.ImportManager.setIsEditorUsingImportedImage;
 import static AutoDriveEditor.XMLConfig.AutoSave.resumeAutoSaving;
 import static AutoDriveEditor.XMLConfig.AutoSave.suspendAutoSaving;
 import static AutoDriveEditor.XMLConfig.GameXML.lastUsedLocation;
@@ -58,7 +58,7 @@ public class OpenRoutesXML extends JMenuItemBase {
             lastUsedLocation = fc.getCurrentDirectory().getAbsolutePath();
             File fileName = fc.getSelectedFile();
             if (loadRouteManagerXML(fileName, false, null)) {
-                setEditorUsingImportedImage(false);
+                setIsEditorUsingImportedImage(false);
                 saveImageEnabled(false);
             }
         }

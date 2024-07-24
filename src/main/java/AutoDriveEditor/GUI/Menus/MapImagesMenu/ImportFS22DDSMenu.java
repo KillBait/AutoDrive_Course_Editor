@@ -16,7 +16,7 @@ import static AutoDriveEditor.GUI.TextPanel.setImageLoadedLabel;
 import static AutoDriveEditor.GUI.TextPanel.showInTextArea;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.Managers.ImportManager.importFromFS22;
-import static AutoDriveEditor.Managers.ImportManager.setEditorUsingImportedImage;
+import static AutoDriveEditor.Managers.ImportManager.setIsEditorUsingImportedImage;
 import static AutoDriveEditor.XMLConfig.GameXML.lastUsedLocation;
 
 public class ImportFS22DDSMenu extends JMenuItemBase {
@@ -54,7 +54,7 @@ public class ImportFS22DDSMenu extends JMenuItemBase {
 
             boolean importResult = importFromFS22(fc.getSelectedFile().getAbsoluteFile().toString());
             if (importResult) {
-                setEditorUsingImportedImage(true);
+                setIsEditorUsingImportedImage(true);
                 saveImageEnabled(true);
                 setImageLoadedLabel("Imported", new Color(191, 56, 14));
                 showInTextArea("Import of FS22 mapImage '" + fc.getSelectedFile().getName() + "' Successful", true, true);

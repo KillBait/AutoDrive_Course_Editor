@@ -63,7 +63,7 @@ public class MapImage {
                         g.drawImage(loadedImage, 0, 0, loadedImage.getWidth(), loadedImage.getHeight(), null);
                         g.dispose();
                         setImageLoadedLabel("Loaded", new Color(0, 100, 0));
-                        setImage(pdaImage, false);
+                        setMapPanelImage(pdaImage, false);
                     } catch (IOException ignored) {}
                 } catch (IOException ignored) {}
             } else {
@@ -78,6 +78,30 @@ public class MapImage {
                 setImageLoadedLabel("Not Found", new Color(200,0,0));
             }
             mapMenuEnabled(true);
+        }
+    }
+
+    public static void setPDAImage(BufferedImage image) {
+        if (image != null) {
+            LOG.info("Set PDA Image, required size {} x {}",image.getWidth(), image.getHeight());
+
+            // actually draw the image and dispose of the graphics context that is no longer needed
+
+            pdaImage = getNewBufferImage(image.getWidth(), image.getHeight(), Transparency.OPAQUE);
+            Graphics2D g = (Graphics2D) pdaImage.getGraphics();
+
+            if (image.getWidth() != 2048 || image.getHeight() != 2048 ) {
+                LOG.info("Scaling PDA image to 2048 x 2048");
+                Image tempImage = image.getScaledInstance(2048,2048, Image.SCALE_DEFAULT);
+                //Graphics2D g = (Graphics2D) mapPanelImage.getGraphics();
+                g.drawImage(tempImage, 0 , 0 , null);
+                //g.dispose();
+            } else {
+                g.drawImage(image, 0, 0, null);
+            }
+            g.dispose();
+        } else {
+            LOG.info("## setPDAImage() ## image = null");
         }
     }
 
@@ -341,7 +365,7 @@ public class MapImage {
                 Graphics2D g = (Graphics2D) pdaImage.getGraphics();
                 g.drawImage(tempBuffer, 0, 0, pdaImage.getWidth(), pdaImage.getHeight(), null);
                 g.dispose();
-                setImage(pdaImage, false);
+                setMapPanelImage(pdaImage, false);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -350,19 +374,19 @@ public class MapImage {
 
     @SuppressWarnings("unused")
     public static BufferedImage getMapPanelImage() {
-        return pdaImage;
+        return mapPanelImage;
     }
 
     // TODO:-   eliminate mapPanelImage entirely, will need to change how the
     //          map image is loaded so pdaImage is a scaled down version of
     //          the original file.
 
-    public static void setImage(BufferedImage image, Boolean scaleToCorrectSize) {
+    public static void setMapPanelImage(BufferedImage image, Boolean scaleToCorrectSize) {
         if (image != null) {
-            LOG.info("Selected Image size is {} x {}",image.getWidth(), image.getHeight());
+            LOG.info("MapPanel Image size {} x {}",image.getWidth(), image.getHeight());
             if (image.getWidth() != 2048 || image.getHeight() != 2048 ) {
                 if (scaleToCorrectSize) {
-                    LOG.info("Scaling image to 2048 x 2048");
+                    LOG.info("Scaling image to required size 2048 x 2048");
                     Image tempImage = image.getScaledInstance(2048,2048, Image.SCALE_DEFAULT);
                     Graphics2D g = (Graphics2D) mapPanelImage.getGraphics();
                     g.drawImage(tempImage, 0 , 0 , null);
@@ -388,7 +412,7 @@ public class MapImage {
             g2d.drawImage(image, 0, 0, null);
             g2d.dispose();
         } else {
-            LOG.info("## setImage() ## image = null");
+            LOG.info("## setMapPanelImage() ## image = null");
         }
     }
 }

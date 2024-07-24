@@ -14,7 +14,7 @@ import java.io.File;
 import java.io.IOException;
 
 import static AutoDriveEditor.AutoDriveEditor.editor;
-import static AutoDriveEditor.Classes.MapImage.setImage;
+import static AutoDriveEditor.Classes.MapImage.setMapPanelImage;
 import static AutoDriveEditor.GUI.MapPanel.forceMapImageRedraw;
 import static AutoDriveEditor.GUI.TextPanel.setImageLoadedLabel;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
@@ -45,7 +45,7 @@ public class LoadMapImageMenu extends JMenuItemBase {
 
             @Override
             public String getDescription() {
-                return "AutoDrive MapImage (.png)";
+                return "AutoDriveEditor MapImage (.png)";
             }
         });
 
@@ -56,7 +56,7 @@ public class LoadMapImageMenu extends JMenuItemBase {
                 fileName = fc.getSelectedFile();
                 BufferedImage mapImage = ImageIO.read(fileName);
                 if (mapImage != null) {
-                    setImage(mapImage, false);
+                    setMapPanelImage(mapImage, false);
                     forceMapImageRedraw();
                     setImageLoadedLabel("Manual Load", new Color(150,100,20));
                 }

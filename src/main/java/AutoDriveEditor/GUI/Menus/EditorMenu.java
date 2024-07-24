@@ -29,7 +29,7 @@ import java.awt.event.KeyEvent;
 
 import static AutoDriveEditor.AutoDriveEditor.bIsDebugEnabled;
 import static AutoDriveEditor.Classes.MapImage.heightMapImage;
-import static AutoDriveEditor.Classes.MapImage.setImage;
+import static AutoDriveEditor.Classes.MapImage.setMapPanelImage;
 import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.GUI.Menus.EditMenu.CopyMenu.menu_Copy;
 import static AutoDriveEditor.GUI.Menus.EditMenu.CutMenu.menu_Cut;
@@ -51,7 +51,7 @@ import static AutoDriveEditor.GUI.Menus.ScanMenu.MergeNodesMenu.menu_MergeNodes;
 import static AutoDriveEditor.GUI.Menus.ScanMenu.OutOfBoundsFixMenu.menu_OutOfBoundsFix;
 import static AutoDriveEditor.GUI.Menus.ScanMenu.ScanNetworkMenu.menu_ScanNetwork;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.Managers.ImportManager.getEditorUsingImportedImage;
+import static AutoDriveEditor.Managers.ImportManager.getIsEditorUsingImportedImage;
 import static AutoDriveEditor.Managers.MultiSelectManager.multiSelectList;
 
 public class EditorMenu extends JMenuBar{
@@ -219,7 +219,7 @@ public class EditorMenu extends JMenuBar{
         menu_ImportFS19DDS.setEnabled(enabled);
         menu_ImportFS22DDS.setEnabled(enabled);
         if (enabled) {
-            if (getEditorUsingImportedImage()) menu_SaveMapImage.setEnabled(true);
+            if (getIsEditorUsingImportedImage()) menu_SaveMapImage.setEnabled(true);
         } else {
             menu_SaveMapImage.setEnabled(false);
         }
@@ -234,7 +234,7 @@ public class EditorMenu extends JMenuBar{
         if (heightMapImage != null) menu_ExportHeightMap.setEnabled(enabled);
         if (heightMapImage != null) {
             menu_ShowHeightMap.setEnabled(enabled);
-            if (bShowHeightMap) setImage(heightMapImage, true);
+            if (bShowHeightMap) setMapPanelImage(heightMapImage, true);
         }
 
     }

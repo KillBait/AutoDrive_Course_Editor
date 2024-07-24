@@ -1,125 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <AutoDriveEditor>
-    <latest_version>1.0.7</latest_version>
+    <latest_version>1.0.8</latest_version>
     <version_notes><![CDATA[<html>
         <head>
             <title>Version Notes</title>
         </head>
         <body>
-            <h3 style="font-family:verdana;">Update to v1.0.7</h2>
-            <p><u>Added</u></p>
-            <ul>
-                <li>Added Freeform selection
-                    <ul style="list-style-type: none;">
-                        <li>Right click on the selection button in "edit" Panel to toggle between regular</li>
-                        <li>and freeform, any other function that allows multi selection will use whatever</li>
-                        <li>selection method you set. </li>                       
-                    </ul>
-                </li>
-                <li>Added Ability to hide selected nodes/connections.
-                    <ul>
-                        <li>Added "Show/Hide" buttons in toolbar, hides user selected nodes/connections.</li>
-                        <li>Added Transparency slider to Config, select how hidden they are ( 0 - 100% )</li>
-                        <li>Added select/ignore hidden nodes/connection button (right click to toggle)</li>
-                        <ul>
-                            <li><b><u>NOTE</u></b>: This setting also effects the functionality of allmost all of the 'Nodes'</li>
-                            <li style="list-style-type: none;">panel buttons, If something is not selecting, check this setting first</li>
-                        </ul>    
-                    </ul>
-                </li>
-                <li>Added a Flip Connections button
-                    <ul>
-                        <li>Allows you to swap the direction of any connection, also supports multi-select</li>
-                    </ul>
-                </li>
-                <li>Added support for displaying and properly maintaining parking spots <a href="https://github.com/rhaetional">@rhaetional</a>
-                    <ul>
-                        <li><b>IMPORTANT...</b> only works for standard configs (not routeManager configs)</li>
-                        <li>If a vehicles.xml is in the same folder as the config, it will read all the</li>
-                        <li style="list-style-type: none;">parking spot from each vehicle and visually display them.</li>
-                        <li>When saving a config, the vehicles.xml will be updated to reflect any</li>
-                        <li style="list-style-type: none;">changes to the node/marker order.</li>
-                        <li>For more info, see the issue section on GitHub <a href="https://github.com/KillBait/AutoDrive_Course_Editor/issues/30">(issue #30)</a></li>
-                    </ul>
-                </li>      
-                <li>Added Menu option to move out-of-bounds nodes back into editable area <a href="https://github.com/rhaetional">@rhaetional</a></li>
-                <li>Added a recent files menu, stores the 10 previously loaded configs.</li>
-                <li>Added the currently used Autosave settings to the info panel.</li>
-                <li>Added help menu item containing a link for help on creating map images for the editor.</li>
-                <li>Added a 'Display' menu to allow turning off parking/marker icons and marker names.</li>
-                <li>Added safeguards against network corruption
-                    <ul>
-                        <li>As i have no re-producible cases, i have target the obvious places</li>
-                        <li>A dialog will appear if triggered, please consider reporting if found</li>
-                        <li>Safeguards should trigger before anything incorrect is committed</li>
-                    </ul>
-                </li>
-            </ul>
-            <p><u>Changed</u></p>
-            <ul>
-                <li>Grid size/max zoom settings are saved to/restored from the editors config for known maps.</li>
-                <li>MapPanel rendering improvements.
-                    <ul>
-                        <li>Configs with large amount of nodes will see the most speed increase.</li>
-                        <li>Changed the way nodes are rendered to significantly reduce the z fighting</li>
-                        <li style="list-style-type: none;">when nodes are close together and drawn connections overlap.</li>
-                    </ul>
-                </li>
-                <li>Added timers to node size buttons, can now single click or click + hold to adjust size.</li>
-                <li>Arrow pointers scale down when the distance between nodes cannot support their full size.</li>
-                <li>Replaced the overlapping nodes search function with a more optimised KDTree version.
-                    <ul>
-                        <li>Removes a possible Concurrency Exception when nodes are moved while scan in progress.</li>
-                        <li>Previous versions used a brute force method, the number of searches was the total</li>
-                        <li style="list-style-type: none;">number of nodes squared, the performance hit was fine for a low quantity</li>
-                        <li style="list-style-type: none;">of nodes, but, on a large number of nodes it was astronomical.</li>
-                        <br>
-                        <li style="list-style-type: none;"><u>Old search function performance</u></li>
-                        <br>
-                        <li style="list-style-type: none;"> - 5000 node config, number of searches was 250,000 (5000²)</li>
-                        <li style="list-style-type: none;"> - 70,000 node config, the number of searches was 4,900,000,000 (70,000²)</li>
-                        <br>
-                        <li style="list-style-type: none;">Nearly 5 billion searches for a 70,000 node search!, this is why it took so long</li>
-                        <li style="list-style-type: none;">on large node configs, the search function had to be threaded otherwise the editor</li>
-                        <li style="list-style-type: none;">would be frozen until the search was finished, that could be 30+ seconds.</li>
-                        <br>
-                        <li style="list-style-type: none;"><u>Old vs New search times</u></li>
-                        <br>
-                        <li style="list-style-type: none;"> - Small config with 5,000 nodes (200ms old version, 17ms new version)</li>
-                        <li style="list-style-type: none;"> - Large config with 70,000 nodes (42sec old version, 0.6sec new version)
-                    </ul>
-                </li>
-                <li>Adjusted zoom in/out scaling, getting to max zoom requires much less wheel scrolling.</li>
-                <li>FileChoosers used for loading anything are now Read-Only to avoid accidental renaming.</li>
-                <li>Moved "Rotate nodes" button to the "Nodes" Panel.</li>
-                <li>Added keyboard shortcut for moving nodes ( 'M' toggles move on/off ).</li>
-                <li>Changed selection preview of to reflect node and connection type changes </li>
-                <li>Updated Log4J to v2.20.0</li>
-            </ul>
+            <h3 style="font-family:verdana;">Update to v1.0.8</h2>
             <p><u>Fixed</u></p>
             <ul>
-                <li>Fixed the long-standing OutOfBounds exception on restoring nodes
-                    <ul>
-                        <li>Finally found a re-producible case by sheer luck during testing before release</li>
-                        <li>May help with the rare cases on config corruption</li>
-                    </ul>
-                </li>
-                <li>Fixed a macOS file separator issue in RoutesXML <a href="https://github.com/rhaetional">@rhaetional</a></li>
-                <li>Fixed 'out of bounds error' calculating heightmap position on high map scales.</li>
-                <li>Fixed edge case where the displayed map image could be moved beyond the edge of mapPanel.</li>
-                <li>Fixed mismatched map image/displayed node network scale when editor window is resized.</li>
-                <li>Fixed edge case for config corruption in LinearLine undo/redo.</li>
-                <li>Fixed known map/node size not being applied when loading a routes XML.</li>
-                <li>Fixed unable to zoom in/out due to setting max zoom to less than current.</li>
-                <li>Fixed changing autosave max interval not enabling apply buttons.</li>
-                <li>Fixed changing autosave interval not applying the new value correctly.</li>
-                <li>Fixed missing overlap check with add node undo/redo.</li>
-                <li>Fixed possible config corruption when deleting a node that overlapped other nodes.</li>
-                <li>Fixed short linear lines not setting start node flag properly to subprio node.</li>
-                <li>Many other small fixes i forgot to document</li>
-            </ul>
-            <ul>
-                <li style="list-style-type: none;"><b><u>Happy Holidays 2023 / New Year 2024</u></n></li>
+                <li>Fixed Editor not applying correct default window height when no config found.</li>
+                <li>Fixed 'Display HeightMap' not working after heightmap import.</li>
+                <li>Fixed 'Save Imported Image' not working.</li>
             </ul>
             <p>Visit the Release Page <a href="https://github.com/KillBait/AutoDrive_Course_Editor/releases">Here</a>.</p>
         </body>

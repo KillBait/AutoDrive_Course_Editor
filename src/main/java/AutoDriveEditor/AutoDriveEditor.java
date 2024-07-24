@@ -32,7 +32,7 @@ import static AutoDriveEditor.XMLConfig.GameXML.xmlConfigFile;
 
 public class AutoDriveEditor extends JFrame {
 
-    public static final String COURSE_EDITOR_VERSION = "1.0.7";
+    public static final String COURSE_EDITOR_VERSION = "1.0.8";
     public static final String COURSE_EDITOR_NAME = "AutoDrive Course Editor";
     public static final String COURSE_EDITOR_TITLE = COURSE_EDITOR_NAME + " " + COURSE_EDITOR_VERSION;
     public static final String COURSE_EDITOR_BUILD_INFO = "Java 11 SDK + IntelliJ IDEA 2022.2.3 Community Edition";
@@ -202,7 +202,7 @@ public class AutoDriveEditor extends JFrame {
     // Getters
     //
 
-    public static AutoDriveEditor getEditor() { return editor; }
+    public static AutoDriveEditor getEditorReference() { return editor; }
     public static MapPanel getMapPanel() {
         return mapPanel;
     }

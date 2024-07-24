@@ -76,7 +76,7 @@ public class ExportHeightMapMenu extends JMenuItemBase {
 
             @Override
             public String getDescription() {
-                return "AutoDrive Heightmap Image (_HeightMap.png)";
+                return "AutoDriveEditor Heightmap Image (_HeightMap.png)";
             }
         });
         fc.setSelectedFile(exportPath);

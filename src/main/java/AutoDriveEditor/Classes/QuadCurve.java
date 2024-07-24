@@ -121,10 +121,17 @@ public class QuadCurve {
 
         for (int j = 1; j < curveNodesList.size() - 1; j++) {
             MapNode tempNode = curveNodesList.get(j);
-            double heightMapY = getYValueFromHeightMap(tempNode.x, tempNode.z);
-            if (heightMapY == -1) {
-                heightMapY = curveStartNode.y + ( yInterpolation * j);
-            }
+
+            // v1.08
+            // Temporary removed the calculation of each nodes base height from the heightmap
+            //
+            // It will take the height of the starting node as the base for each newly created node and add the
+            // linear difference to each node in turn, should stop the weird height appearing for the moment.
+
+            //double heightMapY = getYValueFromHeightMap(tempNode.x, tempNode.z);
+            //if (heightMapY == -1) {
+            double heightMapY = curveStartNode.y + ( yInterpolation * j);
+            //}
             MapNode newNode = createNewNetworkNode(tempNode.x, heightMapY, tempNode.z, this.nodeType, false, false);
             mergeNodesList.add(newNode);
         }

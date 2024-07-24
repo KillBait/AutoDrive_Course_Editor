@@ -398,7 +398,7 @@ public class MapPanel extends JPanel {
                     infoList.add(new NodeHoverTextList("Flag: " + hoveredNode.flag + flagType, TYPE_FOOTER, nodeInfoFGColour, nodeInfoBGColour, false, 0.75f));
                     if (hoveredNode.isNodeHidden()) infoList.add(new NodeHoverTextList("Hidden: " + hoveredNode.isNodeHidden(), TYPE_FOOTER, nodeInfoFGColour, nodeInfoBGColour, false, 0.75f));
                     infoList.add(new NodeHoverTextList("Connections", TYPE_HEADER, connectionFGColour, Color.ORANGE, true, 1.0f));
-                    if (hoveredNode.incoming.size() > 0) {
+                    if (!hoveredNode.incoming.isEmpty()) {
                         int numIncoming = 0;
                         infoList.add(new NodeHoverTextList(hoveredNode.incoming.size() + " In ID:", TYPE_FOOTER, connectionFGColour, connectionBGColour, false, 0.75f));
                         for (MapNode inNode: hoveredNode.incoming) {
@@ -427,7 +427,7 @@ public class MapPanel extends JPanel {
                         infoList.add(new NodeHoverTextList("   No Incoming", TYPE_FOOTER, connectionFGColour, connectionBGColour, false, 0.75f));
                     }
                     infoList.add(new NodeHoverTextList("----------", TYPE_FOOTER, connectionFGColour, connectionBGColour, false, 0.75f));
-                    if (hoveredNode.outgoing.size() > 0) {
+                    if (!hoveredNode.outgoing.isEmpty()) {
                         infoList.add(new NodeHoverTextList(hoveredNode.outgoing.size() + " Out ID:", TYPE_FOOTER, connectionFGColour, connectionBGColour, false, 0.75f));
                         int numOutgoing = 0;
                         for (MapNode outNode: hoveredNode.outgoing) {
@@ -463,7 +463,7 @@ public class MapPanel extends JPanel {
                         infoList.add(new NodeHoverTextList("   No Outgoing:", TYPE_FOOTER, connectionFGColour, connectionBGColour, false, 0.75f));
 
                     }
-                    if (hoveredNode.getHiddenConnectionsList().size() > 0) {
+                    if (!hoveredNode.getHiddenConnectionsList().isEmpty()) {
                         Color hiddenBGColour = new Color(128, 128, 128);
                         Color hiddenFGColour = Color.BLACK;
                         infoList.add(new NodeHoverTextList("Hidden Connections", TYPE_HEADER, hiddenFGColour, hiddenBGColour, true, 1.0f));
@@ -481,7 +481,7 @@ public class MapPanel extends JPanel {
             FontMetrics fm = g2.getFontMetrics();
             int lineHeight = fm.getHeight();
 
-            if (infoList.size() > 0) {
+            if (!infoList.isEmpty()) {
                 // loop through all the strings to display, compare and update maxStringLength to use later
                 int maxStringLength = 0;
                 for (NodeHoverTextList infoEntry : infoList) {
@@ -588,9 +588,23 @@ public class MapPanel extends JPanel {
                 widthScaled = mapPanelImage.getWidth() - offsetX;
             }
 
+            //int centerX = (int) (x * pdaImage.getWidth());
+            //int centerY = (int) (y * pdaImage.getHeight());
+
+            //double offsetX = centerX - widthScaled / 2;
+            //double offsetY = centerY - heightScaled / 2;
+
+            /*LOG.info("zoom = {}", zoomLevel);
+
+            AffineTransform transform = new AffineTransform();
+            transform.translate(-offsetX, -offsetY);
+            transform.scale(zoomLevel, zoomLevel);
+            g.drawImage(pdaImage, transform, null);*/
+
             if (offsetX != oldOffsetX || offsetY != oldOffsetY || widthScaled != oldWidthScaled || heightScaled != oldHeightScaled) {
                 try {
                     croppedImage = mapPanelImage.getSubimage((int)offsetX, (int)offsetY, (int)widthScaled, (int)heightScaled);
+
                     if (bDebugLogZoomScale) LOG.info("## MapPanel.ResizeMap() ## ZoomLevel = {} ## SubImage start at {},{} - size {},{}", zoomLevel, offsetX, offsetY, widthScaled, heightScaled);
                     oldOffsetX = offsetX;
                     oldOffsetY = offsetY;
@@ -616,6 +630,32 @@ public class MapPanel extends JPanel {
     public void setNewZoomLevel(int direction) {
 
         // Quick exponential scaling calculation
+        double newZoomLevel = getNewZoomLevel(direction);
+
+        if (bDebugLogZoomScale) LOG.info("## setNewZoomLevel() ## Applying new zoomLevel - Old = {} , New = {}",zoomLevel, newZoomLevel);
+
+        if (bInterpolateZoom) {
+            if (zoomTimer == null) {
+                if (bDebugLogZoomScale) LOG.info("Creating Zoom Interpolation Timer");
+                try {
+                    zoomTimer = new Timer((int) (5 / newZoomLevel), e -> interpolateZoom(newZoomLevel));
+                    zoomTimer.start();
+                } catch (Exception e) {
+                    LOG.info("Exception creating interpolateZoom() timer, setting new zoom level immediately.");
+                    zoomLevel = newZoomLevel;
+                    updateNodeScaling();
+                    repaint();
+                }
+            }
+        } else {
+            zoomLevel = newZoomLevel;
+            updateNodeScaling();
+            repaint();
+        }
+
+    }
+
+    private double getNewZoomLevel(int direction) {
         double newZoomLevel = zoomLevel;
         double scaleFactor = Math.pow(1.6, Math.abs(direction));
         if (direction < 0) {
@@ -634,29 +674,7 @@ public class MapPanel extends JPanel {
 
         // Enforce minimum and maximum zoom levels
         newZoomLevel = Math.min(Math.max(newZoomLevel, minZoomToFit), maxZoomLevel);
-
-        if (bDebugLogZoomScale) LOG.info("## setNewZoomLevel() ## Applying new zoomLevel - Old = {} , New = {}",zoomLevel, newZoomLevel);
-
-        if (bInterpolateZoom) {
-            if (zoomTimer == null) {
-                if (bDebugLogZoomScale) LOG.info("Creating Zoom Interpolation Timer");
-                try {
-                    double finalNewZoomLevel = newZoomLevel;
-                    zoomTimer = new Timer((int) (5 / newZoomLevel), e -> interpolateZoom(finalNewZoomLevel));
-                    zoomTimer.start();
-                } catch (Exception e) {
-                    LOG.info("Exception creating interpolateZoom() timer, setting new zoom level immediately.");
-                    zoomLevel = newZoomLevel;
-                    updateNodeScaling();
-                    repaint();
-                }
-            }
-        } else {
-            zoomLevel = newZoomLevel;
-            updateNodeScaling();
-            repaint();
-        }
-
+        return newZoomLevel;
     }
 
     private void interpolateZoom(double targetZoomLevel) {

@@ -23,18 +23,18 @@ public class ShowHeightmapMenu extends JCheckBoxMenuItemBase {
         AbstractButton menuItem = (AbstractButton) e.getItem();
         bShowHeightMap = menuItem.isSelected();
         if (bShowHeightMap) {
-            LOG.info("set heightMapImage");
+            LOG.info("displaying height map image");
             if (heightMapImage != null ) {
-                setImage(heightMapImage, true);
+                setMapPanelImage(heightMapImage, true);
             } else {
                 LOG.info("heightMapImage = null");
             }
         } else {
-            if (pdaImage != null ) {
-                LOG.info("set pdaImage");
-                setImage(pdaImage, false);
+            if (mapPanelImage != null ) {
+                LOG.info("displaying map image");
+                setMapPanelImage(pdaImage, false);
             } else {
-                LOG.info("set default mapImage");
+                LOG.info("map image is NULL, setting to default mapImage");
                 useDefaultMapImage();
             }
         }

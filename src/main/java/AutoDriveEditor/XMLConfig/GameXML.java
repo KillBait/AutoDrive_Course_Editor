@@ -37,7 +37,7 @@ import static AutoDriveEditor.GUI.Menus.EditorMenu.*;
 import static AutoDriveEditor.GUI.Menus.FileMenu.RecentFilesMenu.addToRecentFiles;
 import static AutoDriveEditor.GUI.Menus.RoutesMenu.OpenRoutesConfig.menu_OpenRoutesConfig;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.Managers.ImportManager.setEditorUsingImportedImage;
+import static AutoDriveEditor.Managers.ImportManager.setIsEditorUsingImportedImage;
 import static AutoDriveEditor.Managers.MultiSelectManager.clearMultiSelection;
 import static AutoDriveEditor.Managers.ScanManager.scanNetworkForOverlapNodes;
 import static AutoDriveEditor.RoadNetwork.RoadMap.createMapNode;
@@ -82,7 +82,7 @@ public class GameXML {
                 // when we try to undo/redo something on a config that is no longer loaded
                 changeManager = new ChangeManager();
                 forceMapImageRedraw();
-                setEditorUsingImportedImage(false);
+                setIsEditorUsingImportedImage(false);
                 saveImageEnabled(false);
                 setStale(false);
                 scanNetworkForOverlapNodes();

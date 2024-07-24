@@ -7,6 +7,19 @@
         <body style="font-size:14;">
 
             <!------------------------->
+            <!-- Start version 1.0.8 -->
+            <!------------------------->
+
+            <br>
+            <h3 style="font-family:verdana;">Update to v1.0.8</h2>
+            <p><u>Fixed</u></p>
+            <ul>
+                <li>Fixed Editor not applying correct default window height when no config found.</li>
+                <li>Fixed 'Display HeightMap' not working after heightmap import.</li>
+                <li>Fixed 'Save Imported Image' not working.</li>
+            </ul>
+
+            <!------------------------->
             <!-- Start version 1.0.7 -->
             <!------------------------->
 

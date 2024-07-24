@@ -11,7 +11,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import static AutoDriveEditor.AutoDriveEditor.editor;
-import static AutoDriveEditor.Classes.MapImage.setImage;
+import static AutoDriveEditor.Classes.MapImage.*;
 import static AutoDriveEditor.GUI.MapPanel.forceMapImageRedraw;
 import static AutoDriveEditor.GUI.Menus.EditorMenu.saveImageEnabled;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
@@ -26,7 +26,7 @@ public class ImportManager {
     public static Boolean  importFromFS19(String filename) {
         boolean success = createBufferImageFromDDS(filename, FS19_IMAGE);
         if (!success) return false;
-        setEditorUsingImportedImage(true);
+        setIsEditorUsingImportedImage(true);
         saveImageEnabled(true);
         return true;
     }
@@ -34,7 +34,7 @@ public class ImportManager {
     public static Boolean importFromFS22(String filename) {
         boolean success = createBufferImageFromDDS(filename, FS22_IMAGE);
         if (!success) return false;
-        setEditorUsingImportedImage(true);
+        setIsEditorUsingImportedImage(true);
         saveImageEnabled(true);
         return true;
     }
@@ -94,6 +94,7 @@ public class ImportManager {
         if (gameImage == FS19_IMAGE) {
             g.drawImage( image, 0, 0, 2048, 2048, null);
         } else if (gameImage == FS22_IMAGE) {
+            LOG.info("Scaling converted DDS Image to correct size..");
             BufferedImage crop = image.getSubimage(image.getWidth() / 4, image.getHeight() /4, image.getWidth() / 2, image.getHeight() / 2);
             g.drawImage( crop, 0, 0, 2048, 2048, null);
         }
@@ -101,9 +102,10 @@ public class ImportManager {
 
         // set the converted/resized image as the current map image
 
-        setImage(scaledImage, false);
+        setPDAImage(scaledImage);
+        setMapPanelImage(scaledImage, false);
         forceMapImageRedraw();
-        setEditorUsingImportedImage(true);
+        setIsEditorUsingImportedImage(true);
         return true;
     }
 
@@ -135,14 +137,14 @@ public class ImportManager {
     // Getters
     //
 
-    public static boolean getEditorUsingImportedImage() { return isUsingImportedImage; }
+    public static boolean getIsEditorUsingImportedImage() { return isUsingImportedImage; }
 
 
     //
     // Setters
     //
 
-    public static void setEditorUsingImportedImage(boolean result) {
+    public static void setIsEditorUsingImportedImage(boolean result) {
         isUsingImportedImage = result;
     }
 }
