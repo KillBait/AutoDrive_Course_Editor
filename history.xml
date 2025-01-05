@@ -5,6 +5,17 @@
             <title>Version History</title>
         </head>
         <body style="font-size:14;">
+        
+            <!------------------------->
+            <!-- Start version 1.0.9 -->
+            <!------------------------->
+
+            <br>
+            <h3 style="font-family:verdana;">Update to v1.0.9</h2>
+            <p><u>Fixed</u></p>
+            <ul>
+                <li>Fixed FS25 config crash when reading Parking Spots ( FS25 changed how vehicle ID's are stored in vehicles.xml )</li>
+            </ul>
 
             <!------------------------->
             <!-- Start version 1.0.8 -->
