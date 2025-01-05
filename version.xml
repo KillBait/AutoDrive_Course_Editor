@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <AutoDriveEditor>
-    <latest_version>1.0.8</latest_version>
+    <latest_version>1.0.9</latest_version>
     <version_notes><![CDATA[<html>
         <head>
             <title>Version Notes</title>
         </head>
         <body>
-            <h3 style="font-family:verdana;">Update to v1.0.8</h2>
+            <h3 style="font-family:verdana;">Update to v1.0.9</h2>
             <p><u>Fixed</u></p>
             <ul>
-                <li>Fixed Editor not applying correct default window height when no config found.</li>
-                <li>Fixed 'Display HeightMap' not working after heightmap import.</li>
-                <li>Fixed 'Save Imported Image' not working.</li>
+                <li>Fixed FS25 config crash when reading Parking Spots ( FS25 changed how vehicle ID's are stored in vehicles.xml</li>
             </ul>
             <p>Visit the Release Page <a href="https://github.com/KillBait/AutoDrive_Course_Editor/releases">Here</a>.</p>
         </body>
