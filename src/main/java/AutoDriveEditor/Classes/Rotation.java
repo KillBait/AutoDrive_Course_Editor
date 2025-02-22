@@ -12,6 +12,10 @@ import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.cubicCurve;
 import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.isCubicCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.isQuadCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
+//quarticbezier
+import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.isQuarticCurveCreated;
+import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.quarticCurve;
+//
 import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.Managers.CopyPasteManager.*;
 import static AutoDriveEditor.Managers.MultiSelectManager.multiSelectList;
@@ -43,6 +47,7 @@ public class Rotation {
         }
         if (isQuadCurveCreated) quadCurve.updateCurve();
         if (isCubicCurveCreated) cubicCurve.updateCurve();
+        if (isQuarticCurveCreated) quarticCurve.updateCurve();//quarticbezier
         getMapPanel().repaint();
         resumeAutoSaving();
     }

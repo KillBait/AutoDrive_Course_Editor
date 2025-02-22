@@ -19,6 +19,10 @@ import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.cubicCurve;
 import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.isCubicCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.isQuadCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
+//quarticbezier
+import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.isQuarticCurveCreated;
+import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.quarticCurve;
+//
 import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogMultiSelectInfoMenu.bDebugLogMultiSelectInfo;
 import static AutoDriveEditor.GUI.Menus.EditorMenu.updateEditMenu;
@@ -285,6 +289,45 @@ public class MultiSelectManager implements MouseListener, MouseMotionListener {
                     }
                 }
             }
+			//quarticbezier
+			if (isQuarticCurveCreated) {
+				MapNode controlPoint1 = quarticCurve.getControlPoint1();
+				Point cp1ScreenPos = worldPosToScreenPos(controlPoint1.x, controlPoint1.z);
+				MapNode controlPoint2 = quarticCurve.getControlPoint2();
+				Point cp2ScreenPos = worldPosToScreenPos(controlPoint2.x, controlPoint2.z);
+				MapNode controlPoint3 = quarticCurve.getControlPoint3();
+				Point cp3ScreenPos = worldPosToScreenPos(controlPoint3.x, controlPoint3.z);
+
+				if (path.contains(cp1ScreenPos.getX(), cp1ScreenPos.getY())) {
+					if (multiSelectList.contains(controlPoint1)) {
+						multiSelectList.remove(controlPoint1);
+						controlPoint1.setSelected(false);
+					} else {
+						multiSelectList.add(controlPoint1);
+						controlPoint1.setSelected(true);
+					}
+				}
+
+				if (path.contains(cp2ScreenPos.getX(), cp2ScreenPos.getY())) {
+					if (multiSelectList.contains(controlPoint2)) {
+						multiSelectList.remove(controlPoint2);
+						controlPoint2.setSelected(false);
+					} else {
+						multiSelectList.add(controlPoint2);
+						controlPoint2.setSelected(true);
+					}
+				}
+
+				if (path.contains(cp3ScreenPos.getX(), cp3ScreenPos.getY())) {
+					if (multiSelectList.contains(controlPoint3)) {
+						multiSelectList.remove(controlPoint3);
+						controlPoint3.setSelected(false);
+					} else {
+						multiSelectList.add(controlPoint3);
+						controlPoint3.setSelected(true);
+					}
+				}
+			}
 
             if (count > 0) {
                 LOG.info("Added {} nodes to selection",count);

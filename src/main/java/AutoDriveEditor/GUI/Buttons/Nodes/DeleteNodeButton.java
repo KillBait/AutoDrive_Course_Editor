@@ -19,6 +19,10 @@ import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.cubicCurve;
 import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.isCubicCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.isQuadCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
+//quarticbezier
+import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.isQuarticCurveCreated;
+import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.quarticCurve;
+//
 import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogCurveInfoMenu.bDebugLogCurveInfo;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogUndoRedoMenu.bDebugLogUndoRedo;
@@ -79,6 +83,12 @@ public class DeleteNodeButton extends BaseButton {
                 if (cubicCurve != null && isCubicCurveCreated) {
                     if (cubicCurve.isCurveAnchorPoint(toDeleteNode)) {
                         if (bDebugLogCurveInfo) LOG.info("Cannot delete start/end node of cubic curve until it is confirmed or cancelled");
+                        canDelete = false;
+                    }
+                }
+				if (quarticCurve != null && isQuarticCurveCreated) {
+                    if (quarticCurve.isCurveAnchorPoint(toDeleteNode)) {
+                        if (bDebugLogCurveInfo) LOG.info("Cannot delete start node of quartic curve until it is confirmed or cancelled");
                         canDelete = false;
                     }
                 }
@@ -155,6 +165,35 @@ public class DeleteNodeButton extends BaseButton {
                     cubicCurve.getControlPoint2().setSelected(false);
                 }
             }
+			//quarticbezier
+			if (quarticCurve != null && isQuarticCurveCreated) {
+				if (multiSelectList.contains(quarticCurve.getCurveStartNode())) {
+					if (bDebugLogCurveInfo) LOG.info("Cannot delete start node of quartic curve until it is confirmed or cancelled");
+					multiSelectList.remove(quarticCurve.getCurveStartNode());
+					quarticCurve.getCurveStartNode().setSelected(false);
+				}
+				if (multiSelectList.contains(quarticCurve.getCurveEndNode())) {
+					if (bDebugLogCurveInfo) LOG.info("Cannot delete end node of quartic curve until it is confirmed or cancelled");
+					multiSelectList.remove(quarticCurve.getCurveEndNode());
+					quarticCurve.getCurveEndNode().setSelected(false);
+				}
+				if (multiSelectList.contains(quarticCurve.getControlPoint1())) {
+					if (bDebugLogCurveInfo) LOG.info("Cannot delete quartic curve control point 1");
+					multiSelectList.remove(quarticCurve.getControlPoint1());
+					quarticCurve.getControlPoint1().setSelected(false);
+				}
+				if (multiSelectList.contains(quarticCurve.getControlPoint2())) {
+					if (bDebugLogCurveInfo) LOG.info("Cannot delete quartic curve control point 2");
+					multiSelectList.remove(quarticCurve.getControlPoint2());
+					quarticCurve.getControlPoint2().setSelected(false);
+				}
+				if (multiSelectList.contains(quarticCurve.getControlPoint3())) {
+					if (bDebugLogCurveInfo) LOG.info("Cannot delete quartic curve control point 3");
+					multiSelectList.remove(quarticCurve.getControlPoint3());
+					quarticCurve.getControlPoint3().setSelected(false);
+				}
+			}
+
             for (MapNode node : multiSelectList) {
                 addToDeleteList(node);
                 if (bDebugLogUndoRedo) LOG.info("Added ID {} to delete list", node.id);

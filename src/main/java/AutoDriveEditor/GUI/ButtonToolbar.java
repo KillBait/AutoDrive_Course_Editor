@@ -6,6 +6,7 @@ import AutoDriveEditor.GUI.Buttons.Alignment.HorizontalAlignButton;
 import AutoDriveEditor.GUI.Buttons.Alignment.VerticalAlignButton;
 import AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton;
 import AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton;
+import AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton;//quarticbezier
 import AutoDriveEditor.GUI.Buttons.Display.*;
 import AutoDriveEditor.GUI.Buttons.Edit.CopySelectionButton;
 import AutoDriveEditor.GUI.Buttons.Edit.CutSelectionButton;
@@ -133,6 +134,7 @@ public class ButtonToolbar extends JToolBar {
 
         buttonManager.addButton(new QuadCurveButton(curvesPanel));
         buttonManager.addButton(new CubicCurveButton(curvesPanel));
+        buttonManager.addButton(new QuarticCurveButton(curvesPanel));//quarticbezier
 
         add(curvesPanel);
         add(Box.createRigidArea(new Dimension(10, 10)));

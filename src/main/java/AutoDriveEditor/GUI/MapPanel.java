@@ -31,6 +31,10 @@ import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.cubicCurve;
 import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.isCubicCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.isQuadCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
+//quarticbezier
+import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.isQuarticCurveCreated;
+import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.quarticCurve;
+//
 import static AutoDriveEditor.GUI.Buttons.LinerLineBaseButton.*;
 import static AutoDriveEditor.GUI.Buttons.Nodes.RotationButton.rotation;
 import static AutoDriveEditor.GUI.Curves.CurvePanel.curveOptionsPanel;
@@ -717,6 +721,26 @@ public class MapPanel extends JPanel {
                     return cubicCurve.getControlPoint2();
                 }
             }
+			//quarticbezier
+			if (quarticCurve != null && isQuarticCurveCreated) {
+				MapNode cp1Node = quarticCurve.getControlPoint1();
+				if (worldPosX < cp1Node.x + nodeSizeWorld && worldPosX > cp1Node.x - nodeSizeWorld &&
+					worldPosZ < cp1Node.z + nodeSizeWorld && worldPosZ > cp1Node.z - nodeSizeWorld) {
+					return quarticCurve.getControlPoint1();
+				}
+
+				MapNode cp2Node = quarticCurve.getControlPoint2();
+				if (worldPosX < cp2Node.x + nodeSizeWorld && worldPosX > cp2Node.x - nodeSizeWorld &&
+					worldPosZ < cp2Node.z + nodeSizeWorld && worldPosZ > cp2Node.z - nodeSizeWorld) {
+					return quarticCurve.getControlPoint2();
+				}
+				
+				MapNode cp3Node = quarticCurve.getControlPoint3();
+				if (worldPosX < cp3Node.x + nodeSizeWorld && worldPosX > cp3Node.x - nodeSizeWorld &&
+					worldPosZ < cp3Node.z + nodeSizeWorld && worldPosZ > cp3Node.z - nodeSizeWorld) {
+					return quarticCurve.getControlPoint3();
+				}
+			}
 
             if (rotation != null && Objects.equals(buttonManager.getCurrentButtonID(),"RotateButton")) {
                 MapNode rotateControlNode = rotation.getControlNode();
@@ -765,6 +789,26 @@ public class MapPanel extends JPanel {
                     return cubicCurve.getControlPoint2();
                 }
             }
+			//quarticbezier
+			if (quarticCurve != null && isQuarticCurveCreated) {
+				Point2D cp1Position = worldPosToScreenPos(quarticCurve.getControlPoint1().x, quarticCurve.getControlPoint1().z);
+				if (mousePosX < cp1Position.getX() + nodeSizeScaledHalf && mousePosX > cp1Position.getX() - nodeSizeScaledHalf &&
+					mousePosY < cp1Position.getY() + nodeSizeScaledHalf && mousePosY > cp1Position.getY() - nodeSizeScaledHalf) {
+					return quarticCurve.getControlPoint1();
+				}
+
+				Point2D cp2Position = worldPosToScreenPos(quarticCurve.getControlPoint2().x, quarticCurve.getControlPoint2().z);
+				if (mousePosX < cp2Position.getX() + nodeSizeScaledHalf && mousePosX > cp2Position.getX() - nodeSizeScaledHalf &&
+					mousePosY < cp2Position.getY() + nodeSizeScaledHalf && mousePosY > cp2Position.getY() - nodeSizeScaledHalf) {
+					return quarticCurve.getControlPoint2();
+				}
+				
+				Point2D cp3Position = worldPosToScreenPos(quarticCurve.getControlPoint3().x, quarticCurve.getControlPoint3().z);
+				if (mousePosX < cp3Position.getX() + nodeSizeScaledHalf && mousePosX > cp3Position.getX() - nodeSizeScaledHalf &&
+					mousePosY < cp3Position.getY() + nodeSizeScaledHalf && mousePosY > cp3Position.getY() - nodeSizeScaledHalf) {
+					return quarticCurve.getControlPoint3();
+				}
+			}
 
             if (rotation != null && Objects.equals(buttonManager.getCurrentButtonID(),"RotateButton")) {
                 Point2D rotatePosition = worldPosToScreenPos(rotation.getControlNode().x, rotation.getControlNode().z);

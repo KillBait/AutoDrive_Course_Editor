@@ -6,10 +6,14 @@
             <title>Version Notes</title>
         </head>
         <body>
-            <h3 style="font-family:verdana;">Update to v1.0.9</h2>
-            <p><u>Fixed</u></p>
+            <h3 style="font-family:verdana;">Update to v1.1.0</h2>
+            <p><u>Improved</u></p>
             <ul>
-                <li>Fixed FS25 config crash when reading Parking Spots ( FS25 changed how vehicle ID's are stored in vehicles.xml</li>
+				<li>Added support for Quartic Bézier Curves with two endpoints and three control points.</li>
+				<li>Implemented a new Quartic Curve icon and integrated it with the curve editor.</li>
+				<li>Updated hit detection, selection, and movement logic for quartic curve control points.</li>
+				<li>Improved overall state management when switching between cubic, quad, and quartic curves.</li>
+			</ul>
             </ul>
             <p>Visit the Release Page <a href="https://github.com/KillBait/AutoDrive_Course_Editor/releases">Here</a>.</p>
         </body>

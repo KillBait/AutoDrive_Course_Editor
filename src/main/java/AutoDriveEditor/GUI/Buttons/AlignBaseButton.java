@@ -11,6 +11,10 @@ import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.cubicCurve;
 import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.isCubicCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.isQuadCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
+//quarticbezier
+import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.isQuarticCurveCreated;
+import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.quarticCurve;
+//
 import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.Managers.MultiSelectManager.*;
 import static AutoDriveEditor.XMLConfig.AutoSave.resumeAutoSaving;
@@ -33,6 +37,7 @@ public abstract class AlignBaseButton extends BaseButton {
                 adjustNodesTo(clickedNode);
                 if (quadCurve != null && isQuadCurveCreated) quadCurve.updateCurve();
                 if (cubicCurve != null && isCubicCurveCreated) cubicCurve.updateCurve();
+				if (quarticCurve != null && isQuarticCurveCreated) quadCurve.updateCurve();//quarticbezier
                 setStale(true);
                 clearMultiSelection();
                 getMapPanel().repaint();
