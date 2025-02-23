@@ -23,6 +23,10 @@ import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.isQuarticCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.quarticCurve;
 //
+//quinticbezier
+import static AutoDriveEditor.GUI.Buttons.Curves.QuinticCurveButton.isQuinticCurveCreated;
+import static AutoDriveEditor.GUI.Buttons.Curves.QuinticCurveButton.quinticCurve;
+//
 import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogCurveInfoMenu.bDebugLogCurveInfo;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogUndoRedoMenu.bDebugLogUndoRedo;
@@ -86,12 +90,18 @@ public class DeleteNodeButton extends BaseButton {
                         canDelete = false;
                     }
                 }
-				if (quarticCurve != null && isQuarticCurveCreated) {
-                    if (quarticCurve.isCurveAnchorPoint(toDeleteNode)) {
-                        if (bDebugLogCurveInfo) LOG.info("Cannot delete start node of quartic curve until it is confirmed or cancelled");
-                        canDelete = false;
-                    }
-                }
+			    if (quarticCurve != null && isQuarticCurveCreated) {
+				    if (quarticCurve.isCurveAnchorPoint(toDeleteNode)) {
+					    if (bDebugLogCurveInfo) LOG.info("Cannot delete start node of quartic curve until it is confirmed or cancelled");
+						canDelete = false;
+				    }
+				}
+			    if (quinticCurve != null && isQuinticCurveCreated) {
+					if (quinticCurve.isCurveAnchorPoint(toDeleteNode)) {
+					    if (bDebugLogCurveInfo) LOG.info("Cannot delete start node of quintic curve until it is confirmed or cancelled");
+						canDelete = false;
+					}
+				}
                 if (canDelete) {
                     addToDeleteList(toDeleteNode);
                     LOG.info("Added {} to delete list", toDeleteNode.id);
@@ -191,6 +201,39 @@ public class DeleteNodeButton extends BaseButton {
 					if (bDebugLogCurveInfo) LOG.info("Cannot delete quartic curve control point 3");
 					multiSelectList.remove(quarticCurve.getControlPoint3());
 					quarticCurve.getControlPoint3().setSelected(false);
+				}
+			}
+			//quinticbezier
+			if (quinticCurve != null && isQuinticCurveCreated) {
+				if (multiSelectList.contains(quinticCurve.getCurveStartNode())) {
+					if (bDebugLogCurveInfo) LOG.info("Cannot delete start node of quintic curve until it is confirmed or cancelled");
+					multiSelectList.remove(quinticCurve.getCurveStartNode());
+					quinticCurve.getCurveStartNode().setSelected(false);
+				}
+				if (multiSelectList.contains(quinticCurve.getCurveEndNode())) {
+					if (bDebugLogCurveInfo) LOG.info("Cannot delete end node of quintic curve until it is confirmed or cancelled");
+					multiSelectList.remove(quinticCurve.getCurveEndNode());
+					quinticCurve.getCurveEndNode().setSelected(false);
+				}
+				if (multiSelectList.contains(quinticCurve.getControlPoint1())) {
+					if (bDebugLogCurveInfo) LOG.info("Cannot delete quintic curve control point 1");
+					multiSelectList.remove(quinticCurve.getControlPoint1());
+					quinticCurve.getControlPoint1().setSelected(false);
+				}
+				if (multiSelectList.contains(quinticCurve.getControlPoint2())) {
+					if (bDebugLogCurveInfo) LOG.info("Cannot delete quintic curve control point 2");
+					multiSelectList.remove(quinticCurve.getControlPoint2());
+					quinticCurve.getControlPoint2().setSelected(false);
+				}
+				if (multiSelectList.contains(quinticCurve.getControlPoint3())) {
+					if (bDebugLogCurveInfo) LOG.info("Cannot delete quintic curve control point 3");
+					multiSelectList.remove(quinticCurve.getControlPoint3());
+					quinticCurve.getControlPoint3().setSelected(false);
+				}
+				if (multiSelectList.contains(quinticCurve.getControlPoint4())) {
+					if (bDebugLogCurveInfo) LOG.info("Cannot delete quintic curve control point 4");
+					multiSelectList.remove(quinticCurve.getControlPoint4());
+					quinticCurve.getControlPoint3().setSelected(false);
 				}
 			}
 

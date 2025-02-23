@@ -22,6 +22,10 @@ import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.isQuarticCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.quarticCurve;
 //
+//quinticbezier
+import static AutoDriveEditor.GUI.Buttons.Curves.QuinticCurveButton.isQuinticCurveCreated;
+import static AutoDriveEditor.GUI.Buttons.Curves.QuinticCurveButton.quinticCurve;
+//
 import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogUndoRedoMenu.bDebugLogUndoRedo;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
@@ -218,6 +222,26 @@ public class MoveNodeButton extends BaseButton {
 				/* if (node == quarticCurve.getControlPoint4()) {  // Additional control point
 					quarticCurve.updateControlPoint4(scaledDiffX, scaledDiffY);
 				} */
+			}
+			//quinticbezier
+			if (isQuinticCurveCreated) {
+				if (node == quinticCurve.getCurveStartNode()) {
+					quinticCurve.setCurveStartNode(node);
+				} else if (node == quinticCurve.getCurveEndNode()) {
+					quinticCurve.setCurveEndNode(node);
+				}
+				if (node == quinticCurve.getControlPoint1()) {
+					quinticCurve.updateControlPoint1(scaledDiffX, scaledDiffY);
+				}
+				if (node == quinticCurve.getControlPoint2()) {
+					quinticCurve.updateControlPoint2(scaledDiffX, scaledDiffY);
+				}
+				if (node == quinticCurve.getControlPoint3()) {  // Additional control point
+					quinticCurve.updateControlPoint3(scaledDiffX, scaledDiffY);
+				}
+				if (node == quinticCurve.getControlPoint4()) {  // Additional control point
+					quinticCurve.updateControlPoint4(scaledDiffX, scaledDiffY);
+				}
 			}
             checkNodeOverlap(node);
         }

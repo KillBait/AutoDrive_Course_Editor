@@ -12,6 +12,7 @@ import java.awt.geom.Point2D;
 import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.quarticCurve;//quarticbezier
+import static AutoDriveEditor.GUI.Buttons.Curves.QuinticCurveButton.quinticCurve;//quinticbezier
 import static AutoDriveEditor.GUI.Curves.CurvePanel.*;
 import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.GUI.TextPanel.showInTextArea;
@@ -155,8 +156,7 @@ public final class CubicCurveButton extends CurveBaseButton {
         showConnectingLine = false;
         cubicCurve = null;
         curveStartNode = null;
-        if (quadCurve == null) curveOptionsPanel.setVisible(false);
-        if (quarticCurve == null) curveOptionsPanel.setVisible(false);//quarticbezier
+        if (quadCurve == null && quarticCurve == null && quinticCurve == null) curveOptionsPanel.setVisible(false);
         getMapPanel().repaint();
     }
 
@@ -167,8 +167,7 @@ public final class CubicCurveButton extends CurveBaseButton {
         showConnectingLine = false;
         cubicCurve = null;
         curveStartNode = null;
-        if (quadCurve == null) curveOptionsPanel.setVisible(false);
-		if (quarticCurve == null) curveOptionsPanel.setVisible(false);//quarticbezier
+        if (quadCurve == null && quarticCurve == null && quinticCurve == null) curveOptionsPanel.setVisible(false);
         getMapPanel().repaint();
     }
 

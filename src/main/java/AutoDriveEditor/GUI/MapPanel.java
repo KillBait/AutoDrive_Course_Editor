@@ -35,6 +35,10 @@ import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.isQuarticCurveCreated;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.quarticCurve;
 //
+//quinticbezier
+import static AutoDriveEditor.GUI.Buttons.Curves.QuinticCurveButton.isQuinticCurveCreated;
+import static AutoDriveEditor.GUI.Buttons.Curves.QuinticCurveButton.quinticCurve;
+//
 import static AutoDriveEditor.GUI.Buttons.LinerLineBaseButton.*;
 import static AutoDriveEditor.GUI.Buttons.Nodes.RotationButton.rotation;
 import static AutoDriveEditor.GUI.Curves.CurvePanel.curveOptionsPanel;
@@ -741,6 +745,32 @@ public class MapPanel extends JPanel {
 					return quarticCurve.getControlPoint3();
 				}
 			}
+			//quinticbezier
+			if (quinticCurve != null && isQuinticCurveCreated) {
+				MapNode cp1Node = quinticCurve.getControlPoint1();
+				if (worldPosX < cp1Node.x + nodeSizeWorld && worldPosX > cp1Node.x - nodeSizeWorld &&
+					worldPosZ < cp1Node.z + nodeSizeWorld && worldPosZ > cp1Node.z - nodeSizeWorld) {
+					return quinticCurve.getControlPoint1();
+				}
+
+				MapNode cp2Node = quinticCurve.getControlPoint2();
+				if (worldPosX < cp2Node.x + nodeSizeWorld && worldPosX > cp2Node.x - nodeSizeWorld &&
+					worldPosZ < cp2Node.z + nodeSizeWorld && worldPosZ > cp2Node.z - nodeSizeWorld) {
+					return quinticCurve.getControlPoint2();
+				}
+				
+				MapNode cp3Node = quinticCurve.getControlPoint3();
+				if (worldPosX < cp3Node.x + nodeSizeWorld && worldPosX > cp3Node.x - nodeSizeWorld &&
+					worldPosZ < cp3Node.z + nodeSizeWorld && worldPosZ > cp3Node.z - nodeSizeWorld) {
+					return quinticCurve.getControlPoint3();
+				}
+				
+				MapNode cp4Node = quinticCurve.getControlPoint4();
+				if (worldPosX < cp4Node.x + nodeSizeWorld && worldPosX > cp4Node.x - nodeSizeWorld &&
+					worldPosZ < cp4Node.z + nodeSizeWorld && worldPosZ > cp4Node.z - nodeSizeWorld) {
+					return quinticCurve.getControlPoint3();
+				}
+			}
 
             if (rotation != null && Objects.equals(buttonManager.getCurrentButtonID(),"RotateButton")) {
                 MapNode rotateControlNode = rotation.getControlNode();
@@ -757,39 +787,44 @@ public class MapPanel extends JPanel {
         MapNode selected = null;
         Point2D outPos;
 
-        if (roadMap != null) {
+		if (roadMap != null) {
 
-            // make sure we prioritize returning control nodes over regular nodes
+			// make sure we prioritize returning control nodes over regular nodes
 
-            for (MapNode mapNode : RoadMap.networkNodesList) {
-                outPos = worldPosToScreenPos(mapNode.x, mapNode.z);
-                if (mousePosX < outPos.getX() + nodeSizeScaledHalf && mousePosX > outPos.getX() - nodeSizeScaledHalf && mousePosY < outPos.getY() + nodeSizeScaledHalf && mousePosY > outPos.getY() - nodeSizeScaledHalf) {
-                    // TODO Fix node visibility check
-                    /*if (mapNode.isNodeVisible())*/
-                    selected = mapNode;
-                    break;
-                }
-            }
+			for (MapNode mapNode : RoadMap.networkNodesList) {
+				outPos = worldPosToScreenPos(mapNode.x, mapNode.z);
+				if (mousePosX < outPos.getX() + nodeSizeScaledHalf && mousePosX > outPos.getX() - nodeSizeScaledHalf &&
+					mousePosY < outPos.getY() + nodeSizeScaledHalf && mousePosY > outPos.getY() - nodeSizeScaledHalf) {
+					// TODO Fix node visibility check
+					/*if (mapNode.isNodeVisible())*/
+					selected = mapNode;
+					break;
+				}
+			}
 
-            if (quadCurve != null && isQuadCurveCreated) {
-                Point2D cpPosition = worldPosToScreenPos(quadCurve.getControlPoint().x, quadCurve.getControlPoint().z);
-                if (mousePosX < cpPosition.getX() + nodeSizeScaledHalf && mousePosX > cpPosition.getX() - nodeSizeScaledHalf && mousePosY < cpPosition.getY() + nodeSizeScaledHalf && mousePosY > cpPosition.getY() - nodeSizeScaledHalf) {
-                    return quadCurve.getControlPoint();
-                }
-            }
+			if (quadCurve != null && isQuadCurveCreated) {
+				Point2D cpPosition = worldPosToScreenPos(quadCurve.getControlPoint().x, quadCurve.getControlPoint().z);
+				if (mousePosX < cpPosition.getX() + nodeSizeScaledHalf && mousePosX > cpPosition.getX() - nodeSizeScaledHalf &&
+					mousePosY < cpPosition.getY() + nodeSizeScaledHalf && mousePosY > cpPosition.getY() - nodeSizeScaledHalf) {
+					return quadCurve.getControlPoint();
+				}
+			}
 
-            if (cubicCurve != null && isCubicCurveCreated) {
-                Point2D cp1Position = worldPosToScreenPos(cubicCurve.getControlPoint1().x, cubicCurve.getControlPoint1().z);
-                if (mousePosX < cp1Position.getX() + nodeSizeScaledHalf && mousePosX > cp1Position.getX() - nodeSizeScaledHalf && mousePosY < cp1Position.getY() + nodeSizeScaledHalf && mousePosY > cp1Position.getY() - nodeSizeScaledHalf) {
-                    return cubicCurve.getControlPoint1();
-                }
+			if (cubicCurve != null && isCubicCurveCreated) {
+				Point2D cp1Position = worldPosToScreenPos(cubicCurve.getControlPoint1().x, cubicCurve.getControlPoint1().z);
+				if (mousePosX < cp1Position.getX() + nodeSizeScaledHalf && mousePosX > cp1Position.getX() - nodeSizeScaledHalf &&
+					mousePosY < cp1Position.getY() + nodeSizeScaledHalf && mousePosY > cp1Position.getY() - nodeSizeScaledHalf) {
+					return cubicCurve.getControlPoint1();
+				}
 
-                Point2D cp2Position = worldPosToScreenPos(cubicCurve.getControlPoint2().x, cubicCurve.getControlPoint2().z);
-                if (mousePosX < cp2Position.getX() + nodeSizeScaledHalf && mousePosX > cp2Position.getX() - nodeSizeScaledHalf && mousePosY < cp2Position.getY() + nodeSizeScaledHalf && mousePosY > cp2Position.getY() - nodeSizeScaledHalf) {
-                    return cubicCurve.getControlPoint2();
-                }
-            }
-			//quarticbezier
+				Point2D cp2Position = worldPosToScreenPos(cubicCurve.getControlPoint2().x, cubicCurve.getControlPoint2().z);
+				if (mousePosX < cp2Position.getX() + nodeSizeScaledHalf && mousePosX > cp2Position.getX() - nodeSizeScaledHalf &&
+					mousePosY < cp2Position.getY() + nodeSizeScaledHalf && mousePosY > cp2Position.getY() - nodeSizeScaledHalf) {
+					return cubicCurve.getControlPoint2();
+				}
+			}
+
+			// quarticbezier
 			if (quarticCurve != null && isQuarticCurveCreated) {
 				Point2D cp1Position = worldPosToScreenPos(quarticCurve.getControlPoint1().x, quarticCurve.getControlPoint1().z);
 				if (mousePosX < cp1Position.getX() + nodeSizeScaledHalf && mousePosX > cp1Position.getX() - nodeSizeScaledHalf &&
@@ -802,7 +837,7 @@ public class MapPanel extends JPanel {
 					mousePosY < cp2Position.getY() + nodeSizeScaledHalf && mousePosY > cp2Position.getY() - nodeSizeScaledHalf) {
 					return quarticCurve.getControlPoint2();
 				}
-				
+
 				Point2D cp3Position = worldPosToScreenPos(quarticCurve.getControlPoint3().x, quarticCurve.getControlPoint3().z);
 				if (mousePosX < cp3Position.getX() + nodeSizeScaledHalf && mousePosX > cp3Position.getX() - nodeSizeScaledHalf &&
 					mousePosY < cp3Position.getY() + nodeSizeScaledHalf && mousePosY > cp3Position.getY() - nodeSizeScaledHalf) {
@@ -810,16 +845,43 @@ public class MapPanel extends JPanel {
 				}
 			}
 
-            if (rotation != null && Objects.equals(buttonManager.getCurrentButtonID(),"RotateButton")) {
-                Point2D rotatePosition = worldPosToScreenPos(rotation.getControlNode().x, rotation.getControlNode().z);
-                if (mousePosX < rotatePosition.getX() + nodeSizeScaledQuarter && mousePosX > rotatePosition.getX() - nodeSizeScaledQuarter && mousePosY < rotatePosition.getY() + nodeSizeScaledQuarter && mousePosY > rotatePosition.getY() - nodeSizeScaledQuarter) {
-                    return rotation.getControlNode();
-                }
-            }
-        }
-        return selected;
-    }
+			// quinticbezier
+			if (quinticCurve != null && isQuinticCurveCreated) {
+				Point2D qcp1Position = worldPosToScreenPos(quinticCurve.getControlPoint1().x, quinticCurve.getControlPoint1().z);
+				if (mousePosX < qcp1Position.getX() + nodeSizeScaledHalf && mousePosX > qcp1Position.getX() - nodeSizeScaledHalf &&
+					mousePosY < qcp1Position.getY() + nodeSizeScaledHalf && mousePosY > qcp1Position.getY() - nodeSizeScaledHalf) {
+					return quinticCurve.getControlPoint1();
+				}
 
+				Point2D qcp2Position = worldPosToScreenPos(quinticCurve.getControlPoint2().x, quinticCurve.getControlPoint2().z);
+				if (mousePosX < qcp2Position.getX() + nodeSizeScaledHalf && mousePosX > qcp2Position.getX() - nodeSizeScaledHalf &&
+					mousePosY < qcp2Position.getY() + nodeSizeScaledHalf && mousePosY > qcp2Position.getY() - nodeSizeScaledHalf) {
+					return quinticCurve.getControlPoint2();
+				}
+
+				Point2D qcp3Position = worldPosToScreenPos(quinticCurve.getControlPoint3().x, quinticCurve.getControlPoint3().z);
+				if (mousePosX < qcp3Position.getX() + nodeSizeScaledHalf && mousePosX > qcp3Position.getX() - nodeSizeScaledHalf &&
+					mousePosY < qcp3Position.getY() + nodeSizeScaledHalf && mousePosY > qcp3Position.getY() - nodeSizeScaledHalf) {
+					return quinticCurve.getControlPoint3();
+				}
+
+				Point2D qcp4Position = worldPosToScreenPos(quinticCurve.getControlPoint4().x, quinticCurve.getControlPoint4().z);
+				if (mousePosX < qcp4Position.getX() + nodeSizeScaledHalf && mousePosX > qcp4Position.getX() - nodeSizeScaledHalf &&
+					mousePosY < qcp4Position.getY() + nodeSizeScaledHalf && mousePosY > qcp4Position.getY() - nodeSizeScaledHalf) {
+					return quinticCurve.getControlPoint4();
+				}
+			}
+
+			if (rotation != null && Objects.equals(buttonManager.getCurrentButtonID(), "RotateButton")) {
+				Point2D rotatePosition = worldPosToScreenPos(rotation.getControlNode().x, rotation.getControlNode().z);
+				if (mousePosX < rotatePosition.getX() + nodeSizeScaledQuarter && mousePosX > rotatePosition.getX() - nodeSizeScaledQuarter &&
+					mousePosY < rotatePosition.getY() + nodeSizeScaledQuarter && mousePosY > rotatePosition.getY() - nodeSizeScaledQuarter) {
+					return rotation.getControlNode();
+				}
+			}
+		}
+		return selected;
+	}
 
 
     public static double getYValueFromHeightMap(double worldX, double worldZ) {

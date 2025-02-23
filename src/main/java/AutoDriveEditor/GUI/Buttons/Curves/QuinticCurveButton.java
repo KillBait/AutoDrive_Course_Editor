@@ -1,6 +1,6 @@
 package AutoDriveEditor.GUI.Buttons.Curves;
 
-import AutoDriveEditor.Classes.QuarticCurve;
+import AutoDriveEditor.Classes.QuinticCurve;
 import AutoDriveEditor.GUI.Buttons.CurveBaseButton;
 import AutoDriveEditor.RoadNetwork.MapNode;
 
@@ -12,9 +12,7 @@ import java.awt.geom.Point2D;
 import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
 import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.cubicCurve;
 import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
-//
-import static AutoDriveEditor.GUI.Buttons.Curves.QuinticCurveButton.quinticCurve;//quinticbezier
-//
+import static AutoDriveEditor.GUI.Buttons.Curves.QuarticCurveButton.quarticCurve;
 import static AutoDriveEditor.GUI.Curves.CurvePanel.*;
 import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.GUI.TextPanel.showInTextArea;
@@ -25,20 +23,20 @@ import static AutoDriveEditor.Utils.GUIUtils.makeImageToggleButton;
 import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
-public final class QuarticCurveButton extends CurveBaseButton {
+public final class QuinticCurveButton extends CurveBaseButton {
 
-    public static QuarticCurve quarticCurve;
-    public static boolean isQuarticCurveCreated = false;
+    public static QuinticCurve quinticCurve;
+    public static boolean isQuinticCurveCreated = false;
     private boolean showConnectingLine = false;
     private MapNode selectedControlPoint;
 
-    public QuarticCurveButton(JPanel panel) {
-        button = makeImageToggleButton("buttons/quarticcurve", "buttons/quarticcurve_selected", null, "panel_curves_quarticbezier_tooltip", "panel_curves_quarticbezier_alt", panel, false, false, null, false, this);
+    public QuinticCurveButton(JPanel panel) {
+        button = makeImageToggleButton("buttons/quinticcurve", "buttons/quinticcurve_selected", null, "panel_curves_quinticbezier_tooltip", "panel_curves_quinticbezier_alt", panel, false, false, null, false, this);
     }
 
     @Override
     public String getButtonID() {
-        return "QuarticCurveButton";
+        return "QuinticCurveButton";
     }
 
     @Override
@@ -65,80 +63,80 @@ public final class QuarticCurveButton extends CurveBaseButton {
 
     @Override
     protected void setCurvePreviewEndAndDisplay(MapNode endNode) {
-        if (!isQuarticCurveCreated) {
+        if (!isQuinticCurveCreated) {
             showInTextArea(getLocaleString("infopanel_curve_created"), true, false);
-            quarticCurve = new QuarticCurve(curveStartNode, endNode);
-            quarticCurve.setNumInterpolationPoints(numIterationsSlider.getValue() + 1);
-            isQuarticCurveCreated = true;
+            quinticCurve = new QuinticCurve(curveStartNode, endNode);
+            quinticCurve.setNumInterpolationPoints(numIterationsSlider.getValue() + 1);
+            isQuinticCurveCreated = true;
             showConnectingLine = false;
         }
     }
 
     @Override
     protected boolean isCurveCreated() {
-        return isQuarticCurveCreated;
+        return isQuinticCurveCreated;
     }
 
     @Override
     public void setNodeType(int nodeType) {
-        quarticCurve.setNodeType(nodeType);
+        quinticCurve.setNodeType(nodeType);
     }
 
     @Override
     public void setDualPath(boolean isDualPath) {
-        quarticCurve.setDualPath(isDualPath);
+        quinticCurve.setDualPath(isDualPath);
     }
 
     @Override
     public void setReversePath(boolean isReversePath) {
-        quarticCurve.setReversePath(isReversePath);
+        quinticCurve.setReversePath(isReversePath);
     }
 
     @Override
     public void setNumInterpolationPoints(int numPoints) {
-        quarticCurve.setNumInterpolationPoints(numPoints);
+        quinticCurve.setNumInterpolationPoints(numPoints);
     }
 
     @Override
     protected void storeCurvePanelSettings() {
-        if (quarticCurve != null) {
-            curvePanelNodeTypeStore = quarticCurve.getNodeType();
-            curvePanelReverseStore = quarticCurve.isReversePath();
-            curvePanelDualStore = quarticCurve.isDualPath();
-            curvePanelIntPointsStore = quarticCurve.getCurveNodes().size();
+        if (quinticCurve != null) {
+            curvePanelNodeTypeStore = quinticCurve.getNodeType();
+            curvePanelReverseStore = quinticCurve.isReversePath();
+            curvePanelDualStore = quinticCurve.isDualPath();
+            curvePanelIntPointsStore = quinticCurve.getCurveNodes().size();
         }
     }
 
     @Override
     protected void restoreCurvePanelSettings() {
-        if (quarticCurve != null) {
-            quarticCurve.setNodeType(curvePanelNodeTypeStore);
+        if (quinticCurve != null) {
+            quinticCurve.setNodeType(curvePanelNodeTypeStore);
             if (curvePanelNodeTypeStore == 0) {
                 curvePathRegular.setSelected(true);
             } else {
                 curvePathSubPrio.setSelected(true);
             }
-            quarticCurve.setReversePath(curvePanelReverseStore);
+            quinticCurve.setReversePath(curvePanelReverseStore);
             curvePathReverse.setSelected(curvePanelReverseStore);
-            quarticCurve.setDualPath(curvePanelDualStore);
+            quinticCurve.setDualPath(curvePanelDualStore);
             curvePathDual.setSelected(curvePanelDualStore);
-            quarticCurve.setNumInterpolationPoints(curvePanelIntPointsStore);
+            quinticCurve.setNumInterpolationPoints(curvePanelIntPointsStore);
             numIterationsSlider.setValue(curvePanelIntPointsStore);
         }
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON3 && !isQuarticCurveCreated) {
+        if (e.getButton() == MouseEvent.BUTTON3 && !isQuinticCurveCreated) {
             if (curveStartNode != null) {
-                LOG.info("Cancelling Quartic Curve");
+                LOG.info("Cancelling Quintic Curve");
                 showConnectingLine = false;
                 cancelCurve();
             }
         }
         if (e.getButton() == MouseEvent.BUTTON1) {
             MapNode node = getNodeAtScreenPosition(e.getX(), e.getY());
-            if (quarticCurve != null && node != null && node.isControlNode() && quarticCurve.isControlPoint(node)) {
+            if (quinticCurve != null && node != null && node.isControlNode() && quinticCurve.isControlPoint(node)) {
                 selectedControlPoint = node;
                 controlNodeSelected = true;
             }
@@ -147,64 +145,68 @@ public final class QuarticCurveButton extends CurveBaseButton {
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        if (quarticCurve == null && showConnectingLine) {
+        if (quinticCurve == null && showConnectingLine) {
             getMapPanel().repaint();
         }
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        if (quarticCurve != null && isQuarticCurveCreated && !isDraggingMap && controlNodeSelected) {
-            if (selectedControlPoint == quarticCurve.getControlPoint1()) {
-                quarticCurve.moveControlPoint1(e.getX() - prevMousePosX, e.getY() - prevMousePosY);
+        if (quinticCurve != null && isQuinticCurveCreated && !isDraggingMap && controlNodeSelected) {
+            if (selectedControlPoint == quinticCurve.getControlPoint1()) {
+                quinticCurve.moveControlPoint1(e.getX() - prevMousePosX, e.getY() - prevMousePosY);
             }
-            if (selectedControlPoint == quarticCurve.getControlPoint2()) {
-                quarticCurve.moveControlPoint2(e.getX() - prevMousePosX, e.getY() - prevMousePosY);
+            if (selectedControlPoint == quinticCurve.getControlPoint2()) {
+                quinticCurve.moveControlPoint2(e.getX() - prevMousePosX, e.getY() - prevMousePosY);
             }
-            if (selectedControlPoint == quarticCurve.getControlPoint3()) {
-                quarticCurve.moveControlPoint3(e.getX() - prevMousePosX, e.getY() - prevMousePosY);
+            if (selectedControlPoint == quinticCurve.getControlPoint3()) {
+                quinticCurve.moveControlPoint3(e.getX() - prevMousePosX, e.getY() - prevMousePosY);
             }
-            quarticCurve.updateCurve();
+            if (selectedControlPoint == quinticCurve.getControlPoint4()) {
+                quinticCurve.moveControlPoint4(e.getX() - prevMousePosX, e.getY() - prevMousePosY);
+            }
+            quinticCurve.updateCurve();
             getMapPanel().repaint();
         }
     }
 
     @Override
     public void cancelCurve() {
-        if (quarticCurve != null) quarticCurve.clear();
-        isQuarticCurveCreated = false;
+        if (quinticCurve != null) quinticCurve.clear();
+        isQuinticCurveCreated = false;
         showConnectingLine = false;
-        quarticCurve = null;
-        curveStartNode = null;if (cubicCurve == null && quadCurve == null && quinticCurve == null) curveOptionsPanel.setVisible(false);
+        quinticCurve = null;
+        curveStartNode = null;
+        if (cubicCurve == null && quadCurve == null && quarticCurve == null) curveOptionsPanel.setVisible(false);
         getMapPanel().repaint();
     }
 
     @Override
     public void commitCurve() {
-        if (quarticCurve != null) quarticCurve.commitCurve();
-        isQuarticCurveCreated = false;
+        if (quinticCurve != null) quinticCurve.commitCurve();
+        isQuinticCurveCreated = false;
         showConnectingLine = false;
-        quarticCurve = null;
+        quinticCurve = null;
         curveStartNode = null;
-        if (cubicCurve == null && quadCurve == null && quinticCurve == null) curveOptionsPanel.setVisible(false);
+        if (cubicCurve == null && quadCurve == null && quarticCurve == null) curveOptionsPanel.setVisible(false);
         getMapPanel().repaint();
     }
 
     @Override
     public void drawToScreen(Graphics g) {
         // Draw the initial connection arrow
-        if (quarticCurve == null && showConnectingLine) {
+        if (quinticCurve == null && showConnectingLine) {
             Point2D startNodePos = worldPosToScreenPos(curveStartNode.x, curveStartNode.z);
             Point2D mousePos = new Point2D.Double(currentMouseX, currentMouseY);
             drawArrowBetween(g, startNodePos, mousePos, false, Color.WHITE, false);
         }
 
-        if (quarticCurve != null && isQuarticCurveCreated) {
+        if (quinticCurve != null && isQuinticCurveCreated) {
             // Draw interpolation points and connection arrows for the curve
             Color colour;
-            for (int j = 0; j < quarticCurve.getCurveNodes().size() - 1; j++) {
-                MapNode currentNode = quarticCurve.getCurveNodes().get(j);
-                MapNode nextNode = quarticCurve.getCurveNodes().get(j + 1);
+            for (int j = 0; j < quinticCurve.getCurveNodes().size() - 1; j++) {
+                MapNode currentNode = quinticCurve.getCurveNodes().get(j);
+                MapNode nextNode = quinticCurve.getCurveNodes().get(j + 1);
                 Point2D currentNodePos = worldPosToScreenPos(currentNode.x, currentNode.z);
                 Point2D nextNodePos = worldPosToScreenPos(nextNode.x, nextNode.z);
 
@@ -225,14 +227,14 @@ public final class QuarticCurveButton extends CurveBaseButton {
                     g2d.dispose();
                 }
 
-                if (quarticCurve.isReversePath()) {
-                    if (quarticCurve.getNodeType() == NODE_FLAG_REGULAR) {
+                if (quinticCurve.isReversePath()) {
+                    if (quinticCurve.getNodeType() == NODE_FLAG_REGULAR) {
                         colour = colourConnectReverse;
                     } else {
                         colour = colourConnectReverseSubprio;
                     }
-                } else if (quarticCurve.isDualPath()) {
-                    if (quarticCurve.getNodeType() == NODE_FLAG_REGULAR) {
+                } else if (quinticCurve.isDualPath()) {
+                    if (quinticCurve.getNodeType() == NODE_FLAG_REGULAR) {
                         colour = colourConnectDual;
                     } else {
                         colour = colourConnectDualSubprio;
@@ -242,19 +244,19 @@ public final class QuarticCurveButton extends CurveBaseButton {
                 } else {
                     colour = colourConnectRegular;
                 }
-                drawArrowBetween(g, currentNodePos, nextNodePos, quarticCurve.isDualPath(), colour, false);
+                drawArrowBetween(g, currentNodePos, nextNodePos, quinticCurve.isDualPath(), colour, false);
             }
 
-            // Draw control nodes (three in total)
+            // Draw control nodes (four in total)
             Polygon p = new Polygon();
             // Control Point 1
-            Point2D nodePos = worldPosToScreenPos(quarticCurve.getControlPoint1().x, quarticCurve.getControlPoint1().z);
+            Point2D nodePos = worldPosToScreenPos(quinticCurve.getControlPoint1().x, quinticCurve.getControlPoint1().z);
             p.addPoint((int) (nodePos.getX() - nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf));
             p.addPoint((int) (nodePos.getX() + nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf));
             p.addPoint((int) nodePos.getX(), (int) (nodePos.getY() + nodeSizeScaledHalf));
             g.setColor(colourNodeControl);
             g.fillPolygon(p);
-            if (quarticCurve.getControlPoint1().isSelected() || hoveredNode == quarticCurve.getControlPoint1()) {
+            if (quinticCurve.getControlPoint1().isSelected() || hoveredNode == quinticCurve.getControlPoint1()) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 BasicStroke bs = new BasicStroke((float) (nodeSizeScaled / 5));
                 g2.setStroke(bs);
@@ -265,13 +267,13 @@ public final class QuarticCurveButton extends CurveBaseButton {
             p.reset();
 
             // Control Point 2
-            nodePos = worldPosToScreenPos(quarticCurve.getControlPoint2().x, quarticCurve.getControlPoint2().z);
+            nodePos = worldPosToScreenPos(quinticCurve.getControlPoint2().x, quinticCurve.getControlPoint2().z);
             p.addPoint((int) (nodePos.getX() - nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf));
             p.addPoint((int) (nodePos.getX() + nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf));
             p.addPoint((int) nodePos.getX(), (int) (nodePos.getY() + nodeSizeScaledHalf));
             g.setColor(colourNodeControl);
             g.fillPolygon(p);
-            if (quarticCurve.getControlPoint2().isSelected() || hoveredNode == quarticCurve.getControlPoint2()) {
+            if (quinticCurve.getControlPoint2().isSelected() || hoveredNode == quinticCurve.getControlPoint2()) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 BasicStroke bs = new BasicStroke((float) (nodeSizeScaled / 5));
                 g2.setStroke(bs);
@@ -282,13 +284,30 @@ public final class QuarticCurveButton extends CurveBaseButton {
             p.reset();
 
             // Control Point 3
-            nodePos = worldPosToScreenPos(quarticCurve.getControlPoint3().x, quarticCurve.getControlPoint3().z);
+            nodePos = worldPosToScreenPos(quinticCurve.getControlPoint3().x, quinticCurve.getControlPoint3().z);
             p.addPoint((int) (nodePos.getX() - nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf));
             p.addPoint((int) (nodePos.getX() + nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf));
             p.addPoint((int) nodePos.getX(), (int) (nodePos.getY() + nodeSizeScaledHalf));
             g.setColor(colourNodeControl);
             g.fillPolygon(p);
-            if (quarticCurve.getControlPoint3().isSelected() || hoveredNode == quarticCurve.getControlPoint3()) {
+            if (quinticCurve.getControlPoint3().isSelected() || hoveredNode == quinticCurve.getControlPoint3()) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                BasicStroke bs = new BasicStroke((float) (nodeSizeScaled / 5));
+                g2.setStroke(bs);
+                g2.setColor(colourNodeSelected);
+                g2.drawPolygon(p);
+                g2.dispose();
+            }
+            p.reset();
+
+            // Control Point 4
+            nodePos = worldPosToScreenPos(quinticCurve.getControlPoint4().x, quinticCurve.getControlPoint4().z);
+            p.addPoint((int) (nodePos.getX() - nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf));
+            p.addPoint((int) (nodePos.getX() + nodeSizeScaledHalf), (int) (nodePos.getY() - nodeSizeScaledHalf));
+            p.addPoint((int) nodePos.getX(), (int) (nodePos.getY() + nodeSizeScaledHalf));
+            g.setColor(colourNodeControl);
+            g.fillPolygon(p);
+            if (quinticCurve.getControlPoint4().isSelected() || hoveredNode == quinticCurve.getControlPoint4()) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 BasicStroke bs = new BasicStroke((float) (nodeSizeScaled / 5));
                 g2.setStroke(bs);
