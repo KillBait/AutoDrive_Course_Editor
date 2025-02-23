@@ -13,6 +13,10 @@
 				<li>Implemented a new Quartic Curve icon and integrated it with the curve editor.</li>
 				<li>Updated hit detection, selection, and movement logic for quartic curve control points.</li>
 				<li>Improved overall state management when switching between cubic, quad, and quartic curves.</li>
+	    			<li>Added support for Quintic Bézier Curves with two endpoints and four control points.</li>
+				<li>Implemented a new Quintic Curve icon and integrated it with the curve editor.</li>
+				<li>Enhanced hit detection, selection, and movement logic for quintic curve control points.</li>
+				<li>Refined curve rendering to ensure smooth transitions between all curve types.</li>
 			</ul>
             </ul>
             <p>Visit the Release Page <a href="https://github.com/KillBait/AutoDrive_Course_Editor/releases">Here</a>.</p>
