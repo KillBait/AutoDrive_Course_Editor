@@ -1,5 +1,6 @@
 ## Java
 A Java version **greater than 11** is required. ( JRE or JDK are both possible )<br>
+For best performance, use an upto date version.<br>
 Current Java versions can be downloaded [here](https://www.oracle.com/java/technologies/javase-downloads.html) and installation instructions can be found [here](https://www3.ntu.edu.sg/home/ehchua/programming/howto/JDK_Howto.html)
 
 ## Compatibility
