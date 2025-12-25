@@ -13,7 +13,7 @@ public class ShowAllNodeIDMenu extends JCheckBoxMenuItemBase {
     public static boolean bDebugShowAllNodeID;
 
     public ShowAllNodeIDMenu() {
-        makeCheckBoxMenuItem("menu_debug_show_all_node_ID", "menu_debug_show_all_node_ID_accstring", KeyEvent.VK_6, InputEvent.ALT_DOWN_MASK, false,true);
+        makeCheckBoxMenuItem("menu_debug_show_all_node_ID", KeyEvent.VK_6, InputEvent.ALT_DOWN_MASK, false,true);
     }
 
     @Override

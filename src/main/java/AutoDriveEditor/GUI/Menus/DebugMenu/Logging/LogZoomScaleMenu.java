@@ -10,7 +10,7 @@ public class LogZoomScaleMenu extends JCheckBoxMenuItemBase {
     public static boolean bDebugLogZoomScale;
 
     public LogZoomScaleMenu() {
-        makeCheckBoxMenuItem("menu_debug_log_zoom", "menu_debug_log_zoom_accstring", false, true);
+        makeCheckBoxMenuItem("menu_debug_log_zoom", false, true);
     }
 
     @Override

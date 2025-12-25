@@ -11,7 +11,7 @@ import static AutoDriveEditor.GUI.Menus.EditorMenu.menu_DEBUG;
 public class ShowDEBUGMenu extends JCheckBoxMenuItemBase {
 
     public ShowDEBUGMenu() {
-        makeCheckBoxMenuItem("menu_help_debug", "menu_help_debug_accstring", false, true);
+        makeCheckBoxMenuItem("menu_help_debug", false, true);
     }
 
     @Override

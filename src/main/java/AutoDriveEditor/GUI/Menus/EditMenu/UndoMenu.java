@@ -14,7 +14,7 @@ public class UndoMenu extends JMenuItemBase {
     public static JMenuItem menu_Undo;
 
     public UndoMenu() {
-        menu_Undo = makeMenuItem("menu_edit_undo",  "menu_edit_undo_accstring", KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK, false);
+        menu_Undo = makeMenuItem("menu_edit_undo", KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK, false);
     }
 
     @Override

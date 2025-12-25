@@ -1,6 +1,9 @@
 package AutoDriveEditor.GUI.Buttons;
 
-import AutoDriveEditor.Managers.ButtonManager;
+import AutoDriveEditor.Classes.KeyBinds.Shortcut;
+import AutoDriveEditor.Managers.RenderManager.Drawable;
+import AutoDriveEditor.Managers.ShortcutManager;
+import AutoDriveEditor.RoadNetwork.Connection;
 import AutoDriveEditor.RoadNetwork.MapNode;
 
 import javax.swing.*;
@@ -10,27 +13,28 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
 import static AutoDriveEditor.AutoDriveEditor.buttonManager;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
+import static AutoDriveEditor.Classes.Util_Classes.MathUtils.normalizeAngle;
 import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogGUIInfoMenu.bDebugLogGUIInfo;
 import static AutoDriveEditor.GUI.TextPanel.showInTextArea;
-import static AutoDriveEditor.Managers.ButtonManager.ButtonNode;
-import static AutoDriveEditor.Managers.ButtonManager.ButtonState;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
-import static AutoDriveEditor.Utils.MathUtils.normalizeAngle;
+import static AutoDriveEditor.Managers.ButtonManager.*;
+import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_REGULAR;
+import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_SUBPRIO;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
-public abstract class BaseButton implements ButtonState, ActionListener, MouseListener {
+public abstract class BaseButton extends Drawable implements ButtonInterface, ToolTipBuilder, ActionListener, MouseListener {
 
     public ButtonNode buttonNode;
     protected AbstractButton button;
+    private static BaseButton instance;
 
     //
     // Base class for all buttons, all options have defaults set here.
     //
-    // Override any of these functions in your button class to change
+    // Override these functions in your button class to change
     // the default behavior.
     //
-
 
     public String getButtonID() { return "BaseButton"; }
 
@@ -40,6 +44,8 @@ public abstract class BaseButton implements ButtonState, ActionListener, MouseLi
 
     public String getInfoText() {  return ""; }
 
+    public String getHelpText() { return this.getButtonID() + " HelpText"; }
+
     public Boolean ignoreButtonDeselect() { return false; }
 
     public Boolean showHoverNodeSelect() { return true; }
@@ -47,6 +53,8 @@ public abstract class BaseButton implements ButtonState, ActionListener, MouseLi
     public Boolean alwaysSelectHidden() { return false; }
 
     public Boolean useMultiSelection() { return false; }
+
+    public Boolean usePanelEdgeScrolling() { return false; }
 
     public Boolean previewNodeSelectionChange() { return true; }
 
@@ -64,45 +72,25 @@ public abstract class BaseButton implements ButtonState, ActionListener, MouseLi
 
     public Boolean ignoreDeselect() { return false; }
 
-    @Override
-    public void setNode(ButtonNode buttonNode) {
-        this.buttonNode = buttonNode;
-    }
+    public void onButtonCreation() {};
 
-    @Override
-    public void setEnabled(boolean enabled) { button.setEnabled(enabled); }
+    // triggered when a button is selected
+    public void onButtonSelect() {}
 
-    @Override
-    public void setSelected(boolean selected) {
-        button.setSelected(selected);
-        if (selected) {
-            showInTextArea(getInfoText(), true, false);
-        }
-    }
+    // triggered when a button is deselected
+    public void onButtonDeselect() {}
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if (button.isSelected()) {
-            if (buttonNode.button.ignoreButtonDeselect()) {
-                if (bDebugLogGUIInfo) LOG.info("BaseButton > isSelected ignoring button");
-            } else {
-                buttonManager.makeCurrent(buttonNode);
-                if (bDebugLogGUIInfo) LOG.info("BaseButton > setting {} as current", buttonManager.getCurrentButtonID());
-            }
-        } else {
-            if (ButtonManager.getCurrentButton() != null) {
-                if (buttonNode.button.ignoreButtonDeselect()) {
-                    if (bDebugLogGUIInfo) LOG.info("BaseButton > {} ignoring deselect", buttonNode.button.getButtonID());
-                } else {
-                    if (bDebugLogGUIInfo) LOG.info("BaseButton > {} triggered deselect all", buttonNode.button.getButtonID());
-                    buttonManager.deSelectAll();
-                }
-            } else {
-                if (bDebugLogGUIInfo) LOG.info("CurrentButton = {}", buttonNode.button.getButtonID());
-            }
-        }
-    }
+    public void onConfigChange() {}
 
+    // override this function if you want your button to draw custom graphics
+    // to the MapPanel, see the RenderManager class for more information on
+    // the functions to set the render priority in your button.
+    public void drawToScreen(Graphics g) {}
+
+    //
+    // Handy Dandy MouseListener functions, override these in your button class
+    // to save you having to manually add listeners to your buttons.
+    //
 
     public void mouseClicked(MouseEvent e) {}
 
@@ -120,70 +108,135 @@ public abstract class BaseButton implements ButtonState, ActionListener, MouseLi
 
     public void mouseExited(MouseEvent e) {}
 
-    public void drawToScreen(Graphics g) {}
+    public void onMultiSelectStart() {}
 
-    public static class MapNodeStore {
-        private final MapNode mapNode;
-        private final int mapNodeIDBackup;
-        private final ArrayList<MapNode> incomingBackup;
-        private final ArrayList<MapNode> outgoingBackup;
+    public void onMultiSelectStop() {}
 
-        public MapNodeStore(MapNode node) {
-            this.mapNode = node;
-            this.mapNodeIDBackup = node.id;
-            this.incomingBackup = new ArrayList<>();
-            this.outgoingBackup = new ArrayList<>();
-            backupConnections();
+    public void onMultiSelectAdd(ArrayList<MapNode> addedNodes) {}
+
+    public void onMultiSelectRemove(ArrayList<MapNode> removedNodes) {}
+
+    public void onMultiSelectChange(ArrayList<MapNode> nodeList) {}
+
+    public void onMultiSelectOneTime(ArrayList<MapNode> oneTimeList) {}
+
+    public void onMultiSelectCleared() {}
+
+
+
+
+    //
+    // setNode() - WARNING: Do not override this function in any class that extends BaseButton
+    // Called exclusively by the ButtonManager..
+
+    @Override
+    public void setNode(ButtonNode buttonNode) {
+        this.buttonNode = buttonNode;
+        updateTooltip();
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) { if (button != null) button.setEnabled(enabled); }
+
+    @Override
+    public void setSelected(boolean selected) {
+        if (!buttonNode.buttonInterface.ignoreButtonDeselect()) {
+            button.setSelected(selected);
+            if (selected) showInTextArea(buttonNode.buttonInterface.getInfoText(), true, false);
+            if (bDebugLogGUIInfo) LOG.info("## BaseButton.setSelected() ## setSelected: button {} ( {} )",buttonNode.buttonInterface.getButtonID(), selected);
+        } else {
+            if (bDebugLogGUIInfo) LOG.info("## BaseButton.setSelected() ## ignoring deselect for {}", buttonNode.buttonInterface.getButtonID());
         }
+    }
 
-        public MapNode getMapNode() {
-            if (this.hasChangedID()) this.resetID();
-            return this.mapNode;
-        }
+    @Override
+    public void setVisible(boolean visible) {
+        if (button != null) button.setVisible(visible);
+    }
 
-        public void resetID() { this.mapNode.id = this.mapNodeIDBackup; }
-
-        public boolean hasChangedID() { return this.mapNode.id != this.mapNodeIDBackup; }
-
-        public void clearConnections() {
-            clearIncoming();
-            clearOutgoing();
-        }
-
-        public void clearIncoming() { this.mapNode.incoming.clear(); }
-
-        public void clearOutgoing() { this.mapNode.outgoing.clear(); }
-
-        public void backupConnections() {
-            copyList(this.mapNode.incoming, this.incomingBackup);
-            copyList(this.mapNode.outgoing, this.outgoingBackup);
-        }
-
-        public void restoreConnections() {
-            copyList(this.incomingBackup, this.mapNode.incoming);
-            copyList(this.outgoingBackup, this.mapNode.outgoing);
-        }
-
-        @SuppressWarnings("unused")
-        public void backupIncoming() { copyList(this.mapNode.incoming, this.incomingBackup); }
-
-        @SuppressWarnings("unused")
-        public void restoreIncoming() { copyList(this.incomingBackup, this.mapNode.incoming); }
-
-        @SuppressWarnings("unused")
-        public void backupOutgoing() { copyList(this.mapNode.outgoing, this.outgoingBackup); }
-
-        @SuppressWarnings("unused")
-        public void restoreOutgoing() { copyList(this.outgoingBackup, this.mapNode.outgoing); }
-
-        private void copyList(ArrayList<MapNode> from, ArrayList<MapNode> to) {
-            to.clear();
-            // use .clone() ??
-            for (int i = 0; i <= from.size() - 1 ; i++) {
-                MapNode mapNode = from.get(i);
-                to.add(mapNode);
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (button.isSelected()) {
+            if (buttonNode.buttonInterface.ignoreButtonDeselect()) {
+                if (bDebugLogGUIInfo) LOG.info("## BaseButton.actionPerformed() ## isSelected ignoring button");
+            } else {
+                buttonManager.makeCurrent(buttonNode);
+                if (bDebugLogGUIInfo) LOG.info("## BaseButton.actionPerformed() ## setting {} as current", buttonManager.getCurrentButtonID());
+            }
+        } else {
+            if (buttonManager.getCurrentButton() != null) {
+                if (buttonNode.buttonInterface.ignoreButtonDeselect()) {
+                    if (bDebugLogGUIInfo) LOG.info("## BaseButton.actionPerformed() ## {} ignoring deselect", buttonNode.buttonInterface.getButtonID());
+                } else {
+                    if (bDebugLogGUIInfo) LOG.info("## BaseButton.actionPerformed() ## {} triggered deselect all", buttonNode.buttonInterface.getButtonID());
+                    buttonManager.deSelectAll();
+                }
+            } else {
+                if (bDebugLogGUIInfo) LOG.info("## BaseButton.actionPerformed() ## getCurrentButton() is null (actual button  = {} )", buttonNode.buttonInterface.getButtonID());
             }
         }
+    }
+
+    //
+    // Tooltip helper functions, implement the ToolTipBuilder interface
+    // and override the buildToolTip() function to createSetting a custom tooltip
+    // for your button.
+    //
+
+    /** updateTooltip() - Automatically called by the ButtonManager when
+     * a new button is added, <br><br>NOTE:<br>(1) You must implement the
+     * ToolTipBuilder interface for this to work correctly.<br>
+     * If you don't implement theToolTipBuilder interface, you will need
+     * to manually set the tooltip text for your button.<br>
+     * (2) Can be called at any time.
+    **/
+    public void updateTooltip() {
+        String tooltip = buildToolTip();
+        button.setToolTipText(tooltip);
+        button.getAccessibleContext().setAccessibleDescription(tooltip);
+    }
+
+    /** setToolTip() - Manually set the tooltip, can be called anytime
+     * @param tooltip - The tooltip text to set
+     **/
+    public void setTooltip(String tooltip) {
+        button.setToolTipText(tooltip);
+        button.getAccessibleContext().setAccessibleDescription(tooltip);
+    }
+
+    public void setToolTipStale() {
+        updateTooltip();
+    }
+
+    public String getShortcutText(ShortcutManager.ShortcutID shortcutID, String text) {
+        Shortcut s = ShortcutManager.getUserShortcutByID(shortcutID);
+        if (s != null) {
+            return "<html>" + text + "<br> ( Shortcut: <b>" + s.getShortcutString() + " )</b</html>";
+        } else {
+            return text;
+        }
+    }
+
+    public AbstractButton getButton() { return this.button; }
+
+    /** getButtonNode() - Get the button node for this button
+     * @return ButtonNode - The button node for this button
+     * @see ButtonNode
+     */
+    public ButtonNode getButtonNode() { return this.buttonNode; }
+
+    /** getToolTip() - Get the current buttons tooltip text
+     * @return String - The current tooltip text
+     **/
+    public String getToolTip() { return button.getToolTipText(); }
+
+    /** forceShowToolTip() - Force the tooltip to show for any component
+     * @param component - The component to show the tooltip for
+     **/
+    public void forceShowToolTip(JComponent component) {
+        ToolTipManager.sharedInstance().mouseMoved(
+                new MouseEvent(component, MouseEvent.MOUSE_MOVED, System.currentTimeMillis(), 0,
+                        0, 0, 0, false));
     }
 
     /**
@@ -195,7 +248,7 @@ public abstract class BaseButton implements ButtonState, ActionListener, MouseLi
      * @param targetNode End point of the connection arrow
      * @param dualConnection Should it be drawn as a dual connection
      */
-    public static void drawArrowBetween(Graphics g, Point2D startNode, Point2D targetNode, boolean dualConnection, Color colour, boolean hidden) {
+    public static void drawArrowBetween(Graphics g, Point2D startNode, Point2D targetNode, boolean dualConnection, Color colour) {
 
         Graphics2D gTrans = (Graphics2D) g.create();
         Polygon p = new Polygon();
@@ -223,8 +276,8 @@ public abstract class BaseButton implements ButtonState, ActionListener, MouseLi
         double maxDistance = Math.sqrt(Math.pow((targetX - startX), 2) + Math.pow((targetY - startY), 2));
 
         //set the transparency level
-        float tr = (hidden) ? hiddenNodesTransparencyLevel:  1f;
-        gTrans.setComposite(AlphaComposite.SrcOver.derive(tr));
+        //float tr = (hidden) ? hiddenNodesTransparencyLevel:  1f;
+        //gTrans.setComposite(AlphaComposite.SrcOver.derive(tr));
         gTrans.setColor(colour);
 
         if (nodeSizeScaled >= 2.0) {
@@ -312,5 +365,31 @@ public abstract class BaseButton implements ButtonState, ActionListener, MouseLi
             // the node position, no visible gaps are seen between the node points.
             gTrans.drawLine((int) lineStartX, (int) lineStartY, (int) lineEndX, (int) (lineEndY));
         }
+    }
+
+    public static Color getConnectionColour(MapNode startNode, MapNode endNode, Connection.ConnectionType type) {
+        Color colour;
+        if (type == Connection.ConnectionType.DUAL) {
+            if (startNode.getFlag() == NODE_FLAG_SUBPRIO || endNode.getFlag() == NODE_FLAG_SUBPRIO) {
+                colour = colourConnectDualSubprio;
+            } else {
+                colour = colourConnectDual;
+            }
+        } else if (type == Connection.ConnectionType.REVERSE || type == Connection.ConnectionType.CROSSED_REVERSE) {
+            if (startNode.getFlag() == NODE_FLAG_REGULAR) {
+                colour = colourConnectReverse;
+            } else {
+                colour = colourConnectReverseSubprio;
+            }
+        } else if (type == Connection.ConnectionType.REGULAR || type == Connection.ConnectionType.CROSSED_REGULAR || type == Connection.ConnectionType.SUBPRIO) {
+            if (startNode.getFlag() == NODE_FLAG_REGULAR) {
+                colour = colourConnectRegular;
+            } else {
+                colour = colourConnectSubprio;
+            }
+        } else {
+            colour = Color.WHITE;
+        }
+        return colour;
     }
 }

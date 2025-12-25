@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Pixodesk SVG (https://pixodesk.com) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 20 20" text-rendering="geometricPrecision" shape-rendering="geometricPrecision" fill="none">
+  <g transform="translate(-0.25, 0.25)translate(0.25, -0.25)">
+    <path fill="#0aff00" stroke="#003a73" stroke-width="0" transform="translate(-6.25, 7.5)" d="M-1.25,0.5L-1.25,-15L11.75,-15L11.75,-14L-0.25,-14L-0.25,0.5L-1.25,0.5z"/>
+    <path fill="#0aff00" stroke="#003a73" stroke-width="0" transform="translate(0.75, 7)" d="M-2.25,0.5L-2.25,-7.75L6.25,-7.75L6.25,-6.75L-1.25,-6.75L-1.25,0.5L-2.25,0.5z"/>
+  </g>
+  <g transform="translate(0, 0.25)translate(0, -0.25)">
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(-7, -7)" rx="1.75" ry="1.75"/>
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(7, -7)" rx="1.75" ry="1.75"/>
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(-7, 7.5)" rx="1.75" ry="1.75"/>
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(-1, 7.25)" rx="1.75" ry="1.75"/>
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(7, -0.25)" rx="1.75" ry="1.75"/>
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(-1, -0.25)" rx="1.75" ry="1.75"/>
+  </g>
+</svg>

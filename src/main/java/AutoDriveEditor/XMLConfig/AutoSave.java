@@ -1,16 +1,16 @@
 package AutoDriveEditor.XMLConfig;
 
-import AutoDriveEditor.Utils.Classes.NameableThread;
+import AutoDriveEditor.Classes.NameableThread;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
 import static AutoDriveEditor.GUI.MapPanel.*;
-import static AutoDriveEditor.GUI.TextPanel.updateAutosaveStatusLabel;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogAutoSaveMenu.bDebugLogAutoSave;
 import static AutoDriveEditor.RoadNetwork.RoadMap.getRoadMap;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.EditorXML.autoSaveInterval;
 import static AutoDriveEditor.XMLConfig.EditorXML.maxAutoSaveSlots;
 import static AutoDriveEditor.XMLConfig.GameXML.autoSaveGameConfigFile;
@@ -23,7 +23,7 @@ public class AutoSave {
     @SuppressWarnings("rawtypes")
     public static ScheduledFuture scheduledFuture;
 
-    public static boolean bSuspendAutoSave;
+    private static boolean bAutoSaveSuspend;
 
     public static void startAutoSaveThread() {
         LOG.info("Starting AutoSave Thread");
@@ -39,7 +39,7 @@ public class AutoSave {
             }
         }, autoSaveInterval, autoSaveInterval, TimeUnit.MINUTES);
 //
-        LOG.info("Started AutoSave Thread ( Interval in Minutes {} , Max Slots {} )", autoSaveInterval, maxAutoSaveSlots);
+        LOG.info("Started AutoSave Thread ( Interval: {} Minutes , Max Slots {} )", autoSaveInterval, maxAutoSaveSlots);
     }
 
     public static void stopAutoSaveThread() {
@@ -54,8 +54,6 @@ public class AutoSave {
                 } else {
                     LOG.info("AutoSave thread stopped");
                 }
-                updateAutosaveStatusLabel();
-                //setAutosaveStatusLabel("Disabled", new Color(200, 0, 0));
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 scheduledExecutorService.shutdownNow();
@@ -73,11 +71,21 @@ public class AutoSave {
         }
     }
 
-    public static void suspendAutoSaving() { bSuspendAutoSave = true; }
+    public static void suspendAutoSaving() {
+        if (bDebugLogAutoSave && bAutoSaveSuspend) {
+            LOG.warn("## WARNING ## Suspend AutoSave received while already suspended");
+            new Exception().printStackTrace();
+        }
+        bAutoSaveSuspend = true; }
 
-    public static void resumeAutoSaving() { bSuspendAutoSave = false; }
+    public static void resumeAutoSaving() {
+        if (bDebugLogAutoSave && !bAutoSaveSuspend) {
+            LOG.warn("## WARNING ## Resuming AutoSave received while already enabled");
+            new Exception().printStackTrace();
+        }
+        bAutoSaveSuspend = false; }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    public static boolean canAutoSave() { return !bSuspendAutoSave; }
+    public static boolean canAutoSave() { return !bAutoSaveSuspend; }
 
 }

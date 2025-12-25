@@ -12,7 +12,7 @@ public class SaveRoutesXML extends JMenuItemBase {
     public static JMenuItem menu_SaveRoutesXML;
 
     public SaveRoutesXML() {
-        menu_SaveRoutesXML = makeMenuItem("menu_routes_save_xml",  "menu_routes_save_xml_accstring", false);
+        menu_SaveRoutesXML = makeMenuItem("menu_routes_save_xml", false);
     }
 
     @Override

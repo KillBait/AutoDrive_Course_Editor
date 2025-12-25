@@ -14,7 +14,7 @@ public class SaveConfigMenu extends JMenuItemBase {
     public static JMenuItem menu_SaveConfig;
 
     public SaveConfigMenu() {
-        menu_SaveConfig = makeMenuItem("menu_file_saveconfig",  "menu_file_saveconfig_accstring", KeyEvent.VK_S, InputEvent.ALT_DOWN_MASK, false);
+        menu_SaveConfig = makeMenuItem("menu_file_saveconfig", KeyEvent.VK_S, InputEvent.ALT_DOWN_MASK, false);
     }
 
     @Override

@@ -1,23 +1,21 @@
 package AutoDriveEditor.GUI.RenderThreads;
 
+import AutoDriveEditor.Classes.Util_Classes.ProfileUtil;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
-import AutoDriveEditor.Utils.ProfileUtil;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
 import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
-import static AutoDriveEditor.Classes.MapImage.pdaImage;
-import static AutoDriveEditor.GUI.Buttons.ConnectionSelectBaseButton.Connection;
-import static AutoDriveEditor.GUI.Buttons.ConnectionSelectBaseButton.connectionsList;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
+import static AutoDriveEditor.Classes.Util_Classes.MathUtils.normalizeAngle;
+import static AutoDriveEditor.GUI.MapImage.pdaImage;
 import static AutoDriveEditor.GUI.MapPanel.*;
-import static AutoDriveEditor.GUI.Menus.DebugMenu.ShowProfileInfo.bDebugShowProfileInfo;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.ShowRenderProfileInfo.bDebugShowRenderProfileInfo;
 import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_REGULAR;
 import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_SUBPRIO;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
-import static AutoDriveEditor.Utils.MathUtils.normalizeAngle;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 
 public class ConnectionDrawThread implements Runnable{
@@ -26,8 +24,12 @@ public class ConnectionDrawThread implements Runnable{
     // we only draw the connections in the visible area (plus some extra padding) so we don't see the
     // connections clipping.
 
+    private static ArrayList<MapNode> visibleNodes;
+
     private static volatile boolean isStopped = false;
-    private final ArrayList<ConnectionDrawThread.ConnectionDrawList> drawList = new ArrayList<>();
+//    private final LinkedList<ConnectionDrawList> drawList = new LinkedList<>();
+    private final ArrayList<ConnectionDrawList> drawList = new ArrayList<>();
+
 
     public static final ProfileUtil connectionComputeTimer = new ProfileUtil();
     public static final ProfileUtil connectionDrawTimer = new ProfileUtil();
@@ -48,6 +50,10 @@ public class ConnectionDrawThread implements Runnable{
             this.isDual = dual;
             this.isHidden = hidden;
         }
+    }
+
+    public static void setVisibleNodes(ArrayList<MapNode> nodeList) {
+        visibleNodes = nodeList;
     }
 
 
@@ -72,7 +78,7 @@ public class ConnectionDrawThread implements Runnable{
                     return;
                 }
 
-                if (bDebugShowProfileInfo) {
+                if (bDebugShowRenderProfileInfo) {
                     connectionDrawTimer.resetTimer();
                     connectionComputeTimer.resetTimer();
                     connectionComputeTimer.startTimer();
@@ -84,15 +90,15 @@ public class ConnectionDrawThread implements Runnable{
                     double offScreenDistance = 24;
                     Color colour;
 
-                    for (MapNode mapNode : RoadMap.networkNodesList) {
+                    for (MapNode mapNode : visibleNodes) {
                         if (topLeft.getX() - offScreenDistance < mapNode.x && bottomRight.getX() + offScreenDistance > mapNode.x && topLeft.getY() - offScreenDistance < mapNode.z && bottomRight.getY() + offScreenDistance > mapNode.z) {
-                            if (mapNode.outgoing.size() > 0) {
+                            if (!mapNode.outgoing.isEmpty()) {
                                 Point2D nodePos = worldPosToScreenPos(mapNode.x, mapNode.z);
                                 for (MapNode outgoing : mapNode.outgoing) {
                                     Point2D outPos = worldPosToScreenPos(outgoing.x, outgoing.z);
                                     int mapNodeFlag = (mapNode.getPreviewNodeFlagChange())? 1 - mapNode.flag : mapNode.flag;
                                     int outFlag = (outgoing.getPreviewNodeFlagChange())? 1 - outgoing.flag : outgoing.flag;
-                                    boolean hidden = (Connection.contains(connectionsList, mapNode, outgoing) != mapNode.isConnectionHidden(outgoing));
+                                    boolean hidden = mapNode.getPreviewConnectionHiddenList().contains(outgoing) != mapNode.isConnectionHidden(outgoing);
                                     if (RoadMap.isDual(mapNode, outgoing)) {
                                         if (!mapNode.getIgnoreDrawingConnectionsList().contains(outgoing)) {
                                             // for node type preview, if either node is subprio draw both arrows the correct colour
@@ -103,7 +109,7 @@ public class ConnectionDrawThread implements Runnable{
                                             }
                                             drawList.add(new ConnectionDrawList(nodePos, outPos, colour, true, hidden));
                                         }
-                                    } else if (RoadMap.isReverse(mapNode, outgoing)) {
+                                    } else if (RoadMap.isReverse(mapNode, outgoing) || RoadMap.isCrossedReverse(mapNode, outgoing)) {
                                         if (!mapNode.getIgnoreDrawingConnectionsList().contains(outgoing)) {
                                             if (mapNodeFlag == NODE_FLAG_REGULAR) {
                                                 colour = colourConnectReverse;
@@ -126,12 +132,12 @@ public class ConnectionDrawThread implements Runnable{
                         }
                     }
 
-                    if (bDebugShowProfileInfo) connectionComputeTimer.stopTimer();
+                    if (bDebugShowRenderProfileInfo) connectionComputeTimer.stopTimer();
                     drawLock.lock();
                     try {
-                        if (bDebugShowProfileInfo) connectionDrawTimer.startTimer();
+                        if (bDebugShowRenderProfileInfo) connectionDrawTimer.startTimer();
                         drawArrowList(renderGraphics, drawList);
-                        if (bDebugShowProfileInfo) connectionDrawTimer.stopTimer();
+                        if (bDebugShowRenderProfileInfo) connectionDrawTimer.stopTimer();
                     } finally {
                         drawLock.unlock();
                     }
@@ -144,104 +150,80 @@ public class ConnectionDrawThread implements Runnable{
     }
 
     private void drawArrowList(Graphics g, ArrayList<ConnectionDrawThread.ConnectionDrawList> nodeList) {
+        if (nodeList.isEmpty()) return;
 
-        if (nodeList.size() > 0) {
+        Graphics2D gTrans = (Graphics2D) g.create();
+        Polygon p = new Polygon();
 
-            double startX;
-            double startY;
-            double targetX;
-            double targetY;
+        for (ConnectionDrawThread.ConnectionDrawList mapNode : nodeList) {
 
-            Polygon p = new Polygon();
-            Graphics2D gTrans = (Graphics2D) g.create();
+            double angleRad = Math.atan2( mapNode.startPos.getY() - mapNode.endPos.getY(),
+                    mapNode.startPos.getX() - mapNode.endPos.getX()
+            );
 
-            for (ConnectionDrawThread.ConnectionDrawList mapNode : nodeList) {
+            double offsetX = nodeSizeScaledHalf * Math.cos(angleRad);
+            double offsetY = nodeSizeScaledHalf * Math.sin(angleRad);
 
-                startX = mapNode.startPos.getX();
-                startY = mapNode.startPos.getY();
-                targetX = mapNode.endPos.getX();
-                targetY = mapNode.endPos.getY();
+            double maxDistance = Math.sqrt(Math.pow(mapNode.endPos.getX() - mapNode.startPos.getX(), 2) + Math.pow(mapNode.endPos.getY() - mapNode.startPos.getY(), 2));
 
-                double angleRad = Math.atan2(startY - targetY, startX - targetX);
+            float tr = mapNode.isHidden ? hiddenNodesTransparencyLevel : 1f;
+            gTrans.setComposite(AlphaComposite.SrcOver.derive(tr));
+            gTrans.setColor(mapNode.colour);
 
-                double distCos = (nodeSizeScaledHalf) * Math.cos(angleRad);
-                double distSin = (nodeSizeScaledHalf) * Math.sin(angleRad);
+            if (nodeSizeScaled >= 2.0) {
+                double lineLength = maxDistance - nodeSizeScaled;
+                int diff = 0;
 
-                // calculate where the line starts based around the circumference of the start node
-
-                double lineStartX = startX - distCos;
-                double lineStartY = startY - distSin;
-
-                // calculate where to finish the line based around the circumference of the node
-
-                double lineEndX = targetX + distCos;
-                double lineEndY = targetY + distSin;
-
-                // Calculate the distance between the two points
-
-                double maxDistance = Math.sqrt(Math.pow((targetX - startX), 2) + Math.pow((targetY - startY), 2));
-
-                float tr = 1f;
-                if (mapNode.isHidden) tr = hiddenNodesTransparencyLevel;
-                gTrans.setComposite(AlphaComposite.SrcOver.derive(tr));
-                gTrans.setColor(mapNode.colour);
-
-                if (nodeSizeScaled >= 2.0) {
-                    double lineLength = maxDistance - nodeSizeScaled;
-                    int diff = 0;
-
-                    if (mapNode.isDual) {
-                        if (lineLength <= (nodeSizeScaled * 2)) {
-                            diff =(int) ((nodeSizeScaled * 2) - lineLength) / 2;
-                        }
-                    } else {
-                        if (lineLength <= nodeSizeScaled) {
-                            diff = (int) (nodeSizeScaled - lineLength);
-                        }
-                    }
-                    double adjustedArrowLength = ((nodeSize * zoomLevel) * 0.7) - (diff / 1.15);
-
-                    // Calculate where the center of the edge closest to the start point is
-                    double targetPolygonCenterX = targetX + (Math.cos(angleRad) * (adjustedArrowLength));
-                    double targetPolygonCenterY = targetY + (Math.sin(angleRad) * (adjustedArrowLength));
-
-                    double arrowLeft = normalizeAngle(angleRad + Math.toRadians(-20));
-                    double arrowLeftX = targetX + (Math.cos(arrowLeft) * adjustedArrowLength);
-                    double arrowLeftY = targetY + (Math.sin(arrowLeft) * adjustedArrowLength);
-
-                    double arrowRight = normalizeAngle(angleRad + Math.toRadians(20));
-                    double arrowRightX = targetX + (Math.cos(arrowRight) * adjustedArrowLength);
-                    double arrowRightY = targetY + (Math.sin(arrowRight) * adjustedArrowLength);
-
-                    if (maxDistance >= nodeSizeScaled) {
-                        if (bFilledArrows) {
-                            // filled arrows look better, but have a performance impact on the draw times
-                            p.addPoint((int) lineEndX, (int) lineEndY);
-                            p.addPoint((int) arrowLeftX, (int) arrowLeftY);
-                            //p.addPoint((int) targetPolygonCenterX, (int) targetPolygonCenterY);
-                            p.addPoint((int) arrowRightX, (int) arrowRightY);
-                            gTrans.fillPolygon(p);
-                            p.reset();
-                        } else {
-                            gTrans.drawLine((int) lineStartX, (int) lineStartY, (int) lineEndX, (int) (lineEndY));
-                            gTrans.drawLine((int) lineEndX, (int) lineEndY, (int) arrowLeftX, (int) arrowLeftY);
-                            gTrans.drawLine((int) lineEndX, (int) lineEndY, (int) arrowRightX, (int) arrowRightY);
-                        }
-                    }
-                    if (mapNode.isDual) {
-                        angleRad = normalizeAngle(angleRad+Math.PI);
-                        double startPolygonCenterX = startX + (Math.cos(angleRad) * adjustedArrowLength);
-                        double startPolygonCenterY = startY + (Math.sin(angleRad) * adjustedArrowLength);
-                        gTrans.drawLine((int) startPolygonCenterX, (int) startPolygonCenterY, (int) targetPolygonCenterX, (int) targetPolygonCenterY);
-                    } else {
-                        gTrans.drawLine((int) lineStartX, (int) lineStartY, (int) targetPolygonCenterX, (int) targetPolygonCenterY);
-
+                if (mapNode.isDual) {
+                    if (lineLength <= nodeSizeScaled * 2) {
+                        diff = (int) ((nodeSizeScaled * 2) - lineLength) / 2;
                     }
                 } else {
-                    // small zoomLevel's don't draw the actual Nodes, draw from the start to the end of
-                    // the node position, no visible gaps are seen between the node points.
-                    gTrans.drawLine((int) lineStartX, (int) lineStartY, (int) lineEndX, (int) lineEndY);
+                    if (lineLength <= nodeSizeScaled) {
+                        diff = (int) (nodeSizeScaled - lineLength);
+                    }
                 }
+
+                double adjustedArrowLength = (nodeSize * zoomLevel * 0.7) - (diff / 1.15);
+
+
+                double normalizedAngleRad = normalizeAngle(angleRad + Math.toRadians(-20));
+                int arrowLeftX = (int) (mapNode.endPos.getX() + Math.cos(normalizedAngleRad) * adjustedArrowLength);
+                int arrowLeftY = (int) (mapNode.endPos.getY() + Math.sin(normalizedAngleRad) * adjustedArrowLength);
+
+                double normalizedAngleRad2 = normalizeAngle(angleRad + Math.toRadians(20));
+                int arrowRightX = (int) (mapNode.endPos.getX() + Math.cos(normalizedAngleRad2) * adjustedArrowLength);
+                int arrowRightY = (int) (mapNode.endPos.getY() + Math.sin(normalizedAngleRad2) * adjustedArrowLength);
+
+                if (maxDistance >= nodeSizeScaled) {
+                    if (bFilledArrows) {
+                        p.addPoint((int) (mapNode.endPos.getX() + offsetX), (int) (mapNode.endPos.getY() + offsetY));
+                        p.addPoint(arrowLeftX, arrowLeftY);
+                        p.addPoint(arrowRightX, arrowRightY);
+                        gTrans.fillPolygon(p);
+                        p.reset();
+                    } else {
+                        gTrans.drawLine((int) (mapNode.startPos.getX() - offsetX), (int) (mapNode.startPos.getY() - offsetY),
+                                (int) (mapNode.endPos.getX() + offsetX), (int) (mapNode.endPos.getY() + offsetY));
+                        gTrans.drawLine((int) (mapNode.endPos.getX() + offsetX), (int) (mapNode.endPos.getY() + offsetY), arrowLeftX, arrowLeftY);
+                        gTrans.drawLine((int) (mapNode.endPos.getX() + offsetX), (int) (mapNode.endPos.getY() + offsetY), arrowRightX, arrowRightY);
+                    }
+                }
+
+                int targetPolygonCenterX = (int) (mapNode.endPos.getX() + Math.cos(angleRad) * adjustedArrowLength);
+                int targetPolygonCenterY = (int) (mapNode.endPos.getY() + Math.sin(angleRad) * adjustedArrowLength);
+
+                if (mapNode.isDual) {
+                    angleRad = normalizeAngle(angleRad + Math.PI);
+
+                    int startPolygonCenterX = (int) (mapNode.startPos.getX() + Math.cos(angleRad) * adjustedArrowLength);
+                    int startPolygonCenterY = (int) (mapNode.startPos.getY() + Math.sin(angleRad) * adjustedArrowLength);
+                    gTrans.drawLine(startPolygonCenterX, startPolygonCenterY, targetPolygonCenterX, targetPolygonCenterY);
+                } else {
+                    gTrans.drawLine((int) (mapNode.startPos.getX() - offsetX), (int) (mapNode.startPos.getY() - offsetY), targetPolygonCenterX, targetPolygonCenterY);
+                }
+            } else {
+                gTrans.drawLine((int) (mapNode.startPos.getX() - offsetX), (int) (mapNode.startPos.getY() - offsetY), (int) (mapNode.endPos.getX() + offsetX), (int) (mapNode.endPos.getY() + offsetY));
             }
         }
     }

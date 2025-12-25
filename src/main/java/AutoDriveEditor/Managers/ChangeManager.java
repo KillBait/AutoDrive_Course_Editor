@@ -1,9 +1,9 @@
 package AutoDriveEditor.Managers;
 
-import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogUndoRedoMenu.bDebugLogUndoRedo;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogUndoRedoMenu.bDebugLogUndoRedoInfo;
 import static AutoDriveEditor.GUI.Menus.EditMenu.RedoMenu.menu_Redo;
 import static AutoDriveEditor.GUI.Menus.EditMenu.UndoMenu.menu_Undo;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.AutoSave.resumeAutoSaving;
 import static AutoDriveEditor.XMLConfig.AutoSave.suspendAutoSaving;
 
@@ -32,19 +32,17 @@ public class ChangeManager {
     private Node currentIndex;
     //the parent node far left node.
     private final Node parentNode = new Node();
+
     /**
      * Creates a new ChangeManager object which is initially empty.
      */
     public ChangeManager(){
-        LOG.info("Initializing new ChangeManager");
-        menu_Undo.setEnabled(false);
-        menu_Redo.setEnabled(false);
-        currentIndex = parentNode;
+        LOG.info("  Initializing ChangeManager");
+
     }
 
      // Creates a new ChangeManager which is a duplicate of the parameter in both contents and current index.
 
-    @SuppressWarnings("unused")
     public ChangeManager(ChangeManager manager){
         this();
         currentIndex = manager.currentIndex;
@@ -55,6 +53,8 @@ public class ChangeManager {
     @SuppressWarnings("unused")
     public void clear(){
         currentIndex = parentNode;
+        menu_Undo.setEnabled(false);
+        menu_Redo.setEnabled(false);
     }
 
      // Add a Changeable to manage.
@@ -64,7 +64,7 @@ public class ChangeManager {
         currentIndex.right = node;
         node.left = currentIndex;
         currentIndex = node;
-        if (bDebugLogUndoRedo) LOG.info("addChangeable");
+        if (bDebugLogUndoRedoInfo) LOG.info("## ChangeManager.addChangeable() ## Adding Changable for {} : {}", changeable.getClass().getSimpleName(), changeable);
         menu_Undo.setEnabled(true);
     }
 
@@ -80,15 +80,13 @@ public class ChangeManager {
 
     public void undo(){
         //validate
-        suspendAutoSaving();
-
-        if ( !canUndo() ){
+        if (!canUndo() ){
             LOG.info("Reached Beginning of Undo History.");
             menu_Undo.setEnabled(false);
-            resumeAutoSaving();
             return;
-            //throw new IllegalStateException("Cannot undo. Index is out of range.");
         }
+        //suspend auto saving
+        suspendAutoSaving();
         //undo
         if (currentIndex.changeable != null) {
             currentIndex.changeable.undo();
@@ -97,6 +95,7 @@ public class ChangeManager {
         }
         //set index
         moveLeft();
+        // resume auto saving
         resumeAutoSaving();
     }
 
@@ -136,13 +135,13 @@ public class ChangeManager {
 
     public void redo(){
         //validate
-        suspendAutoSaving();
         if ( !canRedo() ){
             LOG.info("Reached End of Undo History.");
             menu_Redo.setEnabled(false);
-            resumeAutoSaving();
             return;
         }
+        // suspend auto saving
+        suspendAutoSaving();
         //reset index
         moveRight();
         //redo
@@ -151,7 +150,7 @@ public class ChangeManager {
         } else {
             LOG.info("Unable to Redo");
         }
-
+        // resume auto saving
         resumeAutoSaving();
     }
 

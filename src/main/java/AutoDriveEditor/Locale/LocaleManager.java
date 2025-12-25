@@ -1,110 +1,120 @@
 package AutoDriveEditor.Locale;
 
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Paths;
-import java.util.Locale;
-import java.util.ResourceBundle;
+import java.util.*;
 
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
 
+/**
+ * Manages the localization for the AutoDriveEditor application.
+ */
 public class LocaleManager {
 
+    // ResourceBundle to hold the localized strings.
     public static ResourceBundle localeString;
+    // Locale object to hold the current locale.
     public static Locale locale;
-    private static ResourceBundle getLocale(){
 
-        String localePath;
-        String classPath = null;
+    /**
+     * Retrieves the appropriate ResourceBundle based on the system's default locale.
+     * If the bundle is not found, it attempts to load it from predefined paths.
+     *
+     * @return ResourceBundle for the current locale.
+     */
+    private static ResourceBundle getLocale() {
+        LOG.info(">> System Locale: {}", Locale.getDefault());
 
         try {
-            ResourceBundle bundle = ResourceBundle.getBundle("locale.AutoDriveEditor", Locale.getDefault());
-            LOG.info("'AutoDriveEditor_{}.properties' loaded", Locale.getDefault());
-            return bundle;
+            return ResourceBundle.getBundle("locale.AutoDriveEditor", Locale.getDefault());
         } catch (Exception e) {
-            LOG.info("'AutoDriveEditor_{}.properties' not found. looking in folders", Locale.getDefault());
+            LOG.info(">> 'AutoDriveEditor_{}.properties' not found. Looking in folders", Locale.getDefault());
+            String[] paths = {"./", "./locale/", "./src/locale/", "./src/main/resources/locale/"};
 
-            // NOTE: the base folder for all locale checks is the same location as the editor JAR
-
-            // check for locale in same folder as JAR
-
-            localePath = "./AutoDriveEditor_" + Locale.getDefault() + ".properties";
-            if (Paths.get(localePath).toFile().exists()) {
-                classPath = "./";
-                LOG.info("Found External locale file : {}", localePath);
-            } else {
-                LOG.info("No locale found at : {}", localePath);
-            }
-
-            // check for locale in /locale/
-
-            if (classPath == null) {
-                localePath = "./locale/AutoDriveEditor_" + Locale.getDefault() + ".properties";
+            for (String path : paths) {
+                String localePath = path + "AutoDriveEditor_" + Locale.getDefault() + ".properties";
                 if (Paths.get(localePath).toFile().exists()) {
-                    classPath = "./locale/";
-                    LOG.info("Found External locale file : {}", localePath);
+                    LOG.info(">> Found External locale file: {}", localePath);
+                    return loadExternalLocale(path);
                 } else {
-                    LOG.info("No locale found at : {}", localePath);
+                    LOG.info(">> No locale found at: {}", localePath);
                 }
             }
 
-            // check for locale in src/locale/
-
-            if (classPath == null) {
-                localePath = "./src/locale/AutoDriveEditor_" + Locale.getDefault() + ".properties";
-                if (Paths.get(localePath).toFile().exists()) {
-                    classPath = "./src/locale/";
-                    LOG.info("Found External locale file : {}", localePath);
-                } else {
-                    LOG.info("No locale found at : {}", localePath);
-                }
-            }
-
-            // check for locale in src/main/resources/locale/
-
-            if (classPath == null) {
-                localePath = "./src/main/resources/locale/AutoDriveEditor_" + Locale.getDefault() + ".properties";
-                if (Paths.get(localePath).toFile().exists()) {
-                    classPath = "./src/main/resources/locale/";
-                    LOG.info("Found External locale file : {}", localePath);
-                } else {
-                    LOG.info("No locale found at : {}", localePath);
-                }
-            }
-
-            if (classPath != null) {
-                File file = new File(classPath);
-                URL[] urls = new URL[0];
-                try {
-                    urls = new URL[]{file.toURI().toURL()};
-                } catch (MalformedURLException ex) {
-                    ex.printStackTrace();
-                }
-                ClassLoader loader = new URLClassLoader(urls);
-                ResourceBundle bundle = ResourceBundle.getBundle("AutoDriveEditor", Locale.getDefault(), loader);
-                LOG.info("loading external locale File for {}", Locale.getDefault());
-                return bundle;
-            } else {
-                LOG.info("Locale file not found..Using default locale {}", new Locale("en", "US"));
-                return ResourceBundle.getBundle("locale.AutoDriveEditor", new Locale("en", "US"));
-            }
+            LOG.info(">> Locale file not found. Using default locale {}", new Locale("en", "US"));
+            return ResourceBundle.getBundle("locale.AutoDriveEditor", new Locale("en", "US"));
         }
     }
 
+    public static List<String[]> getLocalizedText(Element titleElement) {
+        List<String[]> localizedTexts = new ArrayList<>();
+
+        if (titleElement != null) {
+            NodeList childNodes = titleElement.getChildNodes();
+            for (int i = 0; i < childNodes.getLength(); i++) {
+                Node node = childNodes.item(i);
+                if (node.getNodeType() == Node.ELEMENT_NODE) {
+                    String language = node.getNodeName();
+                    String text = node.getTextContent().trim();
+                    localizedTexts.add(new String[]{language, text});
+                }
+            }
+        }
+
+        return localizedTexts;
+    }
+
+    /**
+     * Loads an external locale file from the specified class path.
+     *
+     * @param classPath The path to the external locale file.
+     * @return ResourceBundle loaded from the external file.
+     */
+    private static ResourceBundle loadExternalLocale(String classPath) {
+        try {
+            File file = new File(classPath);
+            URL[] urls = {file.toURI().toURL()};
+            ClassLoader loader = new URLClassLoader(urls);
+            LOG.info(">> Loading external locale File for {}", Locale.getDefault());
+            return ResourceBundle.getBundle("AutoDriveEditor", Locale.getDefault(), loader);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Sets the locale for the application by loading the appropriate ResourceBundle.
+     */
     public static void setLocale() {
         localeString = getLocale();
         locale = Locale.getDefault();
     }
 
+    /**
+     * Retrieves a localized string for the given key.
+     *
+     * @param key The key for the desired localized string.
+     * @return The localized string corresponding to the key.
+     */
     public static String getLocaleString(String key) {
         try {
             return localeString.getString(key);
-        } catch (Exception e) {
-            LOG.info("Localization error - unable to locate key '{}'", key);
+        } catch (NullPointerException e) {
+            LOG.info("Localization error - Null pointer from getString()");
+            e.printStackTrace();
+            return "";
+        } catch (MissingResourceException e) {
+            LOG.info("Localization error - Missing key '{}'", key);
+            e.printStackTrace();
             return key;
         }
-
     }
 }

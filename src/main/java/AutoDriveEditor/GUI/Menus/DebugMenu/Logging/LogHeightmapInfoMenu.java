@@ -10,7 +10,7 @@ public class LogHeightmapInfoMenu extends JCheckBoxMenuItemBase {
     public static boolean bDebugLogHeightMapInfo;
 
     public LogHeightmapInfoMenu() {
-        makeCheckBoxMenuItem("menu_debug_log_heightmap_info", "menu_debug_log_heightmap_info_accstring", false, true);
+        makeCheckBoxMenuItem("menu_debug_log_heightmap", false, true);
     }
 
     @Override

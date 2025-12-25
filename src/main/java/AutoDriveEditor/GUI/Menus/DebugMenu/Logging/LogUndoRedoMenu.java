@@ -7,16 +7,16 @@ import java.awt.event.ItemEvent;
 
 public class LogUndoRedoMenu extends JCheckBoxMenuItemBase {
 
-    public static boolean bDebugLogUndoRedo;
+    public static boolean bDebugLogUndoRedoInfo;
 
     public LogUndoRedoMenu() {
-        makeCheckBoxMenuItem("menu_debug_log_undo_redo", "menu_debug_log_undo_redo_accstring", false, true);
+        makeCheckBoxMenuItem("menu_debug_log_undo_redo", false, true);
     }
 
     @Override
     public void itemStateChanged(ItemEvent e) {
         super.itemStateChanged(e);
         AbstractButton menuItem = (AbstractButton) e.getItem();
-        bDebugLogUndoRedo = menuItem.isSelected();
+        bDebugLogUndoRedoInfo = menuItem.isSelected();
     }
 }

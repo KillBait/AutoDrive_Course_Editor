@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Pixodesk SVG (https://pixodesk.com) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 20 20" text-rendering="geometricPrecision" shape-rendering="geometricPrecision" fill="none">
+  <g transform="translate(-0.125, -0.125)translate(0.125, 0.125)">
+    <path fill="#00ff23" stroke="#003a73" stroke-width="0" transform="translate(-6.2435, -6.847)" d="M-1.2565,-1.903L6.2435,2.097L13.9303,-1.6933L14.4935,-0.403L6.2435,3.847L-2.2565,-0.653L-1.2565,-1.903z"/>
+    <path fill="#00ff23" stroke="#003a73" stroke-width="0" transform="translate(-6.2435, 4.9029)" d="M-1.7565,2.0971L6.2435,2.0971L13.9935,2.0971L13.9935,3.5971L6.2435,3.5971L-2.0065,3.5971L-1.7565,2.0971z"/>
+  </g>
+  <g transform="translate(0, -5.8566)translate(0, 5.8566)">
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(0, -4)translate(0, 4)" cx="0.0111" cy="-3.9632" rx="1.75" ry="1.75"/>
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(7.739, -7.7869)translate(0, 4)" cx="0.011" cy="-3.9631" rx="1.75" ry="1.75"/>
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(-7.761, -7.7869)translate(0, 4)" cx="0.011" cy="-3.9631" rx="1.75" ry="1.75"/>
+  </g>
+  <g transform="translate(0, 7.75)translate(0, -7.75)">
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(-0.011, 7.7131)translate(0, 4)" cx="0.011" cy="-3.9631" rx="1.75" ry="1.75"/>
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(-7.761, 7.7131)translate(0, 4)" cx="0.011" cy="-3.9631" rx="1.75" ry="1.75"/>
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(7.739, 7.7131)translate(0, 4)" cx="0.011" cy="-3.9631" rx="1.75" ry="1.75"/>
+  </g>
+  <g transform="translate(0, -0.125)translate(0, 0.125)">
+    <path fill="#000000" stroke="#003a73" stroke-width="0" transform="translate(0.5, -1.25)" d="M0.25,0L-1.25,0L-1.25,3.75L-2.5,3.75L-0.5,6.25L1.5,3.75L0.25,3.75L0.25,0z"/>
+    <path fill="#000000" stroke="#003a73" stroke-width="0" transform="translate(-6.25, -5.25)" d="M0.25,0L-1.25,0L-1.25,3.75L-2.5,3.75L-0.5,6.25L1.5,3.75L0.25,3.75L0.25,0z"/>
+    <path fill="#000000" stroke="#003a73" stroke-width="0" transform="translate(7.25, -5.25)" d="M0.25,0L-1.25,0L-1.25,3.75L-2.5,3.75L-0.5,6.25L1.5,3.75L0.25,3.75L0.25,0z"/>
+  </g>
+</svg>

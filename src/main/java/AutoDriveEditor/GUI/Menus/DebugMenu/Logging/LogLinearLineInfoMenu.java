@@ -10,7 +10,7 @@ public class LogLinearLineInfoMenu extends JCheckBoxMenuItemBase {
     public static boolean bDebugLogLinearlineInfo;
 
     public LogLinearLineInfoMenu() {
-        makeCheckBoxMenuItem("menu_debug_log_linearline_info", "menu_debug_log_linearline_info_accstring", false, true);
+        makeCheckBoxMenuItem("menu_debug_log_linearline", false, true);
     }
 
     @Override

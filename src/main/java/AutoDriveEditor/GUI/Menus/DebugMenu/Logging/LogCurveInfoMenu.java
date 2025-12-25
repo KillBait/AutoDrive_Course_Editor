@@ -10,7 +10,7 @@ public class LogCurveInfoMenu extends JCheckBoxMenuItemBase {
     public static boolean bDebugLogCurveInfo;
 
     public LogCurveInfoMenu() {
-        makeCheckBoxMenuItem("menu_debug_log_curve_info", "menu_debug_log_curve_info_accstring", false, true);
+        makeCheckBoxMenuItem("menu_debug_log_curve", false, true);
     }
 
     @Override

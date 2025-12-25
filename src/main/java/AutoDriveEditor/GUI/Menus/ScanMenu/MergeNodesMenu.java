@@ -12,7 +12,7 @@ public class MergeNodesMenu extends JMenuItemBase {
     public static JMenuItem menu_MergeNodes;
 
     public MergeNodesMenu() {
-        menu_MergeNodes = makeMenuItem("menu_scan_merge", "menu_scan_merge_accstring", false);
+        menu_MergeNodes = makeMenuItem("menu_scan_merge", false);
     }
 
     @Override

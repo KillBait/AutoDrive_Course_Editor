@@ -10,7 +10,7 @@ public class LogConnectSelectionMenu extends JCheckBoxMenuItemBase {
     public static boolean bDebugConnectSelection;
 
     public LogConnectSelectionMenu() {
-        makeCheckBoxMenuItem("menu_debug_log_connection_selection_info", "menu_debug_log_connection_selection_info_accstring", false, true);
+        makeCheckBoxMenuItem("menu_debug_log_connection_selection", false, true);
     }
 
     @Override

@@ -1,24 +1,33 @@
 package AutoDriveEditor.GUI.Buttons;
 
+import AutoDriveEditor.Managers.ButtonManager;
 import AutoDriveEditor.Managers.ChangeManager;
 import AutoDriveEditor.RoadNetwork.MapNode;
 
+import java.awt.*;
 import java.awt.event.MouseEvent;
-import java.util.LinkedList;
+import java.util.ArrayList;
 
+import static AutoDriveEditor.AutoDriveEditor.curveManager;
 import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
-import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.cubicCurve;
-import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.isCubicCurveCreated;
-import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.isQuadCurveCreated;
-import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
 import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.Managers.MultiSelectManager.*;
+import static AutoDriveEditor.Managers.ScanManager.checkNodeOverlap;
 import static AutoDriveEditor.XMLConfig.AutoSave.resumeAutoSaving;
 import static AutoDriveEditor.XMLConfig.AutoSave.suspendAutoSaving;
 
-public abstract class AlignBaseButton extends BaseButton {
+public abstract class AlignBaseButton extends BaseButton implements ButtonManager.ToolTipBuilder {
 
     protected abstract void adjustNodesTo(MapNode toNode);
+
+    protected final int ALIGN_NONE = 0;
+    protected final int ALIGN_HORIZONTAL = 1;
+    protected final int ALIGN_VERTICAL = 2;
+
+    protected int direction = 0; // 0 = horizontal, 1 = vertical, 2 = depth
+
+    private MapNode alignNode;
+    private boolean drawLine;
 
     @Override
     public Boolean useMultiSelection() { return true; }
@@ -28,51 +37,85 @@ public abstract class AlignBaseButton extends BaseButton {
         super.mouseClicked(e);
         if (e.getButton() == MouseEvent.BUTTON1) {
             MapNode clickedNode = getNodeAtScreenPosition(e.getX(), e.getY());
-            if (multiSelectList.size() > 0 && isMultipleSelected &&  clickedNode != null) {
+            if (!multiSelectList.isEmpty() && isMultipleSelected &&  clickedNode != null) {
                 suspendAutoSaving();
                 adjustNodesTo(clickedNode);
-                if (quadCurve != null && isQuadCurveCreated) quadCurve.updateCurve();
-                if (cubicCurve != null && isCubicCurveCreated) cubicCurve.updateCurve();
+                if (curveManager.isCurvePreviewCreated()) curveManager.updateAllCurves();
                 setStale(true);
                 clearMultiSelection();
                 getMapPanel().repaint();
                 resumeAutoSaving();
+                drawLine = false;
+            }
+        }
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        if (!multiSelectList.isEmpty() && isMultipleSelected) {
+            alignNode = getNodeAtScreenPosition(e.getX(), e.getY());
+            drawLine = alignNode != null;
+        }
+    }
+
+    @Override
+    public void drawToScreen(Graphics g) {
+        if (drawLine && !multiSelectList.isEmpty() && isMultipleSelected) {
+            if (alignNode != null) {
+                Graphics2D gTemp = (Graphics2D) g.create();
+                Point nodeScreenPos = worldPosToScreenPos(alignNode.x, alignNode.z);
+                BasicStroke bsDash = new BasicStroke(3, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 1.0f, new float[]{8f, 0f, 4f}, 3f);
+                gTemp.setComposite(AlphaComposite.SrcOver.derive(0.5f));
+                gTemp.setStroke(bsDash);
+                gTemp.setColor(Color.WHITE);
+                if (direction == ALIGN_HORIZONTAL) {
+                    gTemp.drawLine(0, nodeScreenPos.y, getMapPanel().getWidth(), nodeScreenPos.y);
+                } else if (direction == ALIGN_VERTICAL) {
+                    gTemp.drawLine(nodeScreenPos.x, 0, nodeScreenPos.x, getMapPanel().getHeight());
+                }
+                gTemp.dispose();
             }
         }
     }
 
     public static class AlignmentChanger implements ChangeManager.Changeable {
         private final Boolean isStale;
-        private final LinkedList<ZStore> nodeList;
+        private final ArrayList<ZStore> nodeList;
 
-        public AlignmentChanger(LinkedList<MapNode> multiSelectList, double x, double y, double z){
+        public AlignmentChanger(ArrayList<MapNode> nodeList, double x, double y, double z){
             super();
             this.isStale = isStale();
-            this.nodeList = new LinkedList<>();
+            this.nodeList = new ArrayList<>();
 
-            for (MapNode node : multiSelectList) {
-                nodeList.add(new ZStore(node, x, y, z));
+            for (MapNode node : nodeList) {
+                this.nodeList.add(new ZStore(node, x, y, z));
             }
         }
 
         public void undo() {
+            suspendAutoSaving();
             for (ZStore storedNode : nodeList) {
                 storedNode.mapNode.x += storedNode.diffX;
                 storedNode.mapNode.y += storedNode.diffY;
                 storedNode.mapNode.z += storedNode.diffZ;
+                checkNodeOverlap(storedNode.mapNode);
             }
-            getMapPanel().repaint();
             setStale(this.isStale);
+            resumeAutoSaving();
+            getMapPanel().repaint();
         }
 
         public void redo() {
+            suspendAutoSaving();
             for (ZStore storedNode : nodeList) {
                 storedNode.mapNode.x -= storedNode.diffX;
                 storedNode.mapNode.y -= storedNode.diffY;
                 storedNode.mapNode.z -= storedNode.diffZ;
+                checkNodeOverlap(storedNode.mapNode);
             }
-            getMapPanel().repaint();
             setStale(true);
+            resumeAutoSaving();
+            getMapPanel().repaint();
         }
 
         private static class ZStore {

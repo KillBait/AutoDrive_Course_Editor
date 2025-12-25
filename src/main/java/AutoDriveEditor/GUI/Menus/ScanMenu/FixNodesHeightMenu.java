@@ -8,17 +8,17 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 import static AutoDriveEditor.AutoDriveEditor.editor;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
 import static AutoDriveEditor.GUI.MapPanel.getYValueFromHeightMap;
 import static AutoDriveEditor.GUI.MapPanel.roadMap;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public class FixNodesHeightMenu extends JMenuItemBase {
 
     public static JMenuItem menu_FixNodesHeight;
 
     public FixNodesHeightMenu() {
-        menu_FixNodesHeight = makeMenuItem("menu_heightmap_fix_nodes", "menu_heightmap_fix_nodes_accstring", false);
+        menu_FixNodesHeight = makeMenuItem("menu_scan_fix_node_height", false);
     }
 
     @Override

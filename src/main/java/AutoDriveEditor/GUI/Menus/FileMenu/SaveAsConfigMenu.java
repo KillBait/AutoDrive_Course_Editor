@@ -10,9 +10,9 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 
 import static AutoDriveEditor.AutoDriveEditor.editor;
+import static AutoDriveEditor.Classes.Util_Classes.FileUtils.getSelectedFileWithExtension;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.Utils.FileUtils.getSelectedFileWithExtension;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.GameXML.*;
 
 public class SaveAsConfigMenu extends JMenuItemBase {
@@ -20,7 +20,7 @@ public class SaveAsConfigMenu extends JMenuItemBase {
     public static JMenuItem menu_SaveConfigAs;
 
     public SaveAsConfigMenu() {
-        menu_SaveConfigAs = makeMenuItem("menu_file_saveasconfig",  "menu_file_saveasconfig_accstring", KeyEvent.VK_A, InputEvent.ALT_DOWN_MASK, false);
+        menu_SaveConfigAs = makeMenuItem("menu_file_saveasconfig", KeyEvent.VK_A, InputEvent.ALT_DOWN_MASK, false);
     }
 
     @Override
@@ -50,7 +50,7 @@ public class SaveAsConfigMenu extends JMenuItemBase {
 
         if (fc.showSaveDialog(editor) == JFileChooser.APPROVE_OPTION) {
             lastUsedLocation = fc.getCurrentDirectory().getAbsolutePath();
-            LOG.info("{} {}", getLocaleString("console_config_save_as"), getSelectedFileWithExtension(fc));
+            LOG.info("new filename for config is {}", getSelectedFileWithExtension(fc));
             saveGameConfig(getSelectedFileWithExtension(fc).toString(), false, false);
         }
     }

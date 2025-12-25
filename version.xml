@@ -1,17 +1,151 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <AutoDriveEditor>
-    <latest_version>1.0.8</latest_version>
+    <latest_version>1.1.0</latest_version>
     <version_notes><![CDATA[<html>
         <head>
             <title>Version Notes</title>
         </head>
         <body>
-            <h3 style="font-family:verdana;">Update to v1.0.8</h2>
-            <p><u>Fixed</u></p>
+            <h3 style="font-family:verdana;">Update to v1.1.0</h2>
+
             <ul>
-                <li>Fixed Editor not applying correct default window height when no config found.</li>
-                <li>Fixed 'Display HeightMap' not working after heightmap import.</li>
-                <li>Fixed 'Save Imported Image' not working.</li>
+                <li>This update contains a huge amount of code changes, Some new bugs may appear.</li>
+                <li style="list-style-type: none; margin-left: 10px">Please report any bugs found on the GitHub issues page.</li>
+                <li>This version has a total UI overhaul in all area's. Any feedback is appreciated.</li>
+            </ul>
+
+            <p><u>Added</u></p>
+
+            <ul>
+                <li>Added Theme support. (48 Themes included by default)
+                    <ul>
+                        <li>User generated themes are supported.</li>
+                    </ul>
+                <li>Added customizable keybind support.
+                    <ul>
+                        <li>Added additional 25 keybinds.</li>
+                    </ul>
+                </li>
+                <li>Added movement widget</li>
+                <li>Added the ability to get map images direct from a maps zip file.
+                    <ul>
+                        <li>It will try to extract both the map/heightmap images from the maps zip file</li>
+                        <li>A preview window will show the converted images for confirmation by user.</li>
+                        <li>It will autodetect the appropriate folder name to save the files to.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <p><u>Changes</u></p>
+
+            <ul>
+                <li>Added basic log viewer, will get updates in future versions.</li>
+                <li>Added basic render manager to fix the remaining draw order issue's.</li>
+                <li>Complete UI overhaul
+                    <ul>
+                        <li>All custom UI elements support theme preferences.</li>
+                        <li>Moved some menu options to button dropdown panels.</li>
+                        <li>Re-arranged remaining menu items to a more logical order.</li>
+                        <li>Replaced all icons with new SVG format variants.</li>
+                        <li>Text panel at bottom of window can now be toggled on/off. ( off by default )</li>
+                        <li>Moved all configuration buttons to be above map panel.</li>
+                        <li>Swapped lower right Autosave + Map Info panels for buttons</li>
+                        <li>Changed side panel buttons to a floating toolbar over the displayed map.
+                        <li>Each group of side panel buttons can be expanded/collapsed to save space</li>
+                        <li>Editor preferences UI has been redone completely.
+                        <li>Renamed "Node Colours" tab in config to "Colours" and added more options.</li>
+                        <li>Replaced ColorPicker from previous versions with my own implementation.</li>
+                        <li>Added default curve type and priority to Curves preferences tab.</li>
+                        <li>Added movement widget configuration screen with many configurable options.</li>
+                        <li>Added Theme configuration screen.</li>
+                        <li>Added Keybind configuration screen.</li>
+                    </ul>
+                </li>
+                <li>MapPanel code
+                    <ul>
+                        <li>Small reduction in memory usage of MapPanel.</li>
+                        <li>Modified the background image drawing to use sub-pixel rendering.</li>
+                        <li style="list-style-type: none; margin-left: 10px">No more jerky image movement while moving around the map.!</li>
+                        <li>Fixed precision issue's that caused the grid to not align with the map image.</li>
+                        <li>Fixed grid aligning issues with odd numbered snapping values.</li>
+                    </ul>
+                </li>
+                <li> Image Importing
+                    <ul>
+                        <li>Modified the DDSReader code to drastically reduce memory usage.
+                        <li>Swapped buffering of DDS image in memory to chunk loading.
+                        <li style="list-style-type: none; margin-left: 10px"><b>NOTE</b>: Slightly increases conversion times, but the trade-off is acceptable.</li>
+                        <li>Tested multiple decode of upto 8192x8192 DDS Files with Xmx memory set at 1024MB.
+                        <li style="list-style-type: none; margin-left: 10px">Previous versions failed 100% of the time with XmX memory set at 1024MB.</li>
+                        <li style="list-style-type: none; margin-left: 10px">Should no longer see the DDS Decode OutOfMemory error, Please report if you do. </li>
+                        <li>Added progress bar to the DDS conversion, avoids the editor looking like it's frozen.</li>
+                    </ul>
+                </li>
+                <li> Node Height Calculation
+                    <ul>
+                        <li>Updated node height calculation from terrain, general improvement in accuracy.</li>
+                        <li style="list-style-type: none; margin-left: 10px">Drastically reduces the chances of nodes being under the terrain, but</li>
+                        <li style="list-style-type: none; margin-left: 10px">the trade-off is that they can be slightly higher than previous versions</li>
+                    </ul>
+                </li>
+                <li>Undo/Redo
+                    <ul>
+                        <li>Completely re-done the underlying code for undo/redo.</li>
+                        <li style="list-style-type: none; margin-left: 10px">Any critical changes to a node network is now handled by only the SnapShot class.</li>
+                        <li style="list-style-type: none; margin-left: 10px">Hopefully this kills the long-standing/hard to track down network corruption bug.</li>
+                    </ul>
+                </li>
+                <li>Curve changes.
+                    <ul>
+                        <li>Complete re-write of all curve code, added functionality, removed duplicate code.</li>
+                        <li>Added CurveManager class to maintain all curve creation/removal.</li>
+                        <li>Added preliminary support for registering other curve types.</li>
+                        <li style="list-style-type: none; margin-left: 10px">No release ready examples, one development type is included.</li>
+                        <li>Added a flip path direction button to curvePanel.</li>
+                        <li style="list-style-type: none; margin-left: 10px">It will swap the start/end/control points to maintain the curve shape.</li>
+                        <li>Combined all the current Bézier curve types into a single button.</li>
+                        <li>You can now adjust the number of control points while previewing the curve.</li>
+                        <li>Many curves can be active at the same time.</li>
+                        <li>Curve panel will auto adjust to the currently selected curve</li>
+                        <li>On curve commit, any existing nodes that overlap the preview nodes
+                        <li style="list-style-type: none; margin-left: 10px">will be used instead on generating new ones.</li>
+                        <li>If multiple curves in progress, any curve can be cancelled/commited by</li>
+                        <li style="list-style-type: none; margin-left: 10px">selecting any of the curves control nodes and pressing commit/cancel in</li>
+                        <li style="list-style-type: none; margin-left: 10px">the CurvePanel</li>
+                        <li>First control node will be automatically selected on new curve creation.</li>
+                        <li>When adding a new control node, it will be automatically selected.</li>
+                        <li>Last selected control node is remembered on button selection/deselection.</li>
+                    </ul>
+                </li>
+                <li>LinearLine Changes
+                    <ul>
+                        <li>LinearLine type can be changed while in progress using the assign shortcut key.</li>
+                        <li>Linearline end points will now snap to any existing points close to it.
+                    </ul>
+                </li>
+                <li>Added visual indicator to alignment buttons to show align axis</li>
+                <li>Added a confirm dialog to menu item "Clear List", avoids accidental deletions.</li>
+                <li>Updated Log4J to version 2.25.3</li>
+                <li>Removed all dependencies for ColorPicker.</li>
+            </ul>
+
+            <p><u>Fixes</u></p>
+
+            <ul>
+                <li>Fixed multi select edge case with curve control nodes.</li>
+                <li>Fixed in progress curves persisting after loading a different config.</li>
+                <li>Fixed create end node of linear lines not working.</li>
+                <li>Fixed decimal issues with PropertyChangeNumberFilter.</li>
+                <li>Fixed none fatal NullPointerException in EventTriggerNumberFilter.</li>
+                <li>Fixed incorrect search time being calculated for KDTree search.</li>
+                <li>Fixed many small rendering issues.</li>
+            </ul>
+
+            <p><u>Localization</u></p>
+
+            <ul>
+                <li>Added a lot of new strings to support the updated UI.</li>
+                <li>Removed a lot of unnecessary/redundant entry's.</li>
             </ul>
             <p>Visit the Release Page <a href="https://github.com/KillBait/AutoDrive_Course_Editor/releases">Here</a>.</p>
         </body>

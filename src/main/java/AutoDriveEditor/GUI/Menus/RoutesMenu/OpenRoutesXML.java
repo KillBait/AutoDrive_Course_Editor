@@ -20,7 +20,7 @@ import static AutoDriveEditor.XMLConfig.RoutesXML.loadRouteManagerXML;
 
 public class OpenRoutesXML extends JMenuItemBase {
 
-    public OpenRoutesXML() { makeMenuItem("menu_routes_load_xml",  "menu_routes_load_xml_accstring", true );}
+    public OpenRoutesXML() { makeMenuItem("menu_routes_load_xml", true );}
 
     @Override
     public void actionPerformed(ActionEvent e) {

@@ -10,7 +10,7 @@ public class LogFlipConnectionMenu extends JCheckBoxMenuItemBase {
     public static boolean bDebugLogFlipConnection;
 
     public LogFlipConnectionMenu() {
-        makeCheckBoxMenuItem("menu_debug_log_flip_connection_info", "menu_debug_log_flip_connection_info_accstring", false, true);
+        makeCheckBoxMenuItem("menu_debug_log_flip_connection", false, true);
     }
 
     @Override

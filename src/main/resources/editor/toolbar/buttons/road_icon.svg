@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Pixodesk SVG (https://pixodesk.com) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 20 20" text-rendering="geometricPrecision" shape-rendering="geometricPrecision">
+  <path fill="#b1b1b1" stroke="#7f96ae" stroke-width="0" transform="rotate(-90)translate(-8, -8)" d="M15,-1L15,17L1,17L1,-1L15,-1z"/>
+  <path fill="#6f6f6f" stroke="#fff900" stroke-dashoffset="3.5" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="0.25" stroke-dasharray="2 2 2 2 2 2" transform="translate(6.5, 5.5)rotate(-90)" d="M1.5,1L1.5,-14"/>
+  <path fill="#6f6f6f" stroke="#fff900" stroke-dashoffset="3.5" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="0.25" stroke-dasharray="2 2 2 2 2 2" transform="translate(7, -3.5)rotate(-90)" d="M0.5,0.5L0.5,-14.5"/>
+  <path fill="#818181" stroke="#3c3c3c" stroke-width="0.75" transform="translate(8, 0)rotate(-90)" d="M0,1L0,-17"/>
+</svg>

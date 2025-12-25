@@ -1,7 +1,7 @@
 package AutoDriveEditor.GUI.Menus.ScanMenu;
 
+import AutoDriveEditor.Classes.UI_Components.LabelNumberFilter;
 import AutoDriveEditor.GUI.Menus.JMenuItemBase;
-import AutoDriveEditor.Utils.Classes.LabelNumberFilter;
 
 import javax.swing.*;
 import javax.swing.text.PlainDocument;
@@ -18,7 +18,7 @@ public class ScanNetworkMenu extends JMenuItemBase {
     public static JMenuItem menu_ScanNetwork;
 
     public ScanNetworkMenu() {
-        menu_ScanNetwork = makeMenuItem("menu_scan_overlap", "menu_scan_overlap_accstring", false);
+        menu_ScanNetwork = makeMenuItem("menu_scan_overlap", false);
     }
 
     @Override

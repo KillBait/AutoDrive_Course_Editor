@@ -8,11 +8,13 @@ import java.io.File;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-import static AutoDriveEditor.GUI.EditorImages.getGameIcon;
-import static AutoDriveEditor.GUI.EditorImages.getRouteIcon;
+import static AutoDriveEditor.AutoDriveEditor.curveManager;
+import static AutoDriveEditor.AutoDriveEditor.editor;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
 import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.Managers.IconManager.getGameIcon;
+import static AutoDriveEditor.Managers.IconManager.getRouteIcon;
 import static AutoDriveEditor.XMLConfig.GameXML.loadGameConfig;
 import static AutoDriveEditor.XMLConfig.RoutesXML.loadRouteManagerXML;
 
@@ -26,14 +28,14 @@ public class RecentFilesMenu extends JMenuBase {
     private static JMenu recentSubMenu;
 
     public RecentFilesMenu() {
-        recentSubMenu = makeSubMenu("menu_file_recent","menu_file_recent_accstring", true);
+        recentSubMenu = makeSubMenu("menu_file_recent", true);
 
-        // create the shared actionListener used by all the previous file menus
+        // createSetting the shared actionListener used by all the previous file menus
         recentMenuItemListener = e -> {
             RecentJMenuItem menuItem = (RecentJMenuItem) e.getSource();
             String filePath = menuItem.getConfigPath();
-            LOG.info("Recent File List:- selected '{}'", menuItem.getConfigPath());
             checkIfConfigIsStaleAndConfirmSave();
+            curveManager.cancelAllCurves();
             if (menuItem.getConfigType() == CONFIG_SAVEGAME) {
                 loadGameConfig(new File(filePath));
             } else if (menuItem.getConfigType() == CONFIG_ROUTEMANAGER) {
@@ -42,12 +44,15 @@ public class RecentFilesMenu extends JMenuBase {
 
         };
 
-        // create an actionListener for the clear list menu item.
+        // createSetting an actionListener for the clear list menu item.
         clearListListener = e -> {
-            recentFilesList.clear();
-            recentSubMenu.removeAll();
+            int result = JOptionPane.showConfirmDialog(editor, getLocaleString("dialog_recent_clear"), "AutoDrive Editor", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (result == JOptionPane.OK_OPTION) {
+                recentFilesList.clear();
+                recentSubMenu.removeAll();
+            }
         };
-        if (recentFilesList.size() > 0 ) recreateRecentFilesMenu();
+        if (!recentFilesList.isEmpty()) recreateRecentFilesMenu();
     }
 
     public static void addToRecentFiles(String newPath, int configType) {
@@ -78,12 +83,22 @@ public class RecentFilesMenu extends JMenuBase {
 
         // Add the new path to the top of the list
         recentFilesList.addFirst(new RecentEntry(newPath, configType));
-        // remove the old menu items and re-make them to the new list order
+        // removeOriginalNodes the old menu items and re-make them to the new list order
         recreateRecentFilesMenu();
     }
 
     private static void recreateRecentFilesMenu() {
         recentSubMenu.removeAll();
+        if (!recentFilesList.isEmpty()) {
+            JMenuItem removeMenuItem = new JMenuItem();
+            String text = getLocaleString("menu_file_recent_clear");
+            removeMenuItem.setText(text);
+            removeMenuItem.getAccessibleContext().setAccessibleDescription(text);
+            removeMenuItem.setEnabled(true);
+            removeMenuItem.addActionListener(clearListListener);
+            recentSubMenu.add(removeMenuItem);
+            recentSubMenu.addSeparator();
+        }
         int i = 1;
         for (RecentEntry entry : recentFilesList) {
             String displayText = i + ") " + ((entry.path.length() > MAX_DISPLAY_LENGTH) ? "..." + entry.path.substring(entry.path.length() - MAX_DISPLAY_LENGTH) : entry.path);
@@ -98,15 +113,6 @@ public class RecentFilesMenu extends JMenuBase {
             newItem.addActionListener(recentMenuItemListener);
             recentSubMenu.add(newItem);
             i++;
-        }
-        recentSubMenu.addSeparator();
-        if (recentFilesList.size() > 0) {
-            JMenuItem removeMenuItem = new JMenuItem();
-            removeMenuItem.setText(getLocaleString("menu_file_recent_clear"));
-            removeMenuItem.getAccessibleContext().setAccessibleDescription(getLocaleString("menu_file_recent_clear_accstring"));
-            removeMenuItem.setEnabled(true);
-            removeMenuItem.addActionListener(clearListListener);
-            recentSubMenu.add(removeMenuItem);
         }
     }
 

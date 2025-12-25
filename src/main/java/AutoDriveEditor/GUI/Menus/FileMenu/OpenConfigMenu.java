@@ -9,9 +9,10 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
 
+import static AutoDriveEditor.AutoDriveEditor.curveManager;
 import static AutoDriveEditor.AutoDriveEditor.editor;
+import static AutoDriveEditor.Classes.Util_Classes.FileUtils.createFileChooser;
 import static AutoDriveEditor.GUI.MapPanel.checkIfConfigIsStaleAndConfirmSave;
-import static AutoDriveEditor.Utils.FileUtils.createFileChooser;
 import static AutoDriveEditor.XMLConfig.AutoSave.resumeAutoSaving;
 import static AutoDriveEditor.XMLConfig.AutoSave.suspendAutoSaving;
 import static AutoDriveEditor.XMLConfig.GameXML.lastUsedLocation;
@@ -20,7 +21,7 @@ import static AutoDriveEditor.XMLConfig.GameXML.loadGameConfig;
 public class OpenConfigMenu extends JMenuItemBase {
 
     public OpenConfigMenu() {
-        makeMenuItem("menu_file_loadconfig",  "menu_file_loadconfig_accstring", KeyEvent.VK_L, InputEvent.ALT_DOWN_MASK, true );
+        makeMenuItem("menu_file_loadconfig", KeyEvent.VK_L, InputEvent.ALT_DOWN_MASK, true );
     }
 
     @Override
@@ -47,6 +48,7 @@ public class OpenConfigMenu extends JMenuItemBase {
         suspendAutoSaving();
 
         if (lfc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
+            curveManager.cancelAllCurves();
             lastUsedLocation = lfc.getCurrentDirectory().getAbsolutePath();
             loadGameConfig(lfc.getSelectedFile());
         }

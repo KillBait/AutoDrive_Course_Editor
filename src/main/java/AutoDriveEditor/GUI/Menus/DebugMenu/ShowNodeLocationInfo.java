@@ -14,7 +14,7 @@ public class ShowNodeLocationInfo extends JCheckBoxMenuItemBase {
     public static boolean bDebugShowNodeLocationInfo;
 
     public ShowNodeLocationInfo() {
-        makeCheckBoxMenuItem("menu_debug_shownodelocationinfo", "menu_debug_shownodelocationinfo_accstring", KeyEvent.VK_7, InputEvent.ALT_DOWN_MASK, false, true);
+        makeCheckBoxMenuItem("menu_debug_shownodelocationinfo", KeyEvent.VK_7, InputEvent.ALT_DOWN_MASK, false, true);
     }
 
     @Override

@@ -1,353 +1,158 @@
 package AutoDriveEditor.GUI.Buttons;
 
+import AutoDriveEditor.Classes.CircularList;
+import AutoDriveEditor.Classes.KeyBinds.Shortcut;
+import AutoDriveEditor.Classes.KeyBinds.ShortcutGroup;
 import AutoDriveEditor.Classes.LinearLine;
-import AutoDriveEditor.Managers.ChangeManager;
+import AutoDriveEditor.Managers.ButtonManager;
 import AutoDriveEditor.RoadNetwork.MapNode;
-import AutoDriveEditor.RoadNetwork.RoadMap;
-import AutoDriveEditor.Utils.ExceptionUtils;
 
-import java.awt.*;
+import javax.swing.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.geom.Point2D;
-import java.util.LinkedList;
 
+import static AutoDriveEditor.AutoDriveEditor.buttonManager;
 import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
-import static AutoDriveEditor.AutoDriveEditor.mapPanel;
-import static AutoDriveEditor.GUI.MapPanel.*;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
+import static AutoDriveEditor.GUI.MapPanel.getNodeAtScreenPosition;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogLinearLineInfoMenu.bDebugLogLinearlineInfo;
-import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogUndoRedoMenu.bDebugLogUndoRedo;
 import static AutoDriveEditor.GUI.TextPanel.showInTextArea;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_REGULAR;
-import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_SUBPRIO;
-import static AutoDriveEditor.RoadNetwork.RoadMap.showMismatchedIDError;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
-import static AutoDriveEditor.XMLConfig.EditorXML.*;
+import static AutoDriveEditor.Managers.ShortcutManager.*;
+import static AutoDriveEditor.Managers.ShortcutManager.ShortcutID.NEW_LINEAR_LINE_SHORTCUT;
+import static AutoDriveEditor.XMLConfig.EditorXML.bContinuousConnections;
+import static AutoDriveEditor.XMLConfig.EditorXML.bCreateLinearLineEndNode;
 
-public abstract class LinerLineBaseButton extends BaseButton{
+public abstract class LinerLineBaseButton extends BaseButton implements ShortcutGroup.ShortcutGroups {
 
-    public static final int CONNECTION_UNKNOWN = -1;
-    public static final int CONNECTION_STANDARD = 0;
-    public static final int CONNECTION_STANDARD_SUBPRIO = 1;
-    public static final int CONNECTION_REVERSE = 2;
-    //public static final int CONNECTION_REVERSE_SUBPRIO = 3;
-    public static final int CONNECTION_DUAL = 3;
-    public static final int CONNECTION_CROSSED = 4;
+    protected final String NORMAL_PRIORITY_STRING = "Normal";
+    protected final String SUBPRIO_PRIORITY_STRING = "Subprio";
 
-    LinearLine linearLine;
-    MapNode startNode;
-    public int  connectionState = 0;
-    public int connectionType = 0;
-    boolean isDraggingLine = false;
+    protected static LinearLine linearLine = new LinearLine();
+    boolean isSelectingEndPoint = false;
+    protected static boolean shortcutChanged;
 
-    protected abstract void setNormalStateIcons();
-    protected abstract void setAlternateStateIcons();
+    protected static ShortcutGroup linerLineShortcutGroup;
+
 
 
     @Override
-    public void setSelected(boolean selected) {
-        if (selected) {
-            button.setSelected(true);
-            showInTextArea(getInfoText(), true, false);
-        } else {
-            button.setSelected(false);
-            cancelLinearLine();
-        }
-    }
+    public void onButtonCreation() {
+        if (linerLineShortcutGroup == null) {
+            linerLineShortcutGroup = ShortcutGroup.createShortcutGroup(LINEAR_LINE_GROUP);
 
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON3 && e.getSource() == button) {
-            if (button.isEnabled() && button.isSelected()) {
-                connectionState = 1 - connectionState;
-                if (connectionState == NODE_FLAG_REGULAR) { // == 0
-                    setNormalStateIcons();
-                } else {
-                    setAlternateStateIcons();
-                }
+            Shortcut linearLineShortcut = getUserShortcutByID(NEW_LINEAR_LINE_SHORTCUT);
+            if (linearLineShortcut != null) {
+                Action linearLineButtonAction = new AbstractAction() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        if (button.isEnabled()) {
+                            ShortcutGroup lineGroup = ShortcutGroup.getButtonGroup(LINEAR_LINE_GROUP);
+                            if (lineGroup != null) {
+                                shortcutChanged = true;
+                                if (buttonManager.getCurrentButton() != null && buttonManager.getCurrentButton() == lineGroup.getCurrentButton()) {
+                                    ButtonManager.ButtonNode next = lineGroup.getNextButton().getButtonNode();
+                                    buttonManager.makeCurrent(next);
+                                } else {
+                                    buttonManager.makeCurrent(lineGroup.getCurrentButton().getButtonNode());
+                                }
+                                shortcutChanged = false;
+
+                            }
+                        }
+                    }
+                };
+                registerShortcut(this, linearLineShortcut, linearLineButtonAction, getMapPanel());
             }
         }
     }
+
+    @Override
+    public void onButtonDeselect() {
+        if (!shortcutChanged && linearLine != null) resetLinearLine();
+    }
+
+    @Override
+    public ShortcutGroup getGroup() { return linerLineShortcutGroup; }
+
+    @Override
+    public CircularList<BaseButton> getGroupMembers() { return linerLineShortcutGroup.getButtonNodeList(); }
+
 
     @Override
     public void mousePressed(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
+            // Check if a MapNode is at the location the left mouse button was pressed
             MapNode selected = getNodeAtScreenPosition(e.getX(), e.getY());
-            if (selected != null && selected.isSelectable()) {
-                if (startNode == null) {
-                    if (!selected.isControlNode()) {
-                        startNode = selected;
-                        linearLine = new LinearLine(startNode, e.getX(), e.getY(), connectionState);
-                        isDraggingLine = true;
-                        if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## created linear line starting at x {} y {} z {}",startNode.x, startNode.y, startNode.z);
-                        showInTextArea(getLocaleString("infopanel_linearline_started"), true, false);
-                    }
-                } else if (selected == startNode) {
-                    startNode = null;
-                    isDraggingLine = false;
-                    if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## canceling linear line");
-                    showInTextArea(getLocaleString("infopanel_linearline_canceled"), true, false);
-                } else {
-
-                    if (!selected.isControlNode()) {
-                        if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## End node selected, creating linear line");
-                        createLinearLine(selected);
-                        if (bContinuousConnections) {
-                            if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## Continuous connection enabled, starting next line");
-                            startNode = selected;
-                            linearLine = new LinearLine(selected, e.getX(), e.getY(), connectionState);
-                        } else {
-                            if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## Linear line finished");
-                            isDraggingLine = false;
-                            startNode = null;
-                        }
-                    } else {
-                        if (bCreateLinearLineEndNode) {
-                            if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## No end node selected");
-                            MapNode lastNode = createLinearLine(null);
-                            if (bContinuousConnections) {
-                                linearLine = new LinearLine(lastNode, e.getX(), e.getY(), connectionState);
-                                startNode = lastNode;
-                            } else {
-                                isDraggingLine = false;
-                                startNode = null;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (e.getButton() == MouseEvent.BUTTON3) {
-            cancelLinearLine();
-        }
-    }
-
-    @Override
-    public void mouseMoved(MouseEvent e) {
-        if (startNode != null && isDraggingLine) {
-            if (e.getX() > mapPanel.getWidth()) moveMapBy( -10, 0);
-            if (e.getX() <= 0) moveMapBy( 10, 0);
-            if (e.getY() > mapPanel.getHeight()) moveMapBy( 0, -10);
-            if (e.getY() <= 0) moveMapBy( 0, 10);
-            Point2D pointerPos = screenPosToWorldPos(e.getX(), e.getY());
-            linearLine.updateLineEndLocation(pointerPos.getX(), pointerPos.getY());
-            getMapPanel().repaint();
-        }
-    }
-
-    @Override
-    public void mouseWheelMoved(MouseWheelEvent e) {
-        Point2D pointerPos = screenPosToWorldPos(e.getX(), e.getY());
-        if (linearLine != null) {
-            linearLine.updateLineEndLocation(pointerPos.getX(), pointerPos.getY());
-            getMapPanel().repaint();
-        }
-    }
-
-    private MapNode createLinearLine(MapNode endNode) {
-        MapNode lastNode = linearLine.commitLinearLineEndingAt(endNode, connectionType, connectionState);
-        showInTextArea(getLocaleString("infopanel_linearline_completed"), true, false);
-        linearLine.clear();
-        setStale(true);
-        return lastNode;
-    }
-
-    private void cancelLinearLine() {
-        startNode = null;
-        isDraggingLine = false;
-        if (linearLine != null) { linearLine.clear(); }
-        getMapPanel().repaint();
-    }
-
-
-    @Override
-    public void drawToScreen(Graphics g) {
-        if (isDraggingLine) {
-            Color colour = Color.GREEN;
-            LinkedList<MapNode> lineNodeList = linearLine.getLinearLineNodeList();
-            Graphics2D g2d = (Graphics2D) g.create();
-
-            for (int j = 0; j < lineNodeList.size(); j++) {
-                MapNode startNode = lineNodeList.get(j);
-                Point2D startNodePos = worldPosToScreenPos(startNode.x, startNode.z);
-                g2d.setComposite(AlphaComposite.SrcOver.derive(0.5f));
-                if (this.startNode.flag == NODE_FLAG_REGULAR) {
-                    g2d.setColor(Color.WHITE);
-                } else {
-                    g2d.setColor(colourNodeSubprio);
-                }
-
-                if (startNode != lineNodeList.getFirst()) {
-                    if (startNode != lineNodeList.getLast() || bCreateLinearLineEndNode) {
-                        g2d.fillArc((int) (startNodePos.getX() - nodeSizeScaledHalf), (int) (startNodePos.getY() - nodeSizeScaledHalf), (int) nodeSizeScaled, (int) nodeSizeScaled, 0, 360);
-                    }
-                }
-
-                if (startNode != lineNodeList.getLast()) {
-                    MapNode firstPos = lineNodeList.get(j+1);
-                    Point2D endNodePos = worldPosToScreenPos(firstPos.x, firstPos.z);
-
-                    // select the colour of line to drawToScreen
-
-                    if ( connectionType == CONNECTION_STANDARD) {
-                        if (startNode.flag ==NODE_FLAG_SUBPRIO) colour = colourConnectSubprio;
-                    } else if ( connectionType == CONNECTION_DUAL ) {
-                        if (startNode.flag == NODE_FLAG_REGULAR) {
-                            colour = colourConnectDual;
-                        } else {
-                            colour = colourConnectDualSubprio;
-                        }
-                    } else if ( connectionType == CONNECTION_REVERSE ) {
-                        if (startNode.flag == NODE_FLAG_REGULAR) {
-                            colour = colourConnectReverse;
-                        } else {
-                            colour = colourConnectReverseSubprio;
-                        }
-                    }
-                    //g.setColor(colour);
-                    drawArrowBetween(g, startNodePos, endNodePos, connectionType == CONNECTION_DUAL, colour, false);
-                }
-            }
-            g2d.dispose();
-        }
-    }
-
-    //
-    // Linear Line Changer
-    //
-
-    public static class LinearLineChanger implements ChangeManager.Changeable {
-
-        private final MapNodeStore fromNode;
-        private final MapNodeStore toNode;
-        private final LinkedList<MapNodeStore> autoGeneratedNodes;
-        private final int connectionType;
-        private final boolean wasEndNodeCreated;
-        private final boolean isStale;
-
-        public LinearLineChanger(LinkedList<MapNode> generatedNodes, boolean endNodeCreated, int connectionType){
-            super();
-            this.fromNode = new MapNodeStore(generatedNodes.getFirst());
-            this.toNode = new MapNodeStore(generatedNodes.getLast());
-            this.wasEndNodeCreated = endNodeCreated;
-            this.autoGeneratedNodes = new LinkedList<>();
-            this.connectionType = connectionType;
-            this.isStale = isStale();
-
-            if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger ## Start node ID = {} : End node ID = {} : End node created  = {}", this.fromNode.getMapNode().id, this.toNode.getMapNode().id, endNodeCreated);
-
-            for (MapNode node : generatedNodes) {
-                if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger ## Adding MapNode ID {} to autoGeneratedNodes", node.id);
-                autoGeneratedNodes.add(new MapNodeStore(node));
-            }
-        }
-
-        public void undo(){
-            LOG.info("size = {}", this.autoGeneratedNodes.size());
-            if (this.autoGeneratedNodes.size() <= 2 ) {
-                if (bDebugLogUndoRedo) {
-                    LOG.info("## LinearLineChanger.undo ## Only start + end nodes in list");
-                    LOG.info("## LinearLineChanger.undo ## restoring starting node connections");
-                }
-                this.fromNode.restoreConnections();
-
-                if (this.toNode != null && !this.wasEndNodeCreated) {
-                    if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger.undo ## restoring ending node connections");
-                    this.toNode.restoreConnections();
-                } else if (wasEndNodeCreated) {
-                    if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger.undo ## wasEndNodeCreated = True : removing the created end node");
-                    RoadMap.removeMapNode(this.autoGeneratedNodes.getLast().getMapNode());
+            // Check if a line start node is selected
+            if (linearLine.getStartNode() == null) {
+                // No start node has been selected previously, set the start node.
+                if (selected != null && (selected.isMapNode() && selected.isSelectable())) {
+                    // set the Linear line start node and end location
+                    linearLine.setStartNode(selected);
+                    linearLine.setEndLocation(e.getX(), e.getY());
+                    if (bDebugLogLinearlineInfo) LOG.info("## LinearLineBaseButton.mousePressed() ## Updated linear line start node ID to {} { x={} , y={} , z={} }", selected.id, selected.x, selected.y, selected.z);
+                    isSelectingEndPoint = true;
+                    if (bDebugLogLinearlineInfo) showInTextArea(getLocaleString("toolbar_nodes_connection_started_infotext"), true, false);
                 }
             } else {
-                for (int i = 1; i < this.autoGeneratedNodes.size(); i++) {
-                    MapNodeStore storedNode = this.autoGeneratedNodes.get(i);
-                    MapNode toDelete = storedNode.getMapNode();
-                    if (toDelete != this.autoGeneratedNodes.getLast().getMapNode()) {
-                        if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger.undo ## removing ID {} from MapNodes", toDelete.id);
-                        RoadMap.removeMapNode(toDelete);
-                        if (storedNode.hasChangedID()) {
-                            if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger.undo ## Removed node changed ID {}", storedNode.getMapNode().id);
-                            storedNode.resetID();
-                            if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger.undo ## Reset ID to {}", storedNode.getMapNode().id);
-                        }
+                // A start node has been selected, check if the location of the mouse press is over a MapNode
+                if (selected != null) {
+                    // User selected an MapNode as the end point, Check if the selected node is the same
+                    // as the start node, cancel the linear line if they are the same
+                    if (selected == linearLine.getStartNode()) {
+                        if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## canceling linear line");
+                        showInTextArea(getLocaleString("toolbar_nodes_connection_canceled_infotext"), true, false);
+                        resetLinearLine();
                     } else {
-                        if (this.wasEndNodeCreated) {
-                            if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger.undo ## removing generated end node (ID {}) from MapNodes", toDelete.id);
-                            RoadMap.removeMapNode(toDelete);
-                            if (storedNode.hasChangedID()) {
-                                if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger.undo ## Removed end node changed ID {}", storedNode.getMapNode().id);
-                                storedNode.resetID();
-                                if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger.undo ## Resetting end node ID to {}", storedNode.getMapNode().id);
+                        // Selected node was different from the starting node, check if the selected node is not control node
+                        if (selected.isMapNode()) {
+                            // Create the linear line ending at the selected point
+                            if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## End node selected, creating linear line");
+                            linearLine.commit();
+                            // If we have Continuous connections enabled, start a new line at the selected end point
+                            // otherwise reset the required values to allow a new line creation.
+                            if (bContinuousConnections) {
+                                if (bDebugLogLinearlineInfo) {
+                                    LOG.info("## LinearLine Debug ## Continuous connection enabled, starting next line from ID {}", selected.id);
+                                }
+                                linearLine.updateLineStartNode(selected);
+                            } else {
+                                // Linear line is finished, reset values
+                                if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## Linear line finished");
+                                resetLinearLine();
                             }
-                        } else {
-                            if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger.undo ## restoring connections for end node (ID {})", storedNode.getMapNode().id);
-                            this.toNode.restoreConnections();
                         }
-                    }
-                    if (hoveredNode == toDelete) {
-                        hoveredNode = null;
-                    }
-                }
-            }
-            getMapPanel().repaint();
-            setStale(this.isStale);
-        }
-
-        public void redo(){
-            try {
-                if (this.autoGeneratedNodes.size() <= 2 ) {
-                    if (bDebugLogUndoRedo) {
-                        LOG.info("## LinearLineChanger.redo ## Only start + end nodes in list");
-                        LOG.info("## LinearLineChanger.redo ## restoring starting node connections");
-                    }
-                    this.fromNode.restoreConnections();
-
-                    if (this.wasEndNodeCreated) {
-                        if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger.redo ## wasEndNodeCreated = True, re-inserting the created end node");
-                        roadMap.insertMapNode(this.autoGeneratedNodes.getLast().getMapNode(), null, null);
-                    } else {
-                        if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger.redo ## restoring ending node connections");
-                        this.toNode.restoreConnections();
                     }
                 } else {
-                    for (int i = 1; i < this.autoGeneratedNodes.size(); i++) {
-                        MapNodeStore storedNode = this.autoGeneratedNodes.get(i);
-                        if (storedNode != this.autoGeneratedNodes.getLast()) {
-                            storedNode.clearConnections();
-                            // during the undo process, removeMapNode deletes all the connections coming
-                            // to/from this node but adjusts the node id's,  so we have to manually restore
-                            // the id, .getMapNode() will check this for us and correct if necessary before
-                            // passing us the node info.
-                            MapNode newNode = storedNode.getMapNode();
-                            if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger.redo ## re-inserting node ( ID {} ) in MapNodes", newNode.id);
-                            roadMap.insertMapNode(newNode, null, null);
+                    // No end node was selected, check if the config option to createSetting end nodes is enabled
+                    if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## No end node selected");
+                    if (bCreateLinearLineEndNode) {
+                        if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## Create end node enabled in preferences");
+                        linearLine.commit();
+                        if (bContinuousConnections) {
+                            if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## Continuous connection is enabled, Creating new line from end node");
+                            MapNode newStart = (linearLine.getAddToNetworkNodeList().isEmpty()) ? linearLine.getEndNode() : linearLine.getAddToNetworkNodeList().getLast();
+                            linearLine.updateLineStartNode(newStart);
                         } else {
-                            if (this.wasEndNodeCreated) {
-                                MapNode newNode = storedNode.getMapNode();
-                                if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger.redo ## re-inserting created end node (ID {} ) in MapNodes", newNode.id);
-                                roadMap.insertMapNode(newNode, null, null);
-                            }
+                            resetLinearLine();
                         }
                     }
                 }
-                if (bDebugLogUndoRedo) LOG.info("## LinearLineChanger.redo ## reconnecting all nodes");
-                LinearLine.connectNodes(getLineLinkedList(), this.connectionType);
-                getMapPanel().repaint();
-                setStale(true);
-            } catch (ExceptionUtils.MismatchedIdException e) {
-                showMismatchedIDError("LinearLineChanger redo()", e);
             }
-
         }
 
-        public LinkedList<MapNode> getLineLinkedList() {
-            LinkedList<MapNode> list = new LinkedList<>();
-            for (int i = 0; i <= this.autoGeneratedNodes.size() - 1 ; i++) {
-                MapNodeStore nodeBackup = this.autoGeneratedNodes.get(i);
-                list.add(nodeBackup.getMapNode());
-            }
-            return list;
+        if (e.getButton() == MouseEvent.BUTTON3) {
+            resetLinearLine();
+            showInTextArea(getLocaleString("toolbar_nodes_connection_canceled_infotext"), true, false);
+
         }
+    }
+
+    private void resetLinearLine() {
+        //startNode = null;
+        isSelectingEndPoint = false;
+        if (linearLine != null) { linearLine.clear(); }
+        getMapPanel().repaint();
     }
 }

@@ -14,7 +14,7 @@ public class RedoMenu extends JMenuItemBase {
     public static JMenuItem menu_Redo;
 
     public RedoMenu() {
-        menu_Redo = makeMenuItem("menu_edit_redo",  "menu_edit_redo_accstring", KeyEvent.VK_Z, InputEvent.SHIFT_DOWN_MASK, false);
+        menu_Redo = makeMenuItem("menu_edit_redo", KeyEvent.VK_Z, InputEvent.SHIFT_DOWN_MASK, false);
     }
 
     @Override

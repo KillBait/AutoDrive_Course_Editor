@@ -11,7 +11,7 @@ public class ShowNodeHeightMenu extends JCheckBoxMenuItemBase {
 
     public static boolean bDebugShowHeight;
     public ShowNodeHeightMenu() {
-        makeCheckBoxMenuItem("menu_debug_showheight", "menu_debug_showheight_accstring", false, true);
+        makeCheckBoxMenuItem("menu_debug_showheight", false, true);
     }
 
     @Override

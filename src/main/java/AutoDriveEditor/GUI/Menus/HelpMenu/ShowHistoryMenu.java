@@ -8,7 +8,7 @@ import static AutoDriveEditor.Managers.VersionManager.showVersionHistory;
 
 public class ShowHistoryMenu extends JMenuItemBase {
     public ShowHistoryMenu() {
-        makeMenuItem("menu_help_history", "menu_help_history_accstring");
+        makeMenuItem("menu_help_history", true);
     }
 
     @Override

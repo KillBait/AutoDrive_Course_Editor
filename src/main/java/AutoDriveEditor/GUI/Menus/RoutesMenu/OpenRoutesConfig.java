@@ -19,7 +19,7 @@ public class OpenRoutesConfig extends JMenuItemBase {
     public static JMenuItem menu_OpenRoutesConfig
             ;
     public OpenRoutesConfig() {
-        menu_OpenRoutesConfig = makeMenuItem("menu_routes_load_config",  "menu_routes_load_config_accstring", true );
+        menu_OpenRoutesConfig = makeMenuItem("menu_routes_load_config", true );
     }
 
     @Override

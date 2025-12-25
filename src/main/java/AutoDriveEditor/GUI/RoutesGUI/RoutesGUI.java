@@ -11,10 +11,10 @@ import java.io.File;
 import java.util.LinkedList;
 
 import static AutoDriveEditor.AutoDriveEditor.editor;
-import static AutoDriveEditor.GUI.EditorImages.getTractorImage;
+import static AutoDriveEditor.Classes.Util_Classes.GUIUtils.makeBasicButton;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.Utils.GUIUtils.makeBasicButton;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.Managers.IconManager.getTractorImage;
 import static AutoDriveEditor.XMLConfig.GameXML.saveGameConfig;
 import static AutoDriveEditor.XMLConfig.RoutesXML.*;
 

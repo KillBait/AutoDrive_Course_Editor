@@ -1,75 +1,84 @@
 package AutoDriveEditor.GUI;
 
-import AutoDriveEditor.GUI.Curves.CurvePanel;
+import AutoDriveEditor.Classes.KeyBinds.Shortcut;
+import AutoDriveEditor.Classes.Util_Classes.ColourUtils;
+import AutoDriveEditor.Classes.Util_Classes.ProfileUtil;
 import AutoDriveEditor.GUI.RenderThreads.ConnectionDrawThread;
 import AutoDriveEditor.GUI.RenderThreads.NodeDrawThread;
 import AutoDriveEditor.Listeners.MouseListener;
-import AutoDriveEditor.Managers.CopyPasteManager;
+import AutoDriveEditor.Managers.ButtonManager;
+import AutoDriveEditor.Managers.RenderManager;
+import AutoDriveEditor.RoadNetwork.Connection;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
-import AutoDriveEditor.Utils.ExceptionUtils;
-import AutoDriveEditor.Utils.GUIUtils;
-import AutoDriveEditor.Utils.ProfileUtil;
+import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
-import static AutoDriveEditor.Classes.MapImage.*;
-import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.cubicCurve;
-import static AutoDriveEditor.GUI.Buttons.Curves.CubicCurveButton.isCubicCurveCreated;
-import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.isQuadCurveCreated;
-import static AutoDriveEditor.GUI.Buttons.Curves.QuadCurveButton.quadCurve;
-import static AutoDriveEditor.GUI.Buttons.LinerLineBaseButton.*;
-import static AutoDriveEditor.GUI.Buttons.Nodes.RotationButton.rotation;
-import static AutoDriveEditor.GUI.Curves.CurvePanel.curveOptionsPanel;
+import static AutoDriveEditor.Classes.Util_Classes.GUIUtils.InputEvent_NONE;
+import static AutoDriveEditor.Classes.Util_Classes.ImageUtils.getNewBufferImage;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
+import static AutoDriveEditor.Classes.Util_Classes.MathUtils.limitDoubleToDecimalPlaces;
+import static AutoDriveEditor.Classes.Util_Classes.MathUtils.limitFloatToDecimalPlaces;
+import static AutoDriveEditor.GUI.Buttons.Toolbar.Nodes.RotationButton.rotation;
+import static AutoDriveEditor.GUI.MapImage.*;
 import static AutoDriveEditor.GUI.MapPanel.NodeHoverTextList.TYPE_FOOTER;
 import static AutoDriveEditor.GUI.MapPanel.NodeHoverTextList.TYPE_HEADER;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogHeightmapInfoMenu.bDebugLogHeightMapInfo;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogLinearLineInfoMenu.bDebugLogLinearlineInfo;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogZoomScaleMenu.bDebugLogZoomScale;
-import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.ShowZoomLevelInfo.bDebugShowZoomLevelInfo;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.ShowFrameInfo.bDebugShowFPSInfo;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.ShowFrameInfo.fpsProfileGroup;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.ShowHeightMapInfo.bDebugShowHeightMapInfo;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.ShowHeightMapInfo.heightMapProfileGroup;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.ShowNodeLocationInfo.bDebugShowNodeLocationInfo;
-import static AutoDriveEditor.GUI.Menus.DebugMenu.ShowProfileInfo.bDebugShowProfileInfo;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.ShowRenderProfileInfo.bDebugShowRenderProfileInfo;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.ShowRenderProfileInfo.renderProfileGroup;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.ShowZoomLevelInfo.bDebugShowZoomLevelInfo;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.ShowZoomLevelInfo.zoomProfileGroup;
 import static AutoDriveEditor.GUI.Menus.FileMenu.SaveConfigMenu.menu_SaveConfig;
 import static AutoDriveEditor.GUI.Menus.RoutesMenu.SaveRoutesXML.menu_SaveRoutesXML;
 import static AutoDriveEditor.GUI.RenderThreads.ConnectionDrawThread.*;
 import static AutoDriveEditor.GUI.RenderThreads.NodeDrawThread.*;
-import static AutoDriveEditor.GUI.TextPanel.showInTextArea;
 import static AutoDriveEditor.Listeners.MouseListener.prevMousePosX;
 import static AutoDriveEditor.Listeners.MouseListener.prevMousePosY;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.Managers.MultiSelectManager.isMultiSelectDragging;
-import static AutoDriveEditor.Managers.MultiSelectManager.useRectangularSelection;
-import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_REGULAR;
-import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_SUBPRIO;
-import static AutoDriveEditor.RoadNetwork.RoadMap.*;
-import static AutoDriveEditor.Utils.GUIUtils.InputEvent_NONE;
-import static AutoDriveEditor.Utils.ImageUtils.getNewBufferImage;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
-import static AutoDriveEditor.Utils.MathUtils.limitDoubleToDecimalPlaces;
+import static AutoDriveEditor.Managers.IconManager.*;
+import static AutoDriveEditor.Managers.ShortcutManager.ShortcutID.FOCUS_NODE_SHORTCUT;
+import static AutoDriveEditor.Managers.ShortcutManager.getUserShortcutByID;
+import static AutoDriveEditor.Managers.ShortcutManager.registerShortcut;
+import static AutoDriveEditor.RoadNetwork.RoadMap.getConnection;
+import static AutoDriveEditor.RoadNetwork.RoadMap.networkNodesList;
 import static AutoDriveEditor.XMLConfig.AutoSave.startAutoSaveThread;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
 import static AutoDriveEditor.XMLConfig.GameXML.saveGameConfig;
 import static AutoDriveEditor.XMLConfig.RoutesXML.saveRouteManagerXML;
 
-public class MapPanel extends JPanel {
+@SuppressWarnings("LoggingSimilarMessage")
+public class MapPanel extends JLayeredPane {
 
     public static final int CONFIG_SAVEGAME = 1;
     public static final int CONFIG_ROUTEMANAGER = 2;
 
-    public static double MIN_VISIBLE_NODE_SIZE = 2;
+    public static int MIN_VISIBLE_NODE_SIZE = 2;
     public static int configType;
 
     public final Thread nodeDrawThread;
@@ -78,48 +87,53 @@ public class MapPanel extends JPanel {
     public static final Lock drawLock = new ReentrantLock();
     public static CountDownLatch threadCountLatch;
     public static CountDownLatch drawOrderLatch;
+    private byte frameCounter = 0;
+    private int averageFPS = 0;
+    private float averageFrame = 0;
+    private float totalTime;
 
-    public static BufferedImage croppedImage;
-    public static BufferedImage cachedRegularNodeImage;
-    public static BufferedImage cachedSubprioNodeImage;
-
-    public double offsetX, oldOffsetX;
-    public double offsetY, oldOffsetY;
-
-    public double widthScaled;
-    public static double oldWidthScaled;
-    public double heightScaled;
-    public static double oldHeightScaled;
-
-    public static double nodeSizeScaled;
-    public static double nodeSizeScaledHalf;
-    public static double nodeSizeScaledQuarter;
-    public static double nodeSizeWorld;
+    public static BufferedImage regularNodeImage;
+    public static BufferedImage rotationNodeImage;
+    public static BufferedImage rotationNodeSelectedImage;
+    public static BufferedImage subprioNodeImage;
+    public static BufferedImage selectedNodeOverlayImage;
+    public static BufferedImage controlNodeImage;
+    public static BufferedImage controlNodeSelectedImage;
+    public static BufferedImage radiusNodeImage;
+    private static BufferedImage overlapWarningImage;
+    private static BufferedImage negativeHeightWarningImage;
+    private static BufferedImage parkingImage;
+    private static BufferedImage markerImage;
 
 
-    private static double x = 0.5;
-    private static double y = 0.5;
-    public static double zoomLevel = 1.0;
+    public static float nodeSizeScaled;
+    public static float nodeSizeScaledHalf;
+    public static float nodeSizeScaledQuarter;
+    public static float nodeSizeWorld;
+
+    public static float gridSpacingX;
+    public static float gridSpacingY;
+    public static int gridSubDivisions;
+
+    public static double relativeCentreX = 0.5;
+    public static double relativeCentreY = 0.5;
+    public static double zoomLevel = 1F;
     public static int mapScale = 1;
     public Timer zoomTimer;
 
     public static boolean stale = false;
     public static RoadMap roadMap;
-    public static MapNode hoveredNode = null;
+
+    public MapNode hoveredNode = null;
     public static boolean isDraggingMap = false;
-    public static CopyPasteManager cnpManager;
     public static boolean bIsShiftPressed;
     public static Graphics renderGraphics;
 
     public MapPanel() {
 
-        // Create the curves panel and attach it to the MapPanel (initially hidden until needed)
-
-        curveOptionsPanel = new CurvePanel();
-        add( new GUIUtils.AlphaContainer(curveOptionsPanel));
+        setLayer(this, 0);
 
         // Add the Listeners needed to handle user input
-
         MouseListener mouseListener = new MouseListener(this);
         addMouseListener(mouseListener);
         addMouseMotionListener(mouseListener);
@@ -129,25 +143,14 @@ public class MapPanel extends JPanel {
 
         InputMap iMap = this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap aMap = this.getActionMap();
-
-        iMap.put(KeyStroke.getKeyStroke("F"), "Focus");
         iMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, InputEvent.SHIFT_DOWN_MASK),"ShiftPressed");
         iMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, InputEvent_NONE, true),"ShiftReleased");
-        aMap.put("Focus", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (hoveredNode != null) {
-                    centreNodeInMapPanel(hoveredNode);
-                }
-            }
-        });
         aMap.put("ShiftPressed", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 bIsShiftPressed = true;
             }
         });
-
         aMap.put("ShiftReleased", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -155,8 +158,19 @@ public class MapPanel extends JPanel {
             }
         });
 
-        // Add a ComponentListener to handle window resizing and refreshing
 
+        Shortcut focusShortcut = getUserShortcutByID(FOCUS_NODE_SHORTCUT);
+        if (focusShortcut != null) {
+            Action focusButtonAction = new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (hoveredNode != null) centreNodeInMapPanel(hoveredNode);
+                }
+            };
+            registerShortcut(this, focusShortcut, focusButtonAction, this);
+        }
+
+        // Add a ComponentListener to handle window resizing and refreshing
         addComponentListener(new ComponentAdapter(){
             @Override
             public void componentResized(ComponentEvent e) {
@@ -180,13 +194,6 @@ public class MapPanel extends JPanel {
         nodeDrawThread = new Thread(t2 ,"NodeDraw Thread");
         nodeDrawThread.start();
 
-        // initialize the copy/paste manager
-
-        if (cnpManager == null) {
-            LOG.info("Initializing CopyPaste Manager");
-            cnpManager = new CopyPasteManager();
-        }
-
         // Start the autosave thread ( if enabled in Editor.xml )
 
         if (bAutoSaveEnabled) {
@@ -195,12 +202,14 @@ public class MapPanel extends JPanel {
             LOG.info("AutoSave is disabled");
         }
 
-        // initialize the cropped buffer
+        // Create the map panel icons
+        markerImage = getSVGBufferImage(MARKER_ICON, 25, 25);
+        parkingImage = getSVGBufferImage(PARKING_ICON, 20, 20);
+        overlapWarningImage = getSVGBufferImage(WARNING_ICON, 20, 20);
+        negativeHeightWarningImage = getSVGBufferImage(WARNING_Y_ICON, 20, 20);
 
-        croppedImage = getNewBufferImage(2024, 2048, Transparency.OPAQUE);
 
         // Not sure if this helps, but does not appear to have a negative effect either
-
         setDoubleBuffered(true);
     }
 
@@ -210,23 +219,22 @@ public class MapPanel extends JPanel {
 
         if (zoomLevel > 2) {
 
-            int worldMax = -1024 * mapScale;
-
             Point2D panelWorldTopLeft = screenPosToWorldPos(0, 0);
             Point2D panelWorldBottomRight = screenPosToWorldPos(this.getWidth(), this.getHeight());
 
-            g.setColor(new Color(25, 25, 25));
-            for (int worldX = worldMax; worldX < panelWorldBottomRight.getX(); worldX += gridSpacingX) {
-                if (worldX > panelWorldTopLeft.getX()) {
-                    Point2D worldStart = worldPosToScreenPos(worldX, panelWorldTopLeft.getY());
-                    g.drawLine((int) worldStart.getX(), (int) worldStart.getY(), (int) worldStart.getX(), getMapPanel().getHeight());
-                }
+            g.setColor(colourGridLines);
+
+            double startX = Math.floor(panelWorldTopLeft.getX() / gridSpacingX) * gridSpacingX;
+            for (double worldX = startX; worldX < panelWorldBottomRight.getX(); worldX += gridSpacingX) {
+                Point2D worldStart = worldPosToScreenPos(worldX, panelWorldTopLeft.getY());
+                g.drawLine((int) worldStart.getX(), (int) worldStart.getY(), (int) worldStart.getX(), getMapPanel().getHeight());
             }
-            for (int worldY = worldMax; worldY < panelWorldBottomRight.getY(); worldY += gridSpacingY) {
-                if (worldY > panelWorldTopLeft.getY()) {
-                    Point2D worldStart = worldPosToScreenPos(panelWorldTopLeft.getX(), worldY);
-                    g.drawLine((int) worldStart.getX(), (int) worldStart.getY(), getMapPanel().getWidth(), (int) worldStart.getY());
-                }
+
+            // Draw horizontal lines
+            double startY = Math.floor(panelWorldTopLeft.getY() / gridSpacingY) * gridSpacingY;
+            for (double worldY = startY; worldY < panelWorldBottomRight.getY(); worldY += gridSpacingY) {
+                Point2D worldStart = worldPosToScreenPos(panelWorldTopLeft.getX(), worldY);
+                g.drawLine((int) worldStart.getX(), (int) worldStart.getY(), getMapPanel().getWidth(), (int) worldStart.getY());
             }
         }
     }
@@ -236,10 +244,10 @@ public class MapPanel extends JPanel {
         super.paintComponent(g);
 
         ProfileUtil totalDrawTimer = new ProfileUtil();
-        ProfileUtil calcCroppedTimer = new ProfileUtil();
-        ProfileUtil croppedDrawTimer = new ProfileUtil();
+        ProfileUtil scaledDrawTimer = new ProfileUtil();
         ProfileUtil gridDrawTimer = new ProfileUtil();
         ProfileUtil renderTimer = new ProfileUtil();
+        ProfileUtil buttonDrawTimer = new ProfileUtil();
 
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -252,16 +260,13 @@ public class MapPanel extends JPanel {
         g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_DEFAULT);
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
 
-        if (roadMap != null && croppedImage != null) {
+        if (roadMap != null) {
 
-            if (bDebugShowProfileInfo) totalDrawTimer.startTimer();
+            if (bDebugShowRenderProfileInfo || bDebugShowFPSInfo) totalDrawTimer.startTimer();
 
-            if (bDebugShowProfileInfo) calcCroppedTimer.startTimer();
-            getResizedMap();
-            if (bDebugShowProfileInfo) calcCroppedTimer.stopTimer();
-            if (bDebugShowProfileInfo) croppedDrawTimer.startTimer();
-            g.drawImage(croppedImage, 0, 0, this.getWidth(), this.getHeight(), null);
-            if (bDebugShowProfileInfo) croppedDrawTimer.stopTimer();
+            if (bDebugShowRenderProfileInfo) scaledDrawTimer.startTimer();
+            getResizedMap(g2);
+            if (bDebugShowRenderProfileInfo) scaledDrawTimer.stopTimer();
 
             if (bShowGrid) {
                 gridDrawTimer.startTimer();
@@ -269,7 +274,26 @@ public class MapPanel extends JPanel {
                 gridDrawTimer.stopTimer();
             }
 
-            if (bDebugShowProfileInfo) renderTimer.startTimer();
+            ArrayList<MapNode> visibleNodes = new ArrayList<>();
+            Point2D topLeft = screenPosToWorldPos(0, 0);
+            Point2D bottomRight = screenPosToWorldPos(getWidth(), getHeight());
+            double offScreenDistance = 24;
+
+            // Calculate visible nodes
+            for (MapNode mapNode : RoadMap.networkNodesList) {
+                if (topLeft.getX() - offScreenDistance < mapNode.x &&
+                        bottomRight.getX() + offScreenDistance > mapNode.x &&
+                        topLeft.getY() - offScreenDistance < mapNode.z &&
+                        bottomRight.getY() + offScreenDistance > mapNode.z) {
+                    visibleNodes.add(mapNode);
+                }
+            }
+
+            // Pass visible nodes to threads
+            NodeDrawThread.setVisibleNodes(visibleNodes);
+            ConnectionDrawThread.setVisibleNodes(visibleNodes);
+
+            if (bDebugShowRenderProfileInfo) renderTimer.startTimer();
             if (roadMap != null) {
 
                 renderGraphics = g2;
@@ -284,69 +308,93 @@ public class MapPanel extends JPanel {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                if (bDebugShowProfileInfo) renderTimer.stopTimer();
-                if (bDebugShowProfileInfo) totalDrawTimer.stopTimer();
                 drawNodeInfo(g2);
             }
-        }
+            if (bDebugShowRenderProfileInfo) buttonDrawTimer.startTimer();
+            RenderManager.drawAll(g2);
+            if (bDebugShowRenderProfileInfo) {
+                buttonDrawTimer.stopTimer();
+                renderTimer.stopTimer();
+            }
+            if (bDebugShowRenderProfileInfo || bDebugShowFPSInfo) {
+                totalDrawTimer.stopTimer();
+            }
 
-        if (bDebugShowProfileInfo) {
+            if (bDebugShowFPSInfo) {
+                float frameTime = (float) totalDrawTimer.getTime(3);
+                byte maxFrameCount = 50;
+                if (frameCounter < maxFrameCount) {
+                    totalTime += frameTime;
+                    frameCounter++;
+                } else {
+                    averageFrame = totalTime / maxFrameCount;
+                    averageFPS = (int) (1000 / averageFrame);
 
-            // draw the background
-            Graphics2D bg = (Graphics2D) g2.create();
-            bg.setComposite(AlphaComposite.SrcOver.derive(0.75f));
-            bg.setColor(Color.BLACK);
-            bg.fillRect(15, 15, 190, 345);
-            bg.dispose();
+                    totalTime = 0;
+                    frameCounter = 0;
+                }
+            }
+        } else {
 
-            g.setColor(Color.WHITE);
+            FlatSVGIcon logo = getSVGIcon(LOGO);
+            if (logo != null) {
+                int panelWidth = getWidth();
+                int panelHeight = getHeight();
+                int imageWidth = logo.getWidth();
+                int imageHeight = logo.getHeight();
 
-            if (bDebugShowProfileInfo) {
-                String computeText = "Connection Compute " + connectionComputeTimer.getTime(3) + " ms";
-                String renderText = "Connection Render " + connectionDrawTimer.getTime(3) + " ms";
-                String renderTotal = "Connections Rendered " + connectionDrawTotal;
-                String nodeComputeString = "Node Compute " + nodeComputeTimer.getTime(3) + " ms";
-                String nodeRenderString = "Node Render " + nodeDrawTimer.getTime(3) + " ms";
-                String nodeTotalString = "Nodes Rendered " + nodeComputeTotal;
-                String imageRenderString = "Icon Render " + imageDrawTimer.getTime(3) + " ms";
-                String textRenderString = "Text Render " + textDrawTimer.getTime(3) + " ms";
-                String buttonRenderString = "Button Render " + buttonDrawTimer.getTime(3) + " ms";
-                String rectangleRenderString = "Rectangle Render " + rectangleDrawTimer.getTime(3) + " ms";
+                // Calculate the scaling factor to maintain aspect ratio
+                double scaleFactor = Math.min((double) panelWidth / imageWidth, (double) panelHeight / imageHeight);
 
-                g.drawString("Render Threads Profile", 20, 30);
-                g.drawString("----------------------------------------", 20, 40);
-                g.drawString(computeText, 20, 60);
-                g.drawString(renderText, 20, 75);
-                g.drawString(renderTotal, 20, 90);
-                g.drawString(nodeComputeString, 20, 105);
-                g.drawString(nodeRenderString, 20, 120);
-                g.drawString(nodeTotalString, 20, 135);
-                g.drawString(imageRenderString, 20, 150);
-                g.drawString(textRenderString, 20, 165);
-                g.drawString(buttonRenderString, 20, 180);
-                g.drawString(rectangleRenderString, 20, 195);
+                // Calculate the new dimensions
+                int newWidth = (int) (imageWidth * scaleFactor);
+                int newHeight = (int) (imageHeight * scaleFactor);
 
-                String calcCroppedString = "Calc Cropped Image " + calcCroppedTimer.getTime(3) + " ms";
-                String drawCroppedString = "Cropped -> MapPanel " + croppedDrawTimer.getTime(3) + " ms";
-                String gridRenderString = "Grid Render " + gridDrawTimer.getTime(3) + " ms";
-                String renderString = "Render Threads " + renderTimer.getTime(3) + " ms";
-                String totalRenderString = "Total Render Time " + totalDrawTimer.getTime(3) + " ms";
+                BufferedImage buff = getSVGBufferImage(logo, newWidth, newHeight, null);
 
-                g.drawString("Totals", 20, 240);
-                g.drawString("-------", 20, 255);
-                g.drawString(calcCroppedString, 20, 270);
-                g.drawString(drawCroppedString, 20, 285);
-                g.drawString(gridRenderString, 20, 300);
-                g.drawString(renderString, 20, 315);
-                g.drawString("----------------------------------------", 20, 330);
-                g.drawString(totalRenderString, 20, 345);
-                totalDrawTimer.resetTimer();
+                // Calculate the top-left coordinates to center the image
+                int x = (panelWidth - newWidth) / 2;
+                int y = (panelHeight - newHeight) / 2;
+
+                g.drawImage(buff, x, y, newWidth, newHeight, this);
             }
         }
-        if (bDebugShowZoomLevelInfo) {
-            g2.setColor(Color.WHITE);
-            g2.drawString(""+limitDoubleToDecimalPlaces(zoomLevel, 1, RoundingMode.HALF_UP), 10, getMapPanel().getHeight()-10);
+
+        if (bDebugShowRenderProfileInfo) {
+            renderProfileGroup.reset();
+            renderProfileGroup.addText("Connection Compute", connectionComputeTimer.getTime(3) + " ms");
+            renderProfileGroup.addText("Connection Render", connectionDrawTimer.getTime(3) + " ms");
+            renderProfileGroup.addText("Total Connections Rendered", String.valueOf(connectionDrawTotal));
+            renderProfileGroup.addText("Node Compute", nodeComputeTimer.getTime(3) + " ms");
+            renderProfileGroup.addText("Node Render", nodeDrawTimer.getTime(3) + " ms");
+            renderProfileGroup.addText("Total Nodes Rendered", String.valueOf(nodeComputeTotal));
+            renderProfileGroup.addText("Image Render", imageDrawTimer.getTime(3) + " ms");
+            renderProfileGroup.addText("Text Render", textDrawTimer.getTime(3) + " ms");
+            renderProfileGroup.addText("Button Render", buttonDrawTimer.getTime(3) + " ms");
+            renderProfileGroup.addText("Selection Render", rectangleDrawTimer.getTime(3) + " ms");
+            renderProfileGroup.addEmptyLine();
+            renderProfileGroup.addCenteredText("Render Times", true);
+            renderProfileGroup.addText("Render Thread", renderTimer.getTime(3) + " ms");
+            renderProfileGroup.addText("Map Image Render", scaledDrawTimer.getTime(3) + " ms");
+            renderProfileGroup.addText("Grid Render", gridDrawTimer.getTime(3) + " ms");
+            renderProfileGroup.addLine();
+            renderProfileGroup.addText("Total Render Time", totalDrawTimer.getTime(3) + " ms");
         }
+
+        if (bDebugShowZoomLevelInfo) {
+            zoomProfileGroup.reset();
+            zoomProfileGroup.addText("Current", String.valueOf(limitDoubleToDecimalPlaces(zoomLevel, 1, RoundingMode.HALF_UP)));
+            zoomProfileGroup.addText("Maximum", String.valueOf(maxZoomLevel));
+        }
+
+        if (bDebugShowFPSInfo) {
+            fpsProfileGroup.reset();
+            fpsProfileGroup.addText("Average FPS", String.valueOf(averageFPS));
+            fpsProfileGroup.addText("Average Frame", limitFloatToDecimalPlaces(averageFrame, 3, RoundingMode.HALF_UP) + " ms");
+        }
+
+        debugDisplayManager.drawDebug(g2);
+
         g2.dispose();
     }
 
@@ -362,7 +410,7 @@ public class MapPanel extends JPanel {
             if (hoveredNode.isParkDestination()) {
                 infoList.add(new NodeHoverTextList("Park Destination " + hoveredNode.getParkingID(), TYPE_HEADER, Color.WHITE, new Color(16, 106, 238
                 ), true, 1.0f));
-                for (Integer vehicleId : hoveredNode.getParkedVehiclesList()) {
+                for (String vehicleId : hoveredNode.getParkedVehiclesList()) {
                     infoList.add(new NodeHoverTextList("Vehicle ID : " + vehicleId, TYPE_FOOTER, Color.BLACK, Color.CYAN, true, 1.0f));
                 }
             }
@@ -402,20 +450,7 @@ public class MapPanel extends JPanel {
                         int numIncoming = 0;
                         infoList.add(new NodeHoverTextList(hoveredNode.incoming.size() + " In ID:", TYPE_FOOTER, connectionFGColour, connectionBGColour, false, 0.75f));
                         for (MapNode inNode: hoveredNode.incoming) {
-                            String type = "";
-                            if (isDual(inNode, hoveredNode)) {
-                                if (inNode.flag == NODE_FLAG_REGULAR && hoveredNode.flag == NODE_FLAG_REGULAR) {
-                                    type = "Dual";
-                                } else {
-                                    type = "Subprio Dual";
-                                }
-                            } else if (isRegular(inNode, hoveredNode)) {
-                                if (inNode.flag == NODE_FLAG_REGULAR) {
-                                    type = "Regular";
-                                } else if (inNode.flag == NODE_FLAG_SUBPRIO) {
-                                    type = "Subprio Regular";
-                                }
-                            }
+                            String type = getConnection(inNode, hoveredNode).getDescription();
                             infoList.add(new NodeHoverTextList("  " + inNode.id + " (" + type + ")", TYPE_FOOTER, connectionFGColour, connectionBGColour, false, 0.75f));
                             numIncoming++;
                             if (numIncoming > 5) {
@@ -431,26 +466,7 @@ public class MapPanel extends JPanel {
                         infoList.add(new NodeHoverTextList(hoveredNode.outgoing.size() + " Out ID:", TYPE_FOOTER, connectionFGColour, connectionBGColour, false, 0.75f));
                         int numOutgoing = 0;
                         for (MapNode outNode: hoveredNode.outgoing) {
-                            String type = "";
-                            if (isDual(hoveredNode, outNode)) {
-                                if (hoveredNode.flag == NODE_FLAG_REGULAR && outNode.flag == NODE_FLAG_REGULAR) {
-                                    type = "Dual";
-                                } else {
-                                    type = "Subprio Dual";
-                                }
-                            } else if (isReverse(hoveredNode, outNode)) {
-                                if (hoveredNode.flag == NODE_FLAG_REGULAR) {
-                                    type = "Reverse";
-                                } else {
-                                    type = "Subprio Reverse";
-                                }
-                            } else if (isRegular(outNode, hoveredNode)) {
-                                if (outNode.flag == NODE_FLAG_REGULAR) {
-                                    type = "Regular";
-                                } else if (outNode.flag == NODE_FLAG_SUBPRIO) {
-                                    type = "Subprio Regular";
-                                }
-                            }
+                            String type = getConnection(hoveredNode, outNode).getDescription();
                             infoList.add(new NodeHoverTextList("  " + outNode.id + " (" + type + ")", TYPE_FOOTER, connectionFGColour, connectionBGColour, false, 0.75f));
                             numOutgoing++;
                             if (numOutgoing > 5) {
@@ -464,7 +480,7 @@ public class MapPanel extends JPanel {
 
                     }
                     if (!hoveredNode.getHiddenConnectionsList().isEmpty()) {
-                        Color hiddenBGColour = new Color(128, 128, 128);
+                        Color hiddenBGColour = Color.CYAN;
                         Color hiddenFGColour = Color.BLACK;
                         infoList.add(new NodeHoverTextList("Hidden Connections", TYPE_HEADER, hiddenFGColour, hiddenBGColour, true, 1.0f));
                         for (MapNode hiddenNode : hoveredNode.getHiddenConnectionsList()) {
@@ -482,7 +498,7 @@ public class MapPanel extends JPanel {
             int lineHeight = fm.getHeight();
 
             if (!infoList.isEmpty()) {
-                // loop through all the strings to display, compare and update maxStringLength to use later
+                // loop through all the strings to display, compare and updateVisibility maxStringLength to use later
                 int maxStringLength = 0;
                 for (NodeHoverTextList infoEntry : infoList) {
                     if (fm.stringWidth(infoEntry.text) >= maxStringLength) maxStringLength = fm.stringWidth(infoEntry.text);
@@ -494,20 +510,18 @@ public class MapPanel extends JPanel {
                 int totalEntries = 0;
 
                 Point2D screenPos = worldPosToScreenPos(hoveredNode.x, hoveredNode.z);
-                int bgStartX = (int) (screenPos.getX() + nodeSizeScaledHalf);
-                int bgStartY = (int) screenPos.getY();
+                int bgStartX = Math.max(0, (int) (screenPos.getX() + nodeSizeScaledHalf));
+                int bgStartY = Math.max(0, (int) screenPos.getY());
 
                 int infoBoxBottomPos = bgStartY + (infoList.size() * lineHeight);
                 int infoBoxRightPos = bgStartX + maxWidth;
 
                 if (infoBoxBottomPos > getMapPanel().getHeight()) {
-                    int diff = infoBoxBottomPos - getMapPanel().getHeight();
-                    bgStartY = bgStartY - diff;
+                    bgStartY -= (infoBoxBottomPos - getMapPanel().getHeight());
                 }
 
                 if (infoBoxRightPos > getMapPanel().getWidth()) {
-                    int diff = infoBoxRightPos - getMapPanel().getWidth();
-                    bgStartX = bgStartX - diff;
+                    bgStartX -= (infoBoxRightPos - getMapPanel().getWidth());
                 }
 
                 for (NodeHoverTextList infoEntry : infoList) {
@@ -556,108 +570,63 @@ public class MapPanel extends JPanel {
         }
     }
 
-    private void getResizedMap() throws RasterFormatException {
+    private void getResizedMap(Graphics2D g2) throws RasterFormatException {
         if (pdaImage != null) {
 
-            widthScaled = (int) (this.getWidth() / zoomLevel);
-            heightScaled = (int) (this.getHeight() / zoomLevel);
+            // Clamp the relativeCentre values to stay within the map bounds
 
-            double calcX = (((this.getWidth() * 0.5) / zoomLevel) / mapPanelImage.getWidth());
-            double calcY = (((this.getHeight() * 0.5) / zoomLevel) / mapPanelImage.getHeight());
+            float halfWidthRatio = (float) ((getMapPanel().getWidth() * 0.5) / (zoomLevel * pdaImage.getWidth()));
+            float halfHeightRatio = (float) ((getMapPanel().getHeight() * 0.5) / (zoomLevel * pdaImage.getHeight()));
 
-            x = Math.min(x, 1 - calcX);
-            x = Math.max(x, calcX);
-            y = Math.min(y, 1 - calcY);
-            y = Math.max(y, calcY);
+            relativeCentreX = Math.max(halfWidthRatio, Math.min(relativeCentreX, 1 - halfWidthRatio));
+            relativeCentreY = Math.max(halfHeightRatio, Math.min(relativeCentreY, 1 - halfHeightRatio));
 
-            int centerX = (int) (x * mapPanelImage.getWidth());
-            int centerY = (int) (y * mapPanelImage.getHeight());
+            // Calculate the new draw offset
+            double offsetX = relativeCentreX * pdaImage.getWidth() - (this.getWidth() / zoomLevel) / 2;
+            double offsetY = relativeCentreY * pdaImage.getHeight() - (this.getHeight() / zoomLevel) / 2;
 
-            double halfWidthScaled = widthScaled / 2;
-            double halfHeightScaled = heightScaled / 2;
-
-            offsetX = centerX - halfWidthScaled;
-            offsetX = Math.max(offsetX, 0);
-            offsetY = centerY - halfHeightScaled;
-            offsetY = Math.max(offsetY, 0);
-
-            if (offsetY + heightScaled > pdaImage.getHeight()) {
-                heightScaled = mapPanelImage.getHeight() - offsetY;
-            }
-            if (offsetX + widthScaled > pdaImage.getWidth()) {
-                widthScaled = mapPanelImage.getWidth() - offsetX;
-            }
-
-            //int centerX = (int) (x * pdaImage.getWidth());
-            //int centerY = (int) (y * pdaImage.getHeight());
-
-            //double offsetX = centerX - widthScaled / 2;
-            //double offsetY = centerY - heightScaled / 2;
-
-            /*LOG.info("zoom = {}", zoomLevel);
-
+            // Apply transformations and draw the image
             AffineTransform transform = new AffineTransform();
-            transform.translate(-offsetX, -offsetY);
             transform.scale(zoomLevel, zoomLevel);
-            g.drawImage(pdaImage, transform, null);*/
-
-            if (offsetX != oldOffsetX || offsetY != oldOffsetY || widthScaled != oldWidthScaled || heightScaled != oldHeightScaled) {
-                try {
-                    croppedImage = mapPanelImage.getSubimage((int)offsetX, (int)offsetY, (int)widthScaled, (int)heightScaled);
-
-                    if (bDebugLogZoomScale) LOG.info("## MapPanel.ResizeMap() ## ZoomLevel = {} ## SubImage start at {},{} - size {},{}", zoomLevel, offsetX, offsetY, widthScaled, heightScaled);
-                    oldOffsetX = offsetX;
-                    oldOffsetY = offsetY;
-                    oldWidthScaled = widthScaled;
-                    oldHeightScaled = heightScaled;
-                } catch (Exception e) {
-                    LOG.info("## MapPanel.ResizeMap() ## Exception in getSubImage()");
-                    LOG.info("## MapPanel.ResizeMap() ## x = {} , y = {} , offsetX = {} , offsetY = {}  -- PanelWidth = {} , PanelHeight = {} , zoomLevel = {} , widthScaled = {} , heightScaled = {}", x, y, offsetX, offsetY, this.getWidth(), this.getHeight(), zoomLevel, widthScaled, heightScaled);
-                    e.printStackTrace();
-                }
-            }
+            transform.translate(-offsetX, -offsetY);
+            g2.drawImage(mapPanelImage, transform, null);
         }
     }
 
     public static void moveMapBy(int diffX, int diffY) {
         if (roadMap != null && pdaImage != null) {
-            x -= diffX / (zoomLevel * pdaImage.getWidth());
-            y -= diffY / (zoomLevel * pdaImage.getHeight());
+            // Move the relative centre values by the amount specified
+            relativeCentreX -= diffX / (zoomLevel * pdaImage.getWidth());
+            relativeCentreY -= diffY / (zoomLevel * pdaImage.getHeight());
+            widgetManager.updateAllWidgets();
             getMapPanel().repaint();
         }
     }
 
     public void setNewZoomLevel(int direction) {
-
         // Quick exponential scaling calculation
         double newZoomLevel = getNewZoomLevel(direction);
-
         if (bDebugLogZoomScale) LOG.info("## setNewZoomLevel() ## Applying new zoomLevel - Old = {} , New = {}",zoomLevel, newZoomLevel);
-
         if (bInterpolateZoom) {
             if (zoomTimer == null) {
                 if (bDebugLogZoomScale) LOG.info("Creating Zoom Interpolation Timer");
                 try {
-                    zoomTimer = new Timer((int) (5 / newZoomLevel), e -> interpolateZoom(newZoomLevel));
+                    zoomTimer = new Timer((int) (2 / newZoomLevel), e -> {
+                        interpolateZoom(newZoomLevel);
+                    });
                     zoomTimer.start();
                 } catch (Exception e) {
                     LOG.info("Exception creating interpolateZoom() timer, setting new zoom level immediately.");
-                    zoomLevel = newZoomLevel;
-                    updateNodeScaling();
-                    repaint();
                 }
             }
-        } else {
-            zoomLevel = newZoomLevel;
-            updateNodeScaling();
-            repaint();
         }
-
+        zoomLevel = newZoomLevel;
+        updateNodeScaling();
     }
 
     private double getNewZoomLevel(int direction) {
         double newZoomLevel = zoomLevel;
-        double scaleFactor = Math.pow(1.6, Math.abs(direction));
+        float scaleFactor = (float) Math.pow(1.6, Math.abs(direction));
         if (direction < 0) {
             // Zoom in
             newZoomLevel *= scaleFactor;
@@ -668,9 +637,9 @@ public class MapPanel extends JPanel {
 
         // Calculate the minimum zoom level required to fit the entire image
         // within the mapPanel and make sure we always pick the highest
-        double minZoomToFitWidth = (double)this.getWidth() / pdaImage.getWidth();
-        double minZoomToFitHeight = (double)this.getHeight() / pdaImage.getHeight();
-        double minZoomToFit = Math.max(minZoomToFitWidth, minZoomToFitHeight);
+        float minZoomToFitWidth = (float)this.getWidth() / pdaImage.getWidth();
+        float minZoomToFitHeight = (float) this.getHeight() / pdaImage.getHeight();
+        float minZoomToFit = Math.max(minZoomToFitWidth, minZoomToFitHeight);
 
         // Enforce minimum and maximum zoom levels
         newZoomLevel = Math.min(Math.max(newZoomLevel, minZoomToFit), maxZoomLevel);
@@ -678,13 +647,14 @@ public class MapPanel extends JPanel {
     }
 
     private void interpolateZoom(double targetZoomLevel) {
-        zoomLevel = zoomLevel + 0.5 * (targetZoomLevel - zoomLevel);
+        zoomLevel = zoomLevel + 0.5F * (targetZoomLevel - zoomLevel);
         if (Math.abs(targetZoomLevel - zoomLevel) < 0.01) {
             zoomLevel = targetZoomLevel;
             zoomTimer.stop();
             zoomTimer = null;
         }
         updateNodeScaling();
+        widgetManager.updateAllWidgets();
         repaint();
     }
 
@@ -693,28 +663,10 @@ public class MapPanel extends JPanel {
 
         if (roadMap != null) {
             // make sure we prioritize returning control nodes over regular nodes
-            for (MapNode mapNode : RoadMap.networkNodesList) {
+            for (MapNode mapNode : networkNodesList) {
                 if (worldPosX < mapNode.x + nodeSizeWorld && worldPosX > mapNode.x - nodeSizeWorld && worldPosZ < mapNode.z + nodeSizeWorld && worldPosZ > mapNode.z - nodeSizeWorld) {
                     selected = mapNode;
                     break;
-                }
-            }
-
-            if (quadCurve != null && isQuadCurveCreated) {
-                MapNode cpNode = quadCurve.getControlPoint();
-                if (worldPosX < cpNode.x + nodeSizeWorld && worldPosX > cpNode.x - nodeSizeWorld && worldPosZ < cpNode.z + nodeSizeWorld && worldPosZ > cpNode.z - nodeSizeWorld) {
-                    return quadCurve.getControlPoint();
-                }
-            }
-            if (cubicCurve != null && isCubicCurveCreated) {
-                MapNode cp1Node = cubicCurve.getControlPoint1();
-                if (worldPosX < cp1Node.x + nodeSizeWorld && worldPosX > cp1Node.x - nodeSizeWorld && worldPosZ < cp1Node.z + nodeSizeWorld && worldPosZ > cp1Node.z - nodeSizeWorld) {
-                    return cubicCurve.getControlPoint1();
-                }
-
-                MapNode cp2Node = cubicCurve.getControlPoint2();
-                if (worldPosX < cp2Node.x + nodeSizeWorld && worldPosX > cp2Node.x - nodeSizeWorld && worldPosZ < cp2Node.z + nodeSizeWorld && worldPosZ > cp2Node.z - nodeSizeWorld) {
-                    return cubicCurve.getControlPoint2();
                 }
             }
 
@@ -729,15 +681,12 @@ public class MapPanel extends JPanel {
     }
 
     public static MapNode getNodeAtScreenPosition(int mousePosX, int mousePosY) {
-
         MapNode selected = null;
         Point2D outPos;
 
         if (roadMap != null) {
-
             // make sure we prioritize returning control nodes over regular nodes
-
-            for (MapNode mapNode : RoadMap.networkNodesList) {
+            for (MapNode mapNode : networkNodesList) {
                 outPos = worldPosToScreenPos(mapNode.x, mapNode.z);
                 if (mousePosX < outPos.getX() + nodeSizeScaledHalf && mousePosX > outPos.getX() - nodeSizeScaledHalf && mousePosY < outPos.getY() + nodeSizeScaledHalf && mousePosY > outPos.getY() - nodeSizeScaledHalf) {
                     // TODO Fix node visibility check
@@ -747,36 +696,15 @@ public class MapPanel extends JPanel {
                 }
             }
 
-            if (quadCurve != null && isQuadCurveCreated) {
-                Point2D cpPosition = worldPosToScreenPos(quadCurve.getControlPoint().x, quadCurve.getControlPoint().z);
-                if (mousePosX < cpPosition.getX() + nodeSizeScaledHalf && mousePosX > cpPosition.getX() - nodeSizeScaledHalf && mousePosY < cpPosition.getY() + nodeSizeScaledHalf && mousePosY > cpPosition.getY() - nodeSizeScaledHalf) {
-                    return quadCurve.getControlPoint();
-                }
-            }
-
-            if (cubicCurve != null && isCubicCurveCreated) {
-                Point2D cp1Position = worldPosToScreenPos(cubicCurve.getControlPoint1().x, cubicCurve.getControlPoint1().z);
-                if (mousePosX < cp1Position.getX() + nodeSizeScaledHalf && mousePosX > cp1Position.getX() - nodeSizeScaledHalf && mousePosY < cp1Position.getY() + nodeSizeScaledHalf && mousePosY > cp1Position.getY() - nodeSizeScaledHalf) {
-                    return cubicCurve.getControlPoint1();
-                }
-
-                Point2D cp2Position = worldPosToScreenPos(cubicCurve.getControlPoint2().x, cubicCurve.getControlPoint2().z);
-                if (mousePosX < cp2Position.getX() + nodeSizeScaledHalf && mousePosX > cp2Position.getX() - nodeSizeScaledHalf && mousePosY < cp2Position.getY() + nodeSizeScaledHalf && mousePosY > cp2Position.getY() - nodeSizeScaledHalf) {
-                    return cubicCurve.getControlPoint2();
-                }
-            }
-
-            if (rotation != null && Objects.equals(buttonManager.getCurrentButtonID(),"RotateButton")) {
-                Point2D rotatePosition = worldPosToScreenPos(rotation.getControlNode().x, rotation.getControlNode().z);
-                if (mousePosX < rotatePosition.getX() + nodeSizeScaledQuarter && mousePosX > rotatePosition.getX() - nodeSizeScaledQuarter && mousePosY < rotatePosition.getY() + nodeSizeScaledQuarter && mousePosY > rotatePosition.getY() - nodeSizeScaledQuarter) {
-                    return rotation.getControlNode();
+            if (curveManager.isCurvePreviewCreated()) {
+                MapNode node = curveManager.getControlNodeAt(mousePosX, mousePosY);
+                if (node != null) {
+                    return node;
                 }
             }
         }
         return selected;
     }
-
-
 
     public static double getYValueFromHeightMap(double worldX, double worldZ) {
         if (heightMapImage != null) {
@@ -803,20 +731,26 @@ public class MapPanel extends JPanel {
     }
 
      public static Point2D screenPosToWorldPos(int screenX, int screenY) {
+        double worldPosX = 0;
+        double worldPosY = 0;
+        if (pdaImage != null) {
+             double topLeftX = (relativeCentreX * pdaImage.getWidth()) - ((getMapPanel().getWidth() / zoomLevel)/2);
+             double topLeftY = (relativeCentreY * pdaImage.getHeight()) - ((getMapPanel().getHeight() / zoomLevel)/2);
 
-        double topLeftX = (x * pdaImage.getWidth()) - ((getMapPanel().getWidth() / zoomLevel)/2);
-        double topLeftY = (y * pdaImage.getHeight()) - ((getMapPanel().getHeight() / zoomLevel)/2);
+             double diffScaledX = (double)screenX / zoomLevel;
+             double diffScaledY = (double)screenY / zoomLevel;
 
-        double diffScaledX = (double)screenX / zoomLevel;
-        double diffScaledY = (double)screenY / zoomLevel;
+             int centerPointOffsetX = (pdaImage.getWidth() / 2) * mapScale;
+             int centerPointOffsetY = (pdaImage.getHeight() / 2) * mapScale;
 
-        int centerPointOffsetX = (pdaImage.getWidth() / 2) * mapScale;
-        int centerPointOffsetY = (pdaImage.getHeight() / 2) * mapScale;
+             worldPosX = limitDoubleToDecimalPlaces(((topLeftX + diffScaledX) * mapScale) - centerPointOffsetX, 3, RoundingMode.HALF_UP);
+             worldPosY = limitDoubleToDecimalPlaces(((topLeftY + diffScaledY) * mapScale) - centerPointOffsetY, 3, RoundingMode.HALF_UP);
+         }
+         return new Point2D.Double(worldPosX, worldPosY);
+    }
 
-        double worldPosX = limitDoubleToDecimalPlaces(((topLeftX + diffScaledX) * mapScale) - centerPointOffsetX, 3, RoundingMode.HALF_UP);
-        double worldPosY = limitDoubleToDecimalPlaces(((topLeftY + diffScaledY) * mapScale) - centerPointOffsetY, 3, RoundingMode.HALF_UP);
-
-        return new Point2D.Double(worldPosX, worldPosY);
+    public static Point worldPosToScreenPos(Point2D worldPos) {
+        return worldPosToScreenPos(worldPos.getX(), worldPos.getY());
     }
 
     public static Point worldPosToScreenPos(double worldX, double worldZ) {
@@ -826,16 +760,16 @@ public class MapPanel extends JPanel {
         worldX += centerPointOffset;
         worldZ += centerPointOffset;
 
-        double scaledX = (worldX/ mapScale) * zoomLevel;
-        double scaledY = (worldZ/ mapScale) * zoomLevel;
+        int scaledX = (int) ((worldX/ mapScale) * zoomLevel);
+        int scaledY = (int) ((worldZ/ mapScale) * zoomLevel);
 
-        double centerXScaled = (x * (pdaImage.getWidth()*zoomLevel));
-        double centerYScaled = (y * (pdaImage.getHeight()*zoomLevel));
+        double centerXScaled = (relativeCentreX * (pdaImage.getWidth()*zoomLevel));
+        double centerYScaled = (relativeCentreY * (pdaImage.getHeight()*zoomLevel));
 
-        double topLeftX = centerXScaled - (getMapPanel().getWidth() / 2F);
-        double topLeftY = centerYScaled - (getMapPanel().getHeight()/ 2F);
+        int topLeftX = (int)centerXScaled - (getMapPanel().getWidth() / 2);
+        int topLeftY = (int)centerYScaled - (getMapPanel().getHeight() / 2);
 
-        return new Point((int) (scaledX - topLeftX), (int) (scaledY - topLeftY));
+        return new Point(scaledX - topLeftX, scaledY - topLeftY);
     }
 
     // TODO: Re-do this function completely
@@ -844,24 +778,35 @@ public class MapPanel extends JPanel {
     //           the incoming/outgoing to accomplish the desired connection type
     //       WARNING:-
     //       EXTREME care needs to be taken, one missed mistake or edge case can cause
-    //       this to function to corrupt a config beyond repair!!.
+    //       this function to corrupt a config beyond repair!!.
 
-    public static void createConnectionBetween(MapNode start, MapNode target, int type) {
+    public static boolean createConnectionBetween(MapNode start, MapNode target, Connection.ConnectionType type) {
 
-        if (start == target) return;
+        if (start == target) {
+            if (bDebugLogLinearlineInfo) {
+                LOG.info("createConnectionBetween() - start and target cannot be the same");
+                new Exception("createConnectionBetween() - start and target cannot be the same").printStackTrace();
+            }
+            return false;
+        }
+        if (!networkNodesList.contains(start) || !networkNodesList.contains(target)) {
+            LOG.info("createConnectionBetween() - One or more nodes are not part of the networkNodesList");
+            LOG.info("createConnectionBetween() - start: {} , target: {}", start, target);
+            return false;
+        }
 
         if (!start.outgoing.contains(target)) {
             start.outgoing.add(target);
 
-            if (type == CONNECTION_STANDARD) {
+            if (type == Connection.ConnectionType.REGULAR || type == Connection.ConnectionType.CROSSED_REGULAR || type == Connection.ConnectionType.SUBPRIO) {
                 if (!target.incoming.contains(start)) {
                     target.incoming.add(start);
                 }
-            } else if (type == CONNECTION_REVERSE) {
+            } else if (type == Connection.ConnectionType.REVERSE || type == Connection.ConnectionType.CROSSED_REVERSE) {
                 start.incoming.remove(target);
                 target.incoming.remove(start);
                 target.outgoing.remove(start);
-            } else if (type == CONNECTION_DUAL) {
+            } else if (type == Connection.ConnectionType.DUAL) {
                 if (!target.incoming.contains(start)) {
                     target.incoming.add(start);
                 }
@@ -873,92 +818,25 @@ public class MapPanel extends JPanel {
                 }
             }
         } else {
-            if (type == CONNECTION_STANDARD) {
+            if (type == Connection.ConnectionType.REGULAR || type == Connection.ConnectionType.CROSSED_REGULAR || type == Connection.ConnectionType.SUBPRIO) {
                 start.outgoing.remove(target);
                 target.incoming.remove(start);
-            } else if (type == CONNECTION_REVERSE) {
+            } else if (type == Connection.ConnectionType.REVERSE || type == Connection.ConnectionType.CROSSED_REVERSE) {
                 start.outgoing.remove(target);
                 start.incoming.remove(target);
                 target.outgoing.remove(start);
                 target.incoming.remove(start);
 
-            } else if (type == CONNECTION_DUAL) {
+            } else if (type == Connection.ConnectionType.DUAL) {
                 start.outgoing.remove(target);
                 start.incoming.remove(target);
                 target.incoming.remove(start);
                 target.outgoing.remove(start);
             }
         }
+        return true;
     }
 
-    /*public static void createConnectionBetween(MapNode start, MapNode target, int type) {
-        if (start == null || target == null || start == target) {
-            // Invalid nodes or self-connection, do nothing
-            return;
-        }
-
-        if (type == CONNECTION_UNKNOWN) {
-            // Invalid connection type, do nothing
-            return;
-        }
-
-        // Store the original connections
-        ArrayList<MapNode> startOutgoingCopy = new ArrayList<>(start.outgoing);
-        ArrayList<MapNode> startIncomingCopy = new ArrayList<>(start.incoming);
-        ArrayList<MapNode> targetOutgoingCopy = new ArrayList<>(target.outgoing);
-        ArrayList<MapNode> targetIncomingCopy = new ArrayList<>(target.incoming);
-
-        // Make adjustments to the stored versions based on the connection type
-        adjustConnections(startOutgoingCopy, startIncomingCopy, targetOutgoingCopy, targetIncomingCopy, start, target, type);
-
-        // Check for validity before applying changes to the nodes
-        if (isValidConnection(start, target, type)) {
-            // Apply the changes to the actual nodes
-            start.outgoing = new ArrayList<>(startOutgoingCopy);
-            start.incoming = new ArrayList<>(startIncomingCopy);
-            target.outgoing = new ArrayList<>(targetOutgoingCopy);
-            target.incoming = new ArrayList<>(targetIncomingCopy);
-        }
-    }
-
-    private static void adjustConnections(
-            ArrayList<MapNode> startOutgoingCopy, ArrayList<MapNode> startIncomingCopy,
-            ArrayList<MapNode> targetOutgoingCopy, ArrayList<MapNode> targetIncomingCopy,
-            MapNode start, MapNode target, int type) {
-        // Make adjustments to the stored versions based on the connection type
-        switch (type) {
-            case CONNECTION_STANDARD:
-                startOutgoingCopy.add(target);
-                targetIncomingCopy.add(start);
-                break;
-            case CONNECTION_REVERSE:
-                startOutgoingCopy.remove(target);
-                targetIncomingCopy.remove(start);
-                break;
-            case CONNECTION_DUAL:
-                adjustConnections(startOutgoingCopy, startIncomingCopy, targetOutgoingCopy, targetIncomingCopy, start, target, CONNECTION_STANDARD);
-                adjustConnections(startOutgoingCopy, startIncomingCopy, targetOutgoingCopy, targetIncomingCopy, target, start, CONNECTION_STANDARD);
-                break;
-            default:
-                // Invalid connection type, do nothing
-                break;
-        }
-    }
-
-    private static boolean isValidConnection(MapNode start, MapNode target, int type) {
-        switch (type) {
-            case CONNECTION_STANDARD:
-                return !start.outgoing.contains(target) && !target.incoming.contains(start);
-            case CONNECTION_REVERSE:
-                return !start.outgoing.contains(target) && !start.incoming.contains(target)
-                        && !target.outgoing.contains(start) && !target.incoming.contains(start);
-            case CONNECTION_DUAL:
-                return isValidConnection(start, target, CONNECTION_STANDARD)
-                        && isValidConnection(target, start, CONNECTION_STANDARD);
-            default:
-                return false;
-        }
-    }*/
 
     //
     // Mouse movement and drag detection
@@ -968,30 +846,37 @@ public class MapPanel extends JPanel {
         if (pdaImage != null) {
             if (bDebugShowHeightMapInfo) {
                 if (heightMapImage != null) {
-                    double x, y;
                     Point2D point = screenPosToWorldPos(mousePosX, mousePosY);
 
                     double scaleX = (double) heightMapImage.getWidth() / pdaImage.getWidth();
                     double scaleY = (double) heightMapImage.getHeight() / pdaImage.getHeight();
-                    if (bDebugLogHeightMapInfo) LOG.info("heightmap scale = {} , {}", scaleX, scaleY);
 
-                    x = (int) (((point.getX() / mapScale) + (pdaImage.getWidth() / 2)) * scaleX);
-                    y = (int) (((point.getY() / mapScale) + (pdaImage.getHeight() / 2)) * scaleY);
+                    double x = (int) (((point.getX() / mapScale) + ((double) pdaImage.getWidth() / 2)) * scaleX);
+                    double y = (int) (((point.getY() / mapScale) + ((double) pdaImage.getHeight() / 2)) * scaleY);
 
-                    if (bDebugLogHeightMapInfo) {
-                        LOG.info("mapScale {}", mapScale);
-                        LOG.info("HeightMap size {},{}", heightMapImage.getWidth(), heightMapImage.getHeight());
+                    float hValue;
+
+                    if (heightmapType == HeightmapFormat.USHORT_GREY) {
+                        hValue = heightMapPixelData[(int) (y * heightMapImage16bit.getWidth() + x)] & 0xFFFF; // Convert to unsigned 16-bit value;
+                        heightMapProfileGroup.reset();
+                        heightMapProfileGroup.addText("Image Type", "16bit Grey");
+                        heightMapProfileGroup.addText("Image Size", String.valueOf((heightMapImage16bit.getWidth() - 1)));
+                        heightMapProfileGroup.addText("Value Red", "N/A");
+                        heightMapProfileGroup.addText("Value Green", "N/A");
+
+                    } else {
+                        Color color = new Color(heightMapImage.getRGB((int)x, (int)y));
+                        hValue = (float)((color.getRed()<<8) + color.getGreen());
+                        heightMapProfileGroup.addText("Image Type", "8bit RGB");
+                        heightMapProfileGroup.addText("Image Size", String.valueOf((heightMapImage.getWidth() - 1)));
+                        heightMapProfileGroup.addText("Value Red", String.valueOf(color.getRed()));
+                        heightMapProfileGroup.addText("Value Green", String.valueOf(color.getGreen()));
                     }
-
-                    if (bDebugLogHeightMapInfo) LOG.info(" - mapZoomFactor {} - halfWidth {} , halfHeight {} :: halfPointX {} , halfPointY {}", mapScale, heightMapImage.getWidth() / 2, heightMapImage.getHeight() / 2, (point.getX() / mapScale), (point.getY() / mapScale));
-                    if (bDebugLogHeightMapInfo) LOG.info(" - heightmap coordinates {} , {} - Point coordinates {} , {}", x, y, point.getX(), point.getY());
-
-                    Color color = new Color(heightMapImage.getRGB((int)x, (int)y));
-                    double heightValue = (double)((color.getRed()<<8) + color.getGreen()) / 256;
-                    String colourText="Heightmap Red = " + color.getRed() + " , Green = " + color.getGreen() + " -- Calculated Y Value = " + heightValue / heightMapScale + " ( " + heightValue + " / " + heightMapScale + " ) --";
-                    showInTextArea(colourText, true, false);
-                    String pointerText = "HeightMap (Size = " + (heightMapImage.getWidth() - 1) + ") HeightMap X = " + x + ", Y =" + y;
-                    showInTextArea(pointerText, false, false);
+                    heightMapProfileGroup.addText("Position X", String.valueOf((int)x));
+                    heightMapProfileGroup.addText("Position Y", String.valueOf((int)y));
+                    heightMapProfileGroup.addText("Raw Value", String.valueOf((int)hValue));
+                    heightMapProfileGroup.addText("Calculated Y", String.valueOf(limitFloatToDecimalPlaces(hValue/256, 3, RoundingMode.HALF_UP)));
+                    getMapPanel().repaint();
                 }
             }
 
@@ -1004,13 +889,17 @@ public class MapPanel extends JPanel {
     }
 
     public void mouseDragged(int mousePosX, int mousePosY) {
-        if (isDraggingMap) moveMapBy(mousePosX - prevMousePosX, mousePosY - prevMousePosY);
-        if (isMultiSelectDragging) {
-            if (useRectangularSelection) {
-                if (mousePosX > this.getWidth()) moveMapBy( -10, 0);
-                if (mousePosX < 0) moveMapBy( 10, 0);
-                if (mousePosY > this.getHeight()) moveMapBy( 0, -10);
-                if (mousePosY < 0) moveMapBy( 0, 10);
+        if (isDraggingMap) {
+            moveMapBy(mousePosX - prevMousePosX, mousePosY - prevMousePosY);
+        } else {
+            if (buttonManager != null) {
+                ButtonManager.ButtonInterface button = buttonManager.getCurrentButton();
+                if (button != null && button.usePanelEdgeScrolling()) {
+                    if (mousePosX >= this.getWidth() && mousePosX > prevMousePosX) moveMapBy(- 10, 0);
+                    if (mousePosX <= 0 && mousePosX < prevMousePosX) moveMapBy(10, 0);
+                    if (mousePosY >= this.getHeight() && mousePosY > prevMousePosY) moveMapBy(0, -10);
+                    if (mousePosY <= 0 && mousePosY < prevMousePosY) moveMapBy( 0, 10);
+                }
             }
         }
     }
@@ -1018,83 +907,124 @@ public class MapPanel extends JPanel {
     //
     // Left mouse button click/pressed/released states
     //
-
-    @SuppressWarnings("EmptyMethod")
-    public void mouseButton1Clicked(int ignoredMousePosX, int ignoredMousePosY) {}
-
-    public void mouseButton1Pressed(int mousePosX, int mousePosY) {
-        if (!bMiddleMouseMove) isDraggingMap = true;
-
-        MapNode pressedNode = getNodeAtScreenPosition(mousePosX, mousePosY);
-        if (pressedNode != null) {
-            isDraggingMap = false;
+    public void mouseButtonPressed(MouseEvent e) {
+        if (e.getButton() == MouseEvent.BUTTON2 && bMiddleMouseMove ||
+                e.getButton() == MouseEvent.BUTTON1 && !bMiddleMouseMove) {
+            isDraggingMap = true;
         }
     }
 
-    public void mouseButton1Released(int ignoredMousePosX, int ignoredMousePosY) {
-        if (!bMiddleMouseMove) isDraggingMap = false;
+    public void mouseButtonReleased(MouseEvent ignoredE) {
+        isDraggingMap = false;
     }
 
-    //
-    // Middle mouse button click/pressed/released states
-    //
-
-    @SuppressWarnings("EmptyMethod")
-    public void mouseButton2Clicked(int ignoredMousePosX, int ignoredMousePosY) {}
-
-    public void mouseButton2Pressed(int ignoredMousePosX, int ignoredMousePosY) {
-        if (bMiddleMouseMove) isDraggingMap = true;
-    }
-
-    public void mouseButton2Released() {
-        if (bMiddleMouseMove) isDraggingMap = false;
-    }
-
-    //
-    // Right mouse button click/pressed/released states
-    //
-
-    @SuppressWarnings("EmptyMethod")
-    public void mouseButton3Clicked(int ignoredMousePosX, int ignoredMousePosY) {}
-
-    @SuppressWarnings("EmptyMethod")
-    public void mouseButton3Pressed(int ignoredMousePosX, int ignoredMousePosY) {}
-
-    @SuppressWarnings("EmptyMethod")
-    public void mouseButton3Released(int ignoredMousePosX, int ignoredMousePosY) {}
+    public void mouseButtonClicked(MouseEvent ignoredE) {}
 
     public static void updateNodeScaling() {
         if (pdaImage != null) {
-            nodeSizeScaled = ((nodeSize * zoomLevel) *0.5);
-            nodeSizeScaledHalf = nodeSizeScaled * 0.5;
-            nodeSizeScaledQuarter = nodeSizeScaled * 0.25;
+            nodeSizeScaled = (int) ((nodeSize * zoomLevel) *0.5f);
+            // Ensure nodeSizeScaled is always an odd number
+            if ((int) nodeSizeScaled % 2 == 0) {
+                nodeSizeScaled += 1;
+            }
+            nodeSizeScaledHalf = nodeSizeScaled * 0.5f;
+            nodeSizeScaledQuarter = nodeSizeScaled * 0.25f;
+
             Point2D nodeLeftEdge = screenPosToWorldPos((int) (100 - nodeSizeScaledQuarter), 0);
             Point2D nodeRightEdge = screenPosToWorldPos((int) (100 + nodeSizeScaledQuarter), 0);
-            nodeSizeWorld = nodeRightEdge.getX() - nodeLeftEdge.getX();
+            nodeSizeWorld = (float) (nodeRightEdge.getX() - nodeLeftEdge.getX());
 
-            // update the cached Node image for the render thread
-
-            // TODO (1) Create subprio bufferImage
-            // TODO (2) Link to colour changing in preferences
-
-            if (nodeSizeScaled > 1)  {
-                updateCachedNodeImages();
-            }
+            // updateWidget the cached node image for the render thread
+            updateCachedNodeImages();
         }
     }
 
     public static void updateCachedNodeImages() {
-        cachedRegularNodeImage = getNewBufferImage((int) nodeSizeScaled, (int) nodeSizeScaled, Transparency.BITMASK);
-        Graphics2D g = (Graphics2D) cachedRegularNodeImage.getGraphics();
-        g.setColor(colourNodeRegular);
-        g.fillArc( 0, 0, (int) nodeSizeScaled, (int) nodeSizeScaled, 0, 360);
-        g.dispose();
+        Graphics2D g;
 
-        cachedSubprioNodeImage = getNewBufferImage((int) nodeSizeScaled, (int) nodeSizeScaled, Transparency.BITMASK);
-        Graphics2D g1 = (Graphics2D) cachedSubprioNodeImage.getGraphics();
-        g1.setColor(colourNodeSubprio);
-        g1.fillArc( 0, 0, (int) nodeSizeScaled, (int) nodeSizeScaled, 0, 360);
-        g1.dispose();
+        if (nodeSizeScaled > 0) {
+            if (getSVGIcon((NODE_ICON)) != null) {
+
+                // Create the regular node image
+
+                FlatSVGIcon nodeNormal = getSVGIcon(NODE_ICON);
+                addColourFilter(nodeNormal, new Color(128, 128, 128), colourNodeRegular);
+
+                regularNodeImage = getSVGBufferImage(nodeNormal, (int) nodeSizeScaled, (int) nodeSizeScaled, null);
+
+                // Create the subprio node image
+                FlatSVGIcon nodeSubprio = getSVGIcon(NODE_ICON);
+                addColourFilter(nodeSubprio, new Color(128, 128, 128), colourNodeSubprio);
+                subprioNodeImage = getSVGBufferImage(nodeSubprio, (int) nodeSizeScaled, (int) nodeSizeScaled, null);
+
+                FlatSVGIcon nodeSelectRing = getSVGIcon(NODE_SELECTION_ICON);
+                addColourFilter(nodeSelectRing, new Color(175, 175, 175), colourNodeSelected);
+                selectedNodeOverlayImage = getSVGBufferImage(nodeSelectRing, (int) nodeSizeScaled, (int) nodeSizeScaled, null);
+
+                //
+                // create the control node color filters
+                //
+                FlatSVGIcon controlNode = getSVGIcon(CONTROL_NODE_ICON);
+                Map<Color, Color> filters = new HashMap<>();
+                filters.put(new Color(128,128,128), colourNodeControl);
+                filters.put(new Color(64,64,64), ColourUtils.darken(colourNodeControl, 50));
+                FlatSVGIcon.ColorFilter controlNodeFilter = new FlatSVGIcon.ColorFilter().addAll(filters);
+                controlNode.setColorFilter(controlNodeFilter);
+
+                controlNodeImage = getSVGBufferImage(controlNode, (int) nodeSizeScaled, (int) nodeSizeScaled, null);
+                FlatSVGIcon controlNodeSelectRing = getSVGIcon(CONTROL_NODE_SELECTED_ICON);
+                addColourFilter(controlNodeSelectRing, new Color(128, 128, 128), colourNodeSelected);
+                controlNodeSelectedImage = getSVGBufferImage(controlNodeSelectRing, (int) nodeSizeScaled, (int) nodeSizeScaled, null);
+
+                FlatSVGIcon rotateNode = getSVGIcon(ROTATE_NODE_ICON);
+                rotateNode.setColorFilter(controlNodeFilter);
+                //addColourFilter(controlNodeSelectRing, new Color(255, 0, 214), colourNodeSelected);
+                rotationNodeImage = getSVGBufferImage(rotateNode, (int) nodeSizeScaled, (int) nodeSizeScaled, null);
+
+                FlatSVGIcon rotateSelectedNode = getSVGIcon(ROTATE_NODE_SELECTED_ICON);
+                addColourFilter(rotateSelectedNode, new Color(128, 128, 128), colourNodeSelected);
+                rotationNodeSelectedImage = getSVGBufferImage(rotateSelectedNode, (int) nodeSizeScaled, (int) nodeSizeScaled, null);
+
+                FlatSVGIcon radiusNode = getSVGIcon(RADIUS_NODE_ICON);
+                radiusNode.setColorFilter(controlNodeFilter);
+                radiusNodeImage = getSVGBufferImage(radiusNode, (int) nodeSizeScaled, (int) nodeSizeScaled, null);
+
+
+            } else {
+                // The node SVG file didn't load for some reason, fall back to using the previous version way of creating the node images
+                regularNodeImage = getNewBufferImage((int) nodeSizeScaled, (int) nodeSizeScaled, Transparency.BITMASK);
+                g = (Graphics2D) regularNodeImage.getGraphics();
+                g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                g.setColor(colourNodeRegular);
+                //g.drawImage(image, 0, 0, (int) nodeSizeScaled, (int) nodeSizeScaled, null);
+                g.fillArc(0, 0, (int) nodeSizeScaled, (int) nodeSizeScaled, 0, 360);
+                g.dispose();
+
+                subprioNodeImage = getNewBufferImage((int) nodeSizeScaled, (int) nodeSizeScaled, Transparency.BITMASK);
+                g = (Graphics2D) subprioNodeImage.getGraphics();
+                g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                g.setColor(colourNodeSubprio);
+                //g.drawImage(image, 0, 0, (int) nodeSizeScaled, (int) nodeSizeScaled, null);
+                g.fillArc(0, 0, (int) nodeSizeScaled, (int) nodeSizeScaled, 0, 360);
+                g.dispose();
+
+                selectedNodeOverlayImage = getNewBufferImage((int) nodeSizeScaled, (int) nodeSizeScaled, Transparency.TRANSLUCENT);
+                g = (Graphics2D) selectedNodeOverlayImage.getGraphics();
+                g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                float borderThickness = nodeSizeScaled * .1f;
+                g.setStroke(new BasicStroke(borderThickness));
+                g.setColor(colourNodeSelected);
+                g.drawOval((int) (borderThickness / 2), (int) (borderThickness / 2),
+                        (int) (nodeSizeScaled - borderThickness), (int) (nodeSizeScaled - borderThickness));
+                g.dispose();
+            }
+        }
     }
 
     public void centreNodeInMapPanel(MapNode node) {
@@ -1102,18 +1032,19 @@ public class MapPanel extends JPanel {
         double x = (this.getWidth() >> 1) - target.getX();
         double y = (this.getHeight() >> 1) - target.getY();
         moveMapBy((int) x, (int) y);
+        widgetManager.updateAllWidgets();
+        getMapPanel().repaint();
     }
 
     public static void forceMapImageRedraw() {
         if (pdaImage != null) {
-            oldWidthScaled = 0;
-            oldHeightScaled = 0;
             int widthScaled = (int) (getMapPanel().getWidth() / zoomLevel);
             int heightScaled = (int) (getMapPanel().getHeight() / zoomLevel);
             if (widthScaled < 0 || widthScaled> pdaImage.getWidth() || heightScaled < 0 || heightScaled > pdaImage.getHeight()) {
-                zoomLevel = Math.max((double)getMapPanel().getWidth()/pdaImage.getWidth(),(double)getMapPanel().getHeight()/pdaImage.getHeight());
+                zoomLevel = Math.max((float) getMapPanel().getWidth()/pdaImage.getWidth(),(float) getMapPanel().getHeight()/pdaImage.getHeight());
             }
             updateNodeScaling();
+            widgetManager.updateAllWidgets();
             getMapPanel().repaint();
         }
     }
@@ -1132,13 +1063,17 @@ public class MapPanel extends JPanel {
         }
     }
 
-    public static boolean isStale() { return stale; }
-
     //
     // getters
     //
 
-   public RoadMap getRoadMap() { return roadMap; }
+    public static boolean isStale() { return stale; }
+    public MapNode getHoveredNode() { return hoveredNode; }
+    // Getters for the MapPanel Icons
+    public static BufferedImage getOverlapWarningImage() { return overlapWarningImage; }
+    public static BufferedImage getNegativeHeightWarningImage() { return negativeHeightWarningImage; }
+    public static BufferedImage getParkingImage() { return parkingImage; }
+    public static BufferedImage getMarkerImage() { return markerImage; }
 
     //
     // setters
@@ -1159,7 +1094,12 @@ public class MapPanel extends JPanel {
             menu_SaveRoutesXML.setEnabled(stale);
         }
    }
+    public void setHoveredNode(MapNode hoveredNode) { this.hoveredNode = hoveredNode; }
 
+
+    /**
+     * Hold all the information required to display the hover text for a node.
+     */
     static class NodeHoverTextList {
 
         public static final int TYPE_HEADER = 0;
@@ -1178,30 +1118,6 @@ public class MapPanel extends JPanel {
             this.bgColour = bgColour;
             this.centreText = centreText;
             this.transparency = transparency;
-        }
-    }
-
-    //
-    // Testing only
-    //
-
-    @SuppressWarnings("unused")
-    public static boolean checkConfigForSequenceErrors() {
-        // check if each MapNode has the correct ID set
-        int id = 1;
-        try {
-            for (MapNode networkNode : RoadMap.networkNodesList) {
-                if (networkNode.id != id) {
-                    id++;
-                } else {
-                    throw new ExceptionUtils.SequenceException("RoadMap index " + (id-1) + " does not match expected value ("+ id + ")");
-                }
-            }
-            return true;
-        } catch (ExceptionUtils.SequenceException e) {
-            LOG.info("Failed {}", e.getMessage());
-            e.printStackTrace();
-            return false;
         }
     }
 }

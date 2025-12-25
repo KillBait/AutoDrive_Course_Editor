@@ -10,7 +10,7 @@ public class LogConfigGUIInfoMenu extends JCheckBoxMenuItemBase {
     public static boolean bDebugLogConfigGUIInfo;
 
     public LogConfigGUIInfoMenu() {
-        makeCheckBoxMenuItem("menu_debug_log_config_gui_info", "menu_debug_log_config_gui_info_accstring", false, true);
+        makeCheckBoxMenuItem("menu_debug_log_config_gui", false, true);
     }
 
     @Override

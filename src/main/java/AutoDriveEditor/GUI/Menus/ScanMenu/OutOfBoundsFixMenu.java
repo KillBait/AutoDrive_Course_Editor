@@ -11,10 +11,12 @@ import java.awt.geom.Point2D;
 import java.util.LinkedList;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
-import static AutoDriveEditor.Classes.MapImage.mapPanelImage;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
+import static AutoDriveEditor.GUI.MapImage.pdaImage;
 import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.XMLConfig.AutoSave.resumeAutoSaving;
+import static AutoDriveEditor.XMLConfig.AutoSave.suspendAutoSaving;
 
 //
 // Feature Commit by @rheational ( https://github.com/rhaetional )
@@ -26,7 +28,7 @@ public class OutOfBoundsFixMenu extends JMenuItemBase {
     public static JMenuItem menu_OutOfBoundsFix;
 
     public OutOfBoundsFixMenu() {
-        menu_OutOfBoundsFix = makeMenuItem("menu_scan_fix_oob_nodes", "menu_scan_fix_oob_nodes_accstring", false);
+        menu_OutOfBoundsFix = makeMenuItem("menu_scan_fix_oob_nodes", false);
     }
 
     @Override
@@ -35,8 +37,8 @@ public class OutOfBoundsFixMenu extends JMenuItemBase {
         if (roadMap != null) {
 
             //determine bounds
-            int centerPointOffsetX = (mapPanelImage.getWidth() / 2) * mapScale;
-            int centerPointOffsetY = (mapPanelImage.getHeight() / 2) * mapScale;
+            int centerPointOffsetX = (pdaImage.getWidth() / 2) * mapScale;
+            int centerPointOffsetY = (pdaImage.getHeight() / 2) * mapScale;
 
             String bounds = String.format("\n    X: %d to %d\n    Z: %d to %d", -centerPointOffsetX, centerPointOffsetX, -centerPointOffsetY, centerPointOffsetY);
             int result = JOptionPane.showConfirmDialog(editor, getLocaleString("dialog_fix_out-of-bound_nodes") + bounds, "AutoDrive Editor", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -59,8 +61,8 @@ public class OutOfBoundsFixMenu extends JMenuItemBase {
                 // Centre screen on first node found and add changes to change manager
                 if (firstMapNode != null) {
                     Point2D target = worldPosToScreenPos(firstMapNode.x, firstMapNode.z);
-                    double x = (mapPanel.getWidth() >> 1) - target.getX();
-                    double y = (mapPanel.getHeight() >> 1) - target.getY();
+                    double x = (pdaImage.getWidth() >> 1) - target.getX();
+                    double y = (pdaImage.getHeight() >> 1) - target.getY();
                     moveMapBy((int)x,(int)y);
                     changeManager.addChangeable(coordChanger);
                 }
@@ -87,24 +89,29 @@ public class OutOfBoundsFixMenu extends JMenuItemBase {
         public void addCoordinateChange(MapNode node, double newX, double newY, double newZ) {
             this.nodeList.add(new Coordinates(node, newX, newY, newZ));
         }
+
         public void undo() {
+            suspendAutoSaving();
             for (Coordinates storedNode : nodeList) {
                 storedNode.mapNode.x -= storedNode.diffX;
                 storedNode.mapNode.y -= storedNode.diffY;
                 storedNode.mapNode.z -= storedNode.diffZ;
             }
-            getMapPanel().repaint();
             setStale(this.isStale);
+            resumeAutoSaving();
+            getMapPanel().repaint();
         }
 
         public void redo() {
+            suspendAutoSaving();
             for (Coordinates storedNode : nodeList) {
                 storedNode.mapNode.x += storedNode.diffX;
                 storedNode.mapNode.y += storedNode.diffY;
                 storedNode.mapNode.z += storedNode.diffZ;
             }
-            getMapPanel().repaint();
             setStale(true);
+            resumeAutoSaving();
+            getMapPanel().repaint();
         }
 
         private static class Coordinates {

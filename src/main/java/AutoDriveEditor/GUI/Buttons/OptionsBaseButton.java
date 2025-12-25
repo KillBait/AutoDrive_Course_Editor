@@ -1,6 +1,6 @@
 package AutoDriveEditor.GUI.Buttons;
 
-public abstract class OptionsBaseButton extends BaseButton{
+public abstract class OptionsBaseButton extends BaseButton {
 
     @Override
     public String getButtonAction() { return "OptionButton"; }
@@ -13,7 +13,4 @@ public abstract class OptionsBaseButton extends BaseButton{
 
     @Override
     public Boolean ignoreButtonDeselect() { return true; }
-
-    @Override
-    public void setSelected(boolean selected) {}
 }

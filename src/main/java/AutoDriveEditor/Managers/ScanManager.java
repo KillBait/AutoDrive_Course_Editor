@@ -1,26 +1,26 @@
 package AutoDriveEditor.Managers;
 
 import AutoDriveEditor.AutoDriveEditor;
+import AutoDriveEditor.Classes.KDTree.KDTree3D;
+import AutoDriveEditor.Classes.Util_Classes.ProfileUtil;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
-import AutoDriveEditor.Utils.Classes.KDTree3D;
-import AutoDriveEditor.Utils.ProfileUtil;
 
 import javax.swing.*;
 import java.util.LinkedList;
 import java.util.List;
 
 import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
+import static AutoDriveEditor.Classes.Util_Classes.FileUtils.removeExtension;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
 import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogMergeFunctionMenu.bDebugLogMerge;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogScanManagerInfoMenu.bDebugLogScanManagerInfo;
 import static AutoDriveEditor.GUI.TextPanel.showInTextArea;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.RoadNetwork.MapNode.NODE_WARNING_OVERLAP;
+import static AutoDriveEditor.RoadNetwork.MapNode.NodeWarning.NODE_WARNING_OVERLAP;
 import static AutoDriveEditor.RoadNetwork.RoadMap.networkNodesList;
 import static AutoDriveEditor.RoadNetwork.RoadMap.removeMapNode;
-import static AutoDriveEditor.Utils.FileUtils.removeExtension;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.AutoSave.resumeAutoSaving;
 import static AutoDriveEditor.XMLConfig.AutoSave.suspendAutoSaving;
 import static AutoDriveEditor.XMLConfig.GameXML.saveGameConfig;
@@ -51,6 +51,7 @@ public class ScanManager {
 
         // start profile timers
         if (bDebugLogScanManagerInfo) treeInsertTimer.startTimer();
+        treeSearchTimer.resetTimer();
         treeSearchTimer.startTimer();
 
         // Create the KDTree and populate it with all the nodes from the network
@@ -62,7 +63,7 @@ public class ScanManager {
 
         if (bDebugLogScanManagerInfo) {
             treeInsertTimer.stopTimer();
-            LOG.info("## Scan Manager DEBUG ## Tree Creation Time = {}ms , Num Nodes Added = {}", treeInsertTimer.getTime(3), networkTree.size());
+            LOG.info("## ScanManager DEBUG ## Tree Creation Time = {}ms , Num Nodes Added = {}", treeInsertTimer.getTime(3), networkTree.size());
         }
 
         // start the network search
@@ -71,7 +72,7 @@ public class ScanManager {
         StringBuilder list = new StringBuilder();
         for (MapNode mapNode : RoadMap.networkNodesList) {
             nodesWithinDistance = networkTree.withinDistance(mapNode, 0.1);
-            if (nodesWithinDistance.size() > 0) {
+            if (!nodesWithinDistance.isEmpty()) {
                 numOverlaps++;
                 for (MapNode overlapNode : nodesWithinDistance) {
                     if (!mapNode.getWarningNodes().contains(overlapNode)) {
@@ -82,10 +83,9 @@ public class ScanManager {
                 }
             }
         }
-
-        if (bDebugLogScanManagerInfo) { LOG.info("## Scan Manager DEBUG ## KDTree matches {}", list); }
-
         treeSearchTimer.stopTimer();
+
+        if (bDebugLogScanManagerInfo) { LOG.info("## ScanManager DEBUG ## KDTree matches {}", list); }
         showInTextArea("Network scan completed, Checked " + networkNodesList.size() + " Roadmap nodes --- Found " + numOverlaps + " nodes overlapping --- Time Taken " + treeSearchTimer.getTime(2) + "ms", true, true);
         return numOverlaps;
     }
@@ -130,6 +130,12 @@ public class ScanManager {
         return result;
     }
 
+    //
+    //  TODO:
+    //   Replace this with a more efficient method, looping over a large number of nodes
+    //   for overlap is horribly inefficient, and will cause enormous amounts of lag
+    //   in the editor. Use the KDTree3D class to do this more efficiently?
+
     public static void checkNodeOverlap(MapNode node) {
         if (node.hasWarning()) {
             for (MapNode warningNode : node.getWarningNodes()) {
@@ -139,7 +145,7 @@ public class ScanManager {
         if (checkAreaForNodeOverlap(node) == 0 ) {
             for (MapNode mapNode : node.getWarningNodes()) {
                 mapNode.getWarningNodes().remove(node);
-                if (mapNode.getWarningNodes().size() != 0) {
+                if (!mapNode.getWarningNodes().isEmpty()) {
                     mapNode.setHasWarning(true, NODE_WARNING_OVERLAP);
                 } else {
                     mapNode.clearWarningNodes();
@@ -152,6 +158,7 @@ public class ScanManager {
         }
     }
 
+    @SuppressWarnings("LoggingSimilarMessage")
     public static void  mergeOverlappingNodes() {
         int response = JOptionPane.showConfirmDialog(AutoDriveEditor.editor, getLocaleString("dialog_merge_confirm"), "AutoDrive Editor", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
         if (response == JOptionPane.YES_OPTION) {
@@ -209,7 +216,7 @@ public class ScanManager {
                             }
                         }
 
-                        // edge case #1 - remove self references
+                        // edge case #1 - removeOriginalNodes self references
                         for (MapNode node : mapNode.incoming) {
                             if (node == mapNode) mapNode.incoming.remove(mapNode);
                         }
@@ -263,7 +270,7 @@ public class ScanManager {
     }
 
     public static void saveMergeBackupConfigFile() {
-        LOG.info("{}", getLocaleString("console_config_merge_backup"));
+        LOG.info("Saving backup of config before merging nodes...");
         String filename = removeExtension(xmlConfigFile.getAbsolutePath()) + "_mergeBackup.xml";
         if (configType == CONFIG_SAVEGAME) {
             saveGameConfig(filename, false, true);

@@ -1,7 +1,10 @@
 package AutoDriveEditor.XMLConfig;
 
 
+import AutoDriveEditor.Classes.KeyBinds.Shortcut;
 import AutoDriveEditor.GUI.Menus.FileMenu.RecentFilesMenu;
+import AutoDriveEditor.Managers.ShortcutManager;
+import AutoDriveEditor.RoadNetwork.Connection;
 import AutoDriveEditor.RoadNetwork.RoadMap;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
@@ -13,21 +16,26 @@ import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.awt.*;
+import java.awt.event.InputEvent;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
+import static AutoDriveEditor.Classes.Util_Classes.MathUtils.limitFloatToDecimalPlaces;
+import static AutoDriveEditor.Classes.Util_Classes.XMLUtils.*;
+import static AutoDriveEditor.GUI.Buttons.ActionBar.ConfigPanel.GridDisplayButton.updateGridPanelSettings;
+import static AutoDriveEditor.GUI.Buttons.ActionBar.ConfigPanel.MapInfoButton.setCurrentMapNameLabel;
+import static AutoDriveEditor.GUI.Buttons.ActionBar.ConfigPanel.MapInfoButton.setCurrentMapScaleLabel;
 import static AutoDriveEditor.GUI.MapPanel.*;
-import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogConfigMenu.bDebugLogXMLInfo;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogShortcutInfoMenu.bDebugLogShortcutInfo;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogXMLConfigMenu.bDebugLogXMLInfo;
+import static AutoDriveEditor.GUI.Menus.Display.MapScaleMenu.updateMapScaleMenu;
 import static AutoDriveEditor.GUI.Menus.FileMenu.RecentFilesMenu.recentFilesList;
-import static AutoDriveEditor.GUI.Menus.MapImagesMenu.MapZoomMenu.updateMapScaleMenu;
-import static AutoDriveEditor.GUI.TextPanel.setCurrentMapScaleLabel;
-import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
-import static AutoDriveEditor.Utils.MathUtils.limitFloatToDecimalPlaces;
-import static AutoDriveEditor.Utils.XMLUtils.*;
+import static AutoDriveEditor.Managers.ShortcutManager.*;
+import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_REGULAR;
 import static AutoDriveEditor.XMLConfig.GameXML.autoSaveLastUsedSlot;
 import static AutoDriveEditor.XMLConfig.GameXML.lastUsedLocation;
 
@@ -37,15 +45,19 @@ public class EditorXML {
     // Editor startup default values
     //
 
-    public static String lastRunVersion;
     public static boolean bShowUpdateMessage = true;
-    public static boolean bNoSavedWindowPosition;
-    public static int x = -99; // x + y are negative on purpose
-    public static int y = -99;
-    public static int width = 1280;
-    public static int height = 955;
+    public static boolean bWindowPositionSaved;
+    public static boolean bTextPanelVisible = false;
+    public static boolean bUndoRedoVisible = true;
+    public static boolean bCopyPasteVisible = true;
+
+
+    //public static boolean bNoSavedWindowPosition;
+    public static int windowX = -99; // x + y are negative on purpose
+    public static int windowY = -99;
+    public static int windowWidth = 1280;
+    public static int windowHeight = 955;
     public static float nodeSize = 2;
-    public static String toolbarPosition = "Left";
     public static final ArrayList<MapInfoStore> knownMapList = new ArrayList<>();
     public static boolean bShowSelectionBounds = false; // Experimental only
 
@@ -55,7 +67,6 @@ public class EditorXML {
 
     public static boolean bUseOnlineMapImages = true;
     public static boolean bMiddleMouseMove = false;
-    public static boolean bLockToolbarPosition = false;
     public static boolean bInterpolateZoom = true;
     public static int maxZoomLevel = 30;
 
@@ -72,8 +83,12 @@ public class EditorXML {
     //
     
     public static int curveSliderMax = 50;
-    public static int curveSliderDefault = 10;
+    public static int curveIterationsDefault = 6;
     public static int controlPointMoveScaler = 3;
+    public static int curveControlPointDefault = 1;
+    public static int maxControlPoints = 3;
+    public static int curveNodeDefaultPriority = NODE_FLAG_REGULAR;
+    public static Connection.ConnectionType curveDefaultConnection = Connection.ConnectionType.REGULAR;
 
     //
     // Connections tab default values
@@ -82,23 +97,58 @@ public class EditorXML {
     public static Boolean bCreateLinearLineEndNode = false;
     public static Boolean bFilledArrows = true;
     public static int linearLineNodeDistance = 12;
-    public static float hiddenNodesTransparencyLevel = 0.3f;
+    public static float hiddenNodesTransparencyLevel = 1f;
 
     //
     // Colours tab default values
     //
 
-    public static final Color BROWN = new Color(152, 104, 50 );
     public static Color colourNodeRegular = Color.RED;
     public static Color colourNodeSubprio = Color.ORANGE;
     public static Color colourNodeSelected = Color.WHITE;
-    public static Color colourNodeControl = Color.MAGENTA;
+    public static Color colourNodeControl = new Color(216,0,255);
     public static Color colourConnectRegular = Color.GREEN;
     public static Color colourConnectSubprio = Color.ORANGE;
     public static Color colourConnectDual = Color.BLUE;
-    public static Color colourConnectDualSubprio = BROWN;
+    public static Color colourConnectDualSubprio = new Color(152, 104, 50 );
     public static Color colourConnectReverse = Color.CYAN;
-    public static Color colourConnectReverseSubprio = Color.CYAN;
+    public static Color colourConnectReverseSubprio = new Color(0,140,140);
+    public static Color colourGridLines = new Color(25, 25, 25);
+
+    //
+    // Move Widget default values
+    //
+
+    public static byte axisLength = 30;
+    public static byte axisWidth = 5;
+    public static byte arrowLength = 24;
+    public static byte arrowWidth = 7;
+
+    public static Color DEFAULT_X_AXIS_COLOR = new Color(255, 0, 0, 255);
+    public static Color xAxisColor = DEFAULT_X_AXIS_COLOR;
+    public static Color DEFAULT_Y_AXIS_COLOR = new Color(0, 0, 255, 255);
+    public static Color yAxisColor = DEFAULT_Y_AXIS_COLOR;
+    public static Color DEFAULT_FREE_AXIS_COLOR = new Color(0, 255, 0, 255);
+    public static Color freeMoveColor = DEFAULT_FREE_AXIS_COLOR;
+    public enum X_DIRECTION {LEFT, RIGHT}
+    public static X_DIRECTION xAxisDirection = X_DIRECTION.RIGHT;
+
+    public enum Y_DIRECTION {UP, DOWN}
+    public static Y_DIRECTION yAxisDirection = Y_DIRECTION.UP;
+
+    public enum FREEMOVE_POSITION {CENTER, MANUAL}
+    public static FREEMOVE_POSITION freeMovePosition = FREEMOVE_POSITION.MANUAL;
+    public static int freeMoveOffsetX = 0;
+    public static int freeMoveOffsetY = 0;
+    public static int freeMoveDefaultSmall = 12;
+    public static int freeMoveDefaultMedium = 16;
+    public static int freeMoveDefaultLarge = 20;
+    public enum FREEMOVE_TYPE {SQUARE, ROUND}
+    public static FREEMOVE_TYPE freeMoveType = FREEMOVE_TYPE.SQUARE;
+    public enum FREEMOVE_STYLE {SOLID, OUTLINE, PATTERN}
+    public static FREEMOVE_STYLE freeMoveStyle = FREEMOVE_STYLE.PATTERN;
+    public enum FREEMOVE_SIZE {SMALL, MEDIUM, LARGE}
+    public static FREEMOVE_SIZE freeMoveSize = FREEMOVE_SIZE.MEDIUM;
 
     //
     // Options buttons default values
@@ -107,18 +157,21 @@ public class EditorXML {
     public static boolean bContinuousConnections = false;
     public static boolean bUseRectangularSelection = true;
     public static boolean bSelectHidden = false;
+    public static boolean bRotationSnapEnabled = true;
+    public static int rotationStep = 5;
 
     //
     // Grid buttons default values
     //
-    
+
     public static boolean bGridSnapSubs = false;
-    public static boolean bGridSnap = false;
+    public static boolean bGridSnapEnabled = false;
     public static boolean bShowGrid = false;
-    public static float gridSpacingX = 2;
-    public static float gridSpacingY = 2;
-    public static int gridSubDivisions = 4;
-    public static int rotationSnap = 5;
+    public enum GRID_TYPE {GRID_1x1, GRID_2x2, GRID_4x4, GRID_CUSTOM}
+    public static GRID_TYPE gridType = GRID_TYPE.GRID_1x1;
+    public static float gridCustomX = 1;
+    public static float gridCustomY = 1;
+    public static int gridCustomSubDivisions = 1;
 
     //
     // Display menu default values
@@ -129,59 +182,70 @@ public class EditorXML {
     public static boolean bShowParkingIcons = true;
     public static boolean bShowSelectedNodeID = false;
 
+    //
+    // Default keybinds
+    //
 
     public static void loadEditorXMLConfig() {
+
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         try {
             DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
             Document doc = docBuilder.parse("EditorConfig.xml");
             Element rootElement = doc.getDocumentElement();
 
-            lastRunVersion = getTextValue(lastRunVersion, rootElement, "Version");
-            bShowUpdateMessage = getBooleanValue(bShowUpdateMessage, rootElement, "ShowUpdateMessage");
-            bAutoSaveEnabled = getBooleanValue(bAutoSaveEnabled, rootElement, "AutoSave_Enabled");
-            autoSaveInterval = getIntegerValue(autoSaveInterval, rootElement, "AutoSave_Interval");
-            maxAutoSaveSlots = getIntegerValue(maxAutoSaveSlots, rootElement, "AutoSave_Slots");
-            autoSaveLastUsedSlot = getIntegerValue(autoSaveLastUsedSlot, rootElement, "AutoSave_Last_Used_Slot");
-            lastUsedLocation = getTextValue(lastUsedLocation, rootElement, "LastUsedLocation");
+
+            // TODO: remove default values from constructor variables and specify in get/set functions
+
+            bShowUpdateMessage = getBooleanValue(rootElement, "ShowUpdateMessage", true);
+            bAutoSaveEnabled = getBooleanValue(rootElement, "AutoSave_Enabled", true);
+            autoSaveInterval = getIntegerValue(rootElement, "AutoSave_Interval", 10);
+            maxAutoSaveSlots = getIntegerValue(rootElement, "AutoSave_Slots", 10);
+            autoSaveLastUsedSlot = getIntegerValue(rootElement, "AutoSave_Last_Used_Slot", 1);
             if (autoSaveLastUsedSlot > maxAutoSaveSlots)  autoSaveLastUsedSlot = maxAutoSaveSlots;
-            x = getIntegerValue(x, rootElement, "WindowX");
-            y = getIntegerValue(y, rootElement, "WindowY");
-            if ( x == -99 || y == -99) bNoSavedWindowPosition = true;
-            width = getIntegerValue(width, rootElement, "WindowWidth");
-            height = getIntegerValue(height, rootElement, "WindowHeight");
-            toolbarPosition = getTextValue(toolbarPosition, rootElement, "Toolbar_Position");
-            maxZoomLevel = getIntegerValue(maxZoomLevel, rootElement, "MaxZoomLevel");
-            nodeSize = getFloatValue(rootElement, "NodeSizeScale", nodeSize);
 
+            lastUsedLocation = getStringValue(rootElement, "LastUsedLocation", "");
+            windowX = getIntegerValue(rootElement, "WindowX", -99);
+            windowY = getIntegerValue(rootElement, "WindowY", -99);
+            if ( windowX == -99 || windowY == -99) bWindowPositionSaved = true;
+            windowWidth = getIntegerValue(rootElement, "WindowWidth", 1280);
+            windowHeight = getIntegerValue(rootElement, "WindowHeight", 960);
+            maxZoomLevel = getIntegerValue(rootElement, "MaxZoomLevel", 30);
+            nodeSize = getFloatValue(rootElement, "NodeSizeScale", 2);
 
-            bUseOnlineMapImages = getBooleanValue(bUseOnlineMapImages, rootElement, "Check_Online_MapImages");
-            bContinuousConnections = getBooleanValue(bContinuousConnections, rootElement, "Continuous_Connection");
-            bMiddleMouseMove = getBooleanValue(bMiddleMouseMove, rootElement, "MiddleMouseMove");
-            bLockToolbarPosition = getBooleanValue(bLockToolbarPosition, rootElement, "LockToolbar");
-            curveSliderMax = getIntegerValue(curveSliderMax, rootElement, "CurveSliderMaximum");
-            curveSliderDefault = getIntegerValue(curveSliderDefault, rootElement, "CurveSliderDefault");
-            if (curveSliderDefault > curveSliderMax) curveSliderDefault = curveSliderMax;
-            controlPointMoveScaler = getIntegerValue(controlPointMoveScaler, rootElement, "ControlPointMoveScaler");
-            bShowGrid = getBooleanValue(bShowGrid, rootElement, "ShowGrid");
-            bGridSnap = getBooleanValue(bGridSnap, rootElement, "GridSnapping");
-            gridSpacingX = getFloatValue(rootElement, "GridSpacingX", gridSpacingX);
-            gridSpacingY = getFloatValue(rootElement, "GridSpacingY", gridSpacingY);
-            bGridSnapSubs = getBooleanValue(bGridSnapSubs, rootElement, "SnapSubDivision");
-            gridSubDivisions = getIntegerValue(gridSubDivisions, rootElement, "GridSubDivisions");
-            rotationSnap = getIntegerValue(rotationSnap, rootElement, "RotationStep");
-            bFilledArrows = getBooleanValue(bFilledArrows, rootElement, "FilledConnectionArrows");
+            bTextPanelVisible = getBooleanValue(rootElement, "TextPanelVisible", false);
+            bUndoRedoVisible = getBooleanValue(rootElement, "UndoRedoVisible", true);
+//            public static boolean bUndoRedoVisible = true;
+
+            bCopyPasteVisible = getBooleanValue(rootElement, "CopyPasteVisible", true);
+//            public static boolean bCopyPasteVisible = true;
+            bUseOnlineMapImages = getBooleanValue(rootElement, "Check_Online_MapImages", bUseOnlineMapImages);
+            bContinuousConnections = getBooleanValue(rootElement, "Continuous_Connection", bContinuousConnections);
+            bMiddleMouseMove = getBooleanValue(rootElement, "MiddleMouseMove", bMiddleMouseMove);
+            curveSliderMax = getIntegerValue(rootElement, "CurveSliderMaximum", curveSliderMax);
+            curveIterationsDefault = getIntegerValue(rootElement, "CurveSliderDefault", curveIterationsDefault);
+            if (curveIterationsDefault > curveSliderMax) curveIterationsDefault = curveSliderMax;
+            controlPointMoveScaler = getIntegerValue(rootElement, "ControlPointMoveScaler", controlPointMoveScaler);
+            curveControlPointDefault = getIntegerValue(rootElement, "NumControlPoints", curveControlPointDefault);
+            maxControlPoints = getIntegerValue(rootElement, "MaxControlPoints", maxControlPoints);
+            curveNodeDefaultPriority = getIntegerValue(rootElement, "CurveNodeDefaultPriority", curveNodeDefaultPriority);
+            curveDefaultConnection = getEnumValue(Connection.ConnectionType.class, rootElement, "CurveDefaultConnection", curveDefaultConnection);
+            bShowGrid = getBooleanValue(rootElement, "ShowGrid", bShowGrid);
+            bGridSnapEnabled = getBooleanValue(rootElement, "GridSnapEnabled", bGridSnapEnabled);
+            bGridSnapSubs = getBooleanValue(rootElement, "SnapSubDivision", bGridSnapSubs);
+            rotationStep = getIntegerValue(rootElement, "RotationStep", rotationStep);
+            bFilledArrows = getBooleanValue(rootElement, "FilledConnectionArrows", bFilledArrows);
             hiddenNodesTransparencyLevel = getFloatValue(rootElement, "HiddenNodeTransparency", hiddenNodesTransparencyLevel);
-            bCreateLinearLineEndNode = getBooleanValue(bCreateLinearLineEndNode, rootElement, "CreateLinearLineEndNode");
-            linearLineNodeDistance = getIntegerValue(linearLineNodeDistance, rootElement, "LinearLineNodeDistance");
-            bUseRectangularSelection = getBooleanValue(bUseRectangularSelection, rootElement, "UseRectangularSelection");
-            bShowMarkerNames = getBooleanValue(bShowMarkerNames, rootElement, "ShowMarkerNames");
-            bShowSelectedNodeID = getBooleanValue(bShowSelectedNodeID, rootElement, "ShowSelectedNodeID");
-            bSelectHidden = getBooleanValue(bSelectHidden, rootElement, "SelectHidden");
-            bShowMarkerIcons = getBooleanValue(bShowMarkerIcons, rootElement, "ShowMarkerIcons");
-            bShowParkingIcons = getBooleanValue(bShowParkingIcons, rootElement, "ShowParkingIcons");
-            bInterpolateZoom = getBooleanValue(bInterpolateZoom, rootElement, "InterpolateZoom");
-
+            bCreateLinearLineEndNode = getBooleanValue(rootElement, "CreateLinearLineEndNode", bCreateLinearLineEndNode);
+            linearLineNodeDistance = getIntegerValue(rootElement, "LinearLineNodeDistance", linearLineNodeDistance);
+            bUseRectangularSelection = getBooleanValue(rootElement, "UseRectangularSelection", bUseRectangularSelection);
+            bRotationSnapEnabled = getBooleanValue(rootElement, "RotationSnapEnabled", bRotationSnapEnabled);
+            bShowMarkerNames = getBooleanValue(rootElement, "ShowMarkerNames", bShowMarkerNames);
+            bShowSelectedNodeID = getBooleanValue(rootElement, "ShowSelectedNodeID", bShowSelectedNodeID);
+            bSelectHidden = getBooleanValue(rootElement, "SelectHidden", bSelectHidden);
+            bShowMarkerIcons = getBooleanValue(rootElement, "ShowMarkerIcons", bShowMarkerIcons);
+            bShowParkingIcons = getBooleanValue(rootElement, "ShowParkingIcons", bShowParkingIcons);
+            bInterpolateZoom = getBooleanValue(rootElement, "InterpolateZoom", bInterpolateZoom);
 
             colourNodeRegular = getColorValue(rootElement, "Colour_Node_Regular", Color.RED);
             colourNodeSubprio = getColorValue(rootElement, "Colour_Node_Subprio", Color.ORANGE);
@@ -193,74 +257,121 @@ public class EditorXML {
             colourConnectDualSubprio = getColorValue(rootElement, "Colour_Connection_Dual_Subprio", new Color(150,100,50)); // Color.BROWN
             colourConnectReverse = getColorValue(rootElement, "Colour_Connection_Reverse", Color.CYAN);
             colourConnectReverseSubprio = getColorValue(rootElement, "Colour_Connection_Reverse_Subprio", Color.CYAN);
+            colourGridLines = getColorValue(rootElement, "Colour_Grid", new Color(25, 25, 25));
 
-            LOG.info("Checking for <RecentFiles> key in EditorConfig.xml");
 
-            NodeList recentEntryList;
-            if (doc.getElementsByTagName("RecentFiles").getLength() != 0 ) {
-                NodeList recentList = doc.getElementsByTagName("RecentFiles");
-                LOG.info("Found <RecentFiles> tag");
-                LOG.info("parsing {} <Config> tags from XML", doc.getElementsByTagName("Config").getLength());
+            axisLength = getByteValue(rootElement, "AxisLength", axisLength);
+            axisWidth = getByteValue(rootElement, "AxisWidth", axisWidth);
+            xAxisColor = getColorValue(rootElement, "X_AxisColor", xAxisColor);
+            yAxisColor = getColorValue(rootElement, "Y_AxisColor", yAxisColor);
+            arrowLength = getByteValue(rootElement, "ArrowLength", arrowLength);
+            arrowWidth = getByteValue(rootElement, "ArrowWidth", arrowWidth);
+            xAxisDirection = getEnumValue(X_DIRECTION.class, rootElement, "X_Direction", X_DIRECTION.RIGHT);
+            yAxisDirection = getEnumValue(Y_DIRECTION.class, rootElement, "Y_Direction", Y_DIRECTION.UP);
+            freeMovePosition = getEnumValue(FREEMOVE_POSITION.class, rootElement, "FreeMoveLocation", FREEMOVE_POSITION.MANUAL);
+            freeMoveOffsetX = getIntegerValue(rootElement, "FreeMoveOffsetX", -20);
+            freeMoveOffsetY = getIntegerValue(rootElement, "FreeMoveOffsetY", 30);
+            freeMoveType = getEnumValue(FREEMOVE_TYPE.class, rootElement, "FreeMoveType", FREEMOVE_TYPE.SQUARE);
+            freeMoveStyle = getEnumValue(FREEMOVE_STYLE.class, rootElement, "FreeMoveStyle", FREEMOVE_STYLE.PATTERN);
+            freeMoveSize = getEnumValue(FREEMOVE_SIZE.class, rootElement, "FreeMoveSize", FREEMOVE_SIZE.SMALL);
+            freeMoveDefaultSmall = getIntegerValue(rootElement, "FreeMoveDefaultSmall", 12);
+            freeMoveDefaultMedium = getIntegerValue(rootElement, "FreeMoveDefaultMedium", 16);
+            freeMoveDefaultLarge = getIntegerValue(rootElement, "FreeMoveDefaultLarge", 20);
+            freeMoveColor = getColorValue(rootElement, "FreeMoveColor", freeMoveColor);
 
-                for (int i = 0; i < recentList.getLength(); i++) {
-                    Node recentListNode = recentList.item(i);
-                    if (recentListNode.getNodeType() == Node.ELEMENT_NODE) {
-                        recentEntryList = doc.getElementsByTagName("Config");
-                        for (int j = 0; j < recentEntryList.getLength(); j++) {
-                            String path = null;
-                            int type = 0;
-                            Node knownEntryNode = recentEntryList.item(j);
-                            Element eElement = (Element) knownEntryNode;
-                            if (eElement.getElementsByTagName("Path").getLength() != 0 ) {
-                                NodeList nodeList = eElement.getElementsByTagName("Path").item(0).getChildNodes();
-                                Node node = nodeList.item(0);
-                                // check if the <Path> key is empty
-                                if (node != null) {
-                                    path = node.getNodeValue();
-                                } else {
-                                    LOG.info("--> <Path> key is empty for Entry {}", j + 1);
-                                }
-                            } else {
-                                // No <Path> key was found
-                                LOG.info("@ --> No <Path> key found for Entry {}", j + 1);
-                            }
+            // get the keyboard shortcuts
 
-                            if (eElement.getElementsByTagName("Type").getLength() != 0 ) {
-                                NodeList nodeList = eElement.getElementsByTagName("Type").item(0).getChildNodes();
-                                Node node = nodeList.item(0);
-                                // Check if the <Type> tag is empty
-                                if (node != null) {
-                                    type = Integer.parseInt(node.getNodeValue());
-                                } else {
-                                    LOG.info("--> <Type> key is empty for Entry {}", j + 1);
-                                }
-                            } else {
-                                LOG.info("@ --> No <Type> key found for Entry {}", j + 1);
-                            }
+            LOG.info("  Checking for <Shortcuts> key in EditorConfig.xml");
+            int valid = 0;
+            int created = 0;
+            NodeList shortcutsElement = rootElement.getElementsByTagName("Shortcuts");
+            // Check if the <Shortcuts> element exists
+            if (shortcutsElement.getLength() != 0) {
+                // Get the child nodes of the <Shortcuts> element
+                NodeList shortcutNodes = shortcutsElement.item(0).getChildNodes();
 
-                            if (path != null && type > 0) {
-                                if (bDebugLogXMLInfo) LOG.info("Adding {} to list", path);
-                                recentFilesList.addLast(new RecentFilesMenu.RecentEntry(path, type));
-                            } else {
-                                LOG.info("--> Skipping Entry {} -> <Path> or <Type> is invalid", j + 1);
+                for (Shortcut defaultShortcut : ShortcutManager.getDefaultShortcutList()) {
+                    boolean found = false;
+                    for (int i = 0; i < shortcutNodes.getLength(); i++) {
+                        if (shortcutNodes.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                            Element shortcutElement = (Element) shortcutNodes.item(i);
+                            // get the ID attribute of the shortcut element
+                            String id = shortcutElement.getAttribute("ID");
+                            // Check if the ID matches any of the default shortcuts
+                            if (defaultShortcut.getId().getXmlDescriptor().equals(id)) {
+                                found = true;
+                                String key = shortcutElement.getAttribute("Key");
+                                String modifiers = shortcutElement.getAttribute("Modifier");
+                                addShortcut(defaultShortcut.getId(), getVKInteger(key), getModifiersIntFromString(modifiers));
+                                valid++;
+                                break;
                             }
                         }
                     }
+                    if (!found) {
+                        LOG.info("    Shortcut {} not found, adding using default values", defaultShortcut.getId().getXmlDescriptor());
+                        Shortcut shortcut = ShortcutManager.getDefaultShortcutByName(defaultShortcut.getId().getXmlDescriptor());
+                        if (shortcut != null) addMissingUserShortcut(shortcut);
+                        created++;
+                    }
                 }
-
-                //LOG.info("parsing {} recently used files for editor use", doc.getElementsByTagName("Recent").getLength());
             } else {
-                LOG.info("No <RecentFiles> key found");
+                LOG.warn("    No shortcuts found in EditorConfig.xml, initializing all to default");
+                for (Shortcut defaultShortcut : getDefaultShortcutList()) {
+                    addMissingUserShortcut(defaultShortcut);
+                    created++;
+                }
             }
+            LOG.info("    Total Shortcuts: Valid = {}, Created = {}", valid, created);
 
+            // get the recent files list
 
+            LOG.info("  Checking for <RecentFiles> key in EditorConfig.xml");
+
+            NodeList recentFilesNodes = doc.getElementsByTagName("RecentFiles");
+            if (recentFilesNodes.getLength() != 0) {
+                NodeList recentEntries = recentFilesNodes.item(0).getChildNodes();
+                // get the number of valid entries
+                int recentEntriesCount = 0;
+                for (int i = 0; i < recentEntries.getLength(); i++) {
+                    if (recentEntries.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                        recentEntriesCount++;
+                    }
+                }
+                LOG.info("    Parsing {} Entries", recentEntriesCount);
+                // iterate through the entries
+                for (int i = 0; i < recentEntries.getLength(); i++) {
+                    if (recentEntries.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                        Element entryElement = (Element) recentEntries.item(i);
+                        String path = entryElement.getAttribute("Path");
+                        String typeStr = entryElement.getAttribute("Type");
+                        if (!path.isEmpty() && !typeStr.isEmpty()) {
+                            try {
+                                int type = Integer.parseInt(typeStr);
+                                if (type == 1 || type == 2) {
+                                    if (bDebugLogXMLInfo) LOG.info("Adding {} to list", path);
+                                    recentFilesList.addLast(new RecentFilesMenu.RecentEntry(path, type));
+                                } else {
+                                    LOG.info("      Skipping Entry {} -> <Type> is invalid", i + 1);
+                                }
+                            } catch (NumberFormatException e) {
+                                LOG.info("      <Type> key is invalid for Entry {}", i + 1);
+                            }
+                        } else {
+                            LOG.info("      Skipping Entry {} -> <Path> or <Type> is invalid", i + 1);
+                        }
+                    }
+                }
+            } else {
+                LOG.info("----> No <RecentFiles> key found");
+            }
 
             NodeList knownMapsList;
 
-            LOG.info("Checking for depreciated <mapzoomfactors> key in EditorConfig.xml");
+            LOG.info("  Checking for depreciated <mapzoomfactors> key in EditorConfig.xml");
 
             if (doc.getElementsByTagName("mapzoomfactor").getLength() != 0 ) {
-                LOG.info("  -> detected old <mapzoomfactors> key, old format will be replaced with new format on next config save");
+                LOG.info("    detected old <mapzoomfactors> key, old format will be replaced with new format on next config save");
                 knownMapsList = doc.getElementsByTagName("mapzoomfactor");
                 for (int temp = 0; temp < knownMapsList.getLength(); temp++) {
                     Node knownMapsNode = knownMapsList.item(temp);
@@ -285,118 +396,105 @@ public class EditorXML {
                             // not found, set NodeSize/GridX/GridY to default (2.0) + GridSubDivisions to default (1),
                             //
                             // All the entries will be updated to the new format on the next config save.
-                            // TODO:- Specifying a direct float is not ideal, find a cleaner way?
 
-                            knownMapList.add(new MapInfoStore(mapName, Integer.parseInt(mapZoomInt), 2f, 2f, 2f, 1, 30));
+                            knownMapList.add(new MapInfoStore(mapName, Integer.parseInt(mapZoomInt), 2f, GRID_TYPE.GRID_CUSTOM, 2f, 2f, 1, 30));
                         }
                     }
                 }
             } else if (doc.getElementsByTagName("KnownMapSettings").getLength() != 0 ) {
-                LOG.info("<mapzoomfactors> not found");
-                LOG.info("parsing {} known maps for editor use", doc.getElementsByTagName("Map").getLength());
+                LOG.info("    <mapzoomfactors> not found");
+                LOG.info("  Parsing {} known maps for editor use", doc.getElementsByTagName("Map").getLength());
 
                 NodeList mapList = doc.getElementsByTagName("KnownMapSettings");
 
-                for (int temp = 0; temp < mapList.getLength(); temp++) {
-                    Node mapListNode = mapList.item(temp);
+                for (int listNum = 0; listNum < mapList.getLength(); listNum++) {
+                    Node mapListNode = mapList.item(listNum);
                     if (mapListNode.getNodeType() == Node.ELEMENT_NODE) {
                         knownMapsList = doc.getElementsByTagName("Map");
-                        for (int temp2 = 0; temp2 < knownMapsList.getLength(); temp2++) {
-                            Node knownMapsNode = knownMapsList.item(temp2);
+                        for (int keyNum = 0; keyNum < knownMapsList.getLength(); keyNum++) {
+                            Node knownMapsNode = knownMapsList.item(keyNum);
                             Element eElement = (Element) knownMapsNode;
                             String mapName = eElement.getAttribute("Name");
-                            LOG.info("  Checking <{}> entry", mapName);
+                            LOG.info("    Checking <{}> entry", mapName);
 
-                            // get Maps Scale
+                            // get maps scale
+                            int mapScale = getIntegerValue(eElement, "MapScale", 1);
 
-                            String mapScale;
+                            // get node size
+                            float nodeSize = getFloatValue(eElement, "NodeSize", 2f);
 
-                            if (eElement.getElementsByTagName("MapScale").getLength() != 0 ) {
-                                NodeList nodeList = eElement.getElementsByTagName("MapScale").item(0).getChildNodes();
-                                Node node = nodeList.item(0);
-                                mapScale = node.getNodeValue();
+                            // get grid settings
+                            GRID_TYPE mapGridType = getEnumValue(GRID_TYPE.class, eElement, "GridType", GRID_TYPE.GRID_1x1);
+                            if (mapGridType != null) {
+                                switch (mapGridType) {
+                                    case GRID_1x1:
+                                    case GRID_2x2:
+                                    case GRID_4x4:
+                                        gridType = mapGridType;
+                                        break;
+                                    case GRID_CUSTOM:
+                                        gridType = GRID_TYPE.GRID_CUSTOM;
+                                        float customGridX = getFloatValue(eElement, "CustomGridX");
+                                        float customGridY = getFloatValue(eElement, "CustomGridY");
+                                        int customGridSub = getIntegerValue(eElement, "CustomSubDivisions");
+                                        if (customGridX != 0) {
+                                            gridCustomX = customGridX;
+                                        } else {
+                                            LOG.info("      <GridX> key is missing, setting to default ( {} )", gridCustomX);
+                                        }
+                                        if (customGridY != 0) {
+                                            gridCustomY = customGridY;
+                                        } else {
+                                            LOG.info("      <GridY> key is missing, setting to default ( {} )", gridCustomY);
+                                        }
+                                        if (customGridSub != 0) {
+                                            gridCustomSubDivisions = customGridSub;
+                                        } else {
+                                            LOG.info("      <GridSubDivisions> key is missing, setting to default ( {} )", gridCustomSubDivisions);
+                                        }
+                                        break;
+                                }
+
                             } else {
-                                mapScale = String.valueOf(1);
-                                LOG.info("    --> <MapScale> key is missing, setting to default ( {} )", mapScale);
-                            }
-
-                            // get Maps Scale
-
-                            String nodeSize;
-
-                            if (eElement.getElementsByTagName("NodeSize").getLength() != 0 ) {
-                                NodeList nodeList = eElement.getElementsByTagName("NodeSize").item(0).getChildNodes();
-                                Node node = nodeList.item(0);
-                                nodeSize = node.getNodeValue();
-                            } else {
-                                nodeSize = String.valueOf(2F);
-                                LOG.info("    --> <NodeSize> key is missing, setting to default ( {} )", nodeSize);
-                            }
-
-                            // get GridX
-
-                            String mapGridX;
-
-                            if (eElement.getElementsByTagName("GridX").getLength() != 0 ) {
-                                NodeList nodeList = eElement.getElementsByTagName("GridX").item(0).getChildNodes();
-                                Node node = nodeList.item(0);
-                                mapGridX = node.getNodeValue();
-                            } else {
-                                mapGridX = String.valueOf(2F);
-                                LOG.info("    --> <GridX> key is missing, setting to default ( {} )", mapGridX);
-                            }
-
-                            // get gridY
-
-                            String mapGridY;
-
-                            if (eElement.getElementsByTagName("GridY").getLength() != 0 ) {
-                                NodeList nodeList = eElement.getElementsByTagName("GridY").item(0).getChildNodes();
-                                Node node = nodeList.item(0);
-                                mapGridY = node.getNodeValue();
-                            } else {
-                                mapGridY = String.valueOf(2F);
-                                LOG.info("    --> <GridY> key is missing, setting to default ( {} )", mapGridY);
-                            }
-
-                            // get grid subdivisions
-
-                            String mapGridSub;
-
-                            if (eElement.getElementsByTagName("GridSubDivisions").getLength() != 0 ) {
-                                NodeList nodeList = eElement.getElementsByTagName("GridSubDivisions").item(0).getChildNodes();
-                                Node node = nodeList.item(0);
-                                mapGridSub = node.getNodeValue();
-                            } else {
-                                mapGridSub = String.valueOf(1);
-                                LOG.info("    --> <GridSubDivisions> key is missing, setting to default ( {} )", mapGridSub);
+                                LOG.info("--------> <GridType> key is missing, checking other settings");
+                                float mapGridX = getFloatValue(eElement, "GridX");
+                                float mapGridY = getFloatValue(eElement, "GridY");
+                                int mapGridSub = getIntegerValue(eElement, "GridSubDivisions");
+                                if (mapGridX == 1 && mapGridY == 1 && mapGridSub ==1) {
+                                    gridType = GRID_TYPE.GRID_1x1;
+                                    LOG.info("--------> Stored grid settings match GRID_1x1x1, converting to new format");
+                                } else if (mapGridX == 2 && mapGridY == 2 && mapGridSub ==1) {
+                                    gridType = GRID_TYPE.GRID_2x2;
+                                    LOG.info("--------> Stored grid settings match GRID_2x2x1, converting to new format");
+                                } else if (mapGridX == 4 && mapGridY == 4 && mapGridSub ==1) {
+                                    gridType = GRID_TYPE.GRID_4x4;
+                                    LOG.info("--------> Stored grid settings match GRID_4x4x1, converting to new format");
+                                } else {
+                                    gridType = GRID_TYPE.GRID_CUSTOM;
+                                    gridCustomX = (mapGridX != 0) ? mapGridX: 1;
+                                    gridCustomY = (mapGridY != 0) ? mapGridY: 1;
+                                    gridCustomSubDivisions = (mapGridSub != 0) ? mapGridSub: 1;
+                                    LOG.info("--------> Stored grid settings do not match any default, converting to GRID_CUSTOM");
+                                    LOG.info("--------> GridX = {}, GridY = {}, GridSubDivisions = {}", gridCustomX, gridCustomY, gridCustomSubDivisions);
+                                }
                             }
 
                             // get max zoom level
+                            int mapMaxZoomLevel = getIntegerValue(eElement, "MaxZoomLevel", 30);
 
-                            String mapMaxZoomLevel;
-
-                            if (eElement.getElementsByTagName("MaxZoomLevel").getLength() != 0 ) {
-                                NodeList nodeList = eElement.getElementsByTagName("MaxZoomLevel").item(0).getChildNodes();
-                                Node node = nodeList.item(0);
-                                mapMaxZoomLevel = node.getNodeValue();
-                            } else {
-                                mapMaxZoomLevel = String.valueOf(30);
-                                LOG.info("    --> <MaxZoomLevel> key is missing, setting to default ( {} )", maxZoomLevel);
-                            }
-
-                            if (bDebugLogXMLInfo) LOG.info("Map name = {}, Scale = {}, NodeSize = {}, GridX = {}, GridY = {}, GridSub = {}, maxZoom = {}", mapName, mapScale, nodeSize, mapGridX, mapGridY, mapGridSub, mapMaxZoomLevel);
-                            knownMapList.add(new MapInfoStore(mapName, Integer.parseInt(mapScale), Float.parseFloat(nodeSize), Float.parseFloat(mapGridX), Float.parseFloat(mapGridY), Integer.parseInt(mapGridSub), Integer.parseInt(mapMaxZoomLevel)));
+                            knownMapList.add(new MapInfoStore(mapName, mapScale, nodeSize, gridType, gridCustomX, gridCustomY, gridCustomSubDivisions, mapMaxZoomLevel));
                         }
                     }
                 }
             }
+            //setGridSpacing();
         } catch (ParserConfigurationException | SAXException pce) {
             LOG.error("## Exception in loading Editor config ## SAX/Parser Exception");
             System.out.println(pce.getMessage());
         } catch (IOException ioe) {
-            LOG.warn(getLocaleString("console_editor_config_load_not_found"));
-            bNoSavedWindowPosition = true;
+            LOG.warn("Editor config not found, using defaults. A new config will be saved on exit");
+            addAllDefaultShortcuts();
+            bWindowPositionSaved = true;
         }
     }
 
@@ -407,173 +505,149 @@ public class EditorXML {
             Document doc = docBuilder.newDocument();
             Element rootElement = doc.createElement("EditorConfig");
 
-            setTextValue("Version", doc, COURSE_EDITOR_VERSION, rootElement);
-            setBooleanValue("ShowUpdateMessage", doc, bShowUpdateMessage, rootElement);
-            setBooleanValue("AutoSave_Enabled", doc, bAutoSaveEnabled, rootElement);
-            setIntegerValue("AutoSave_Interval", doc, autoSaveInterval, rootElement);
-            setIntegerValue("AutoSave_Slots", doc, maxAutoSaveSlots, rootElement);
-            setIntegerValue("AutoSave_Last_Used_Slot", doc, autoSaveLastUsedSlot, rootElement);
-            setTextValue("LastUsedLocation", doc, lastUsedLocation, rootElement);
-            setIntegerValue("WindowX", doc, editor.getBounds().x, rootElement);
-            setIntegerValue("WindowY", doc, editor.getBounds().y, rootElement);
-            setIntegerValue("WindowWidth", doc, editor.getBounds().width, rootElement);
-            setIntegerValue("WindowHeight", doc, editor.getBounds().height, rootElement);
-            setTextValue("Toolbar_Position", doc, toolbarPosition, rootElement);
-            setIntegerValue( "MaxZoomLevel", doc, maxZoomLevel, rootElement);
-            setFloatValue("NodeSizeScale", doc, nodeSize, rootElement);
-            setBooleanValue("Check_Online_MapImages", doc, bUseOnlineMapImages, rootElement);
-            setBooleanValue("Continuous_Connection", doc, bContinuousConnections, rootElement);
-            setBooleanValue("MiddleMouseMove", doc, bMiddleMouseMove, rootElement);
-            setBooleanValue("LockToolbar", doc, bLockToolbarPosition, rootElement);
-            setIntegerValue("CurveSliderMaximum", doc, curveSliderMax, rootElement);
-            setIntegerValue("CurveSliderDefault", doc, curveSliderDefault, rootElement);
-            if (curveSliderDefault > curveSliderMax) curveSliderDefault = curveSliderMax;
-            setIntegerValue("ControlPointMoveScaler", doc, controlPointMoveScaler, rootElement);
-            setBooleanValue("ShowGrid", doc, bShowGrid, rootElement);
-            setBooleanValue("GridSnapping", doc, bGridSnap, rootElement);
-            setFloatValue("GridSpacingX", doc, gridSpacingX, rootElement);
-            setFloatValue("GridSpacingY", doc, gridSpacingY, rootElement);
-            setBooleanValue("SnapSubDivision",doc, bGridSnapSubs, rootElement);
-            setIntegerValue("GridSubDivisions", doc, gridSubDivisions, rootElement);
-            setIntegerValue("RotationStep", doc, rotationSnap, rootElement);
-            setBooleanValue("FilledConnectionArrows", doc, bFilledArrows, rootElement);
-            setFloatValue("HiddenNodeTransparency", doc, hiddenNodesTransparencyLevel, rootElement);
-            setBooleanValue("CreateLinearLineEndNode", doc, bCreateLinearLineEndNode, rootElement);
-            setIntegerValue("LinearLineNodeDistance", doc, linearLineNodeDistance, rootElement);
-            setBooleanValue("UseRectangularSelection", doc, bUseRectangularSelection, rootElement);
-            setBooleanValue("ShowMarkerNames", doc, bShowMarkerNames, rootElement);
-            setBooleanValue("ShowSelectedNodeID", doc, bShowSelectedNodeID, rootElement);
-            setBooleanValue("SelectHidden", doc, bSelectHidden, rootElement);
-            setBooleanValue("ShowMarkerIcons", doc, bShowMarkerIcons, rootElement);
-            setBooleanValue("ShowParkingIcons", doc, bShowParkingIcons, rootElement);
-            setBooleanValue("InterpolateZoom", doc, bInterpolateZoom, rootElement);
-
+            setTextValue(doc, rootElement, "Version", COURSE_EDITOR_VERSION);
+            setBooleanValue(doc, rootElement, "ShowUpdateMessage", bShowUpdateMessage);
+            setBooleanValue(doc, rootElement, "AutoSave_Enabled", bAutoSaveEnabled);
+            setIntegerValue(doc, rootElement, "AutoSave_Interval", autoSaveInterval);
+            setIntegerValue(doc, rootElement, "AutoSave_Slots", maxAutoSaveSlots);
+            setIntegerValue(doc, rootElement, "AutoSave_Last_Used_Slot", autoSaveLastUsedSlot);
+            setTextValue(doc, rootElement, "LastUsedLocation", lastUsedLocation);
+            setIntegerValue(doc, rootElement, "WindowX", editor.getBounds().x);
+            setIntegerValue(doc, rootElement, "WindowY", editor.getBounds().y);
+            setIntegerValue(doc, rootElement, "WindowWidth", editor.getBounds().width);
+            setIntegerValue(doc, rootElement, "WindowHeight", editor.getBounds().height);
+            setIntegerValue(doc, rootElement, "MaxZoomLevel", maxZoomLevel);
+            setFloatValue(doc, rootElement, "NodeSizeScale", nodeSize);
+            setBooleanValue(doc, rootElement, "TextPanelVisible", bTextPanelVisible);
+            setBooleanValue(doc, rootElement, "UndoRedoVisible", bUndoRedoVisible);
+            setBooleanValue(doc, rootElement, "CopyPasteVisible", bCopyPasteVisible);
+//            bCopyPasteVisible
+            setBooleanValue(doc, rootElement, "Check_Online_MapImages", bUseOnlineMapImages);
+            setBooleanValue(doc, rootElement, "Continuous_Connection", bContinuousConnections);
+            setBooleanValue(doc, rootElement, "MiddleMouseMove", bMiddleMouseMove);
+            setIntegerValue(doc, rootElement, "CurveSliderMaximum", curveSliderMax);
+            setIntegerValue(doc, rootElement, "CurveSliderDefault", curveIterationsDefault);
+            if (curveIterationsDefault > curveSliderMax) curveIterationsDefault = curveSliderMax;
+            setIntegerValue(doc, rootElement, "CurveNodeDefaultPriority", curveNodeDefaultPriority);
+            setEnumValue(doc, rootElement, "CurveDefaultConnection", curveDefaultConnection);
+            setIntegerValue(doc, rootElement, "ControlPointMoveScaler", controlPointMoveScaler);
+            setIntegerValue(doc, rootElement, "NumControlPoints", curveControlPointDefault);
+            setIntegerValue(doc, rootElement, "MaxControlPoints", maxControlPoints);
+            setBooleanValue(doc, rootElement, "ShowGrid", bShowGrid);
+            setBooleanValue(doc, rootElement, "GridSnapEnabled", bGridSnapEnabled);
+            setBooleanValue(doc, rootElement, "SnapSubDivision", bGridSnapSubs);
+            setIntegerValue(doc, rootElement, "RotationStep", rotationStep);
+            setBooleanValue(doc, rootElement, "RotationSnapEnabled", bRotationSnapEnabled);
+            setBooleanValue(doc, rootElement, "FilledConnectionArrows", bFilledArrows);
+            setFloatValue(doc, rootElement, "HiddenNodeTransparency", hiddenNodesTransparencyLevel);
+            setBooleanValue(doc, rootElement, "CreateLinearLineEndNode", bCreateLinearLineEndNode);
+            setIntegerValue(doc, rootElement, "LinearLineNodeDistance", linearLineNodeDistance);
+            setBooleanValue(doc, rootElement, "UseRectangularSelection", bUseRectangularSelection);
+            setBooleanValue(doc, rootElement, "ShowMarkerNames", bShowMarkerNames);
+            setBooleanValue(doc, rootElement, "ShowSelectedNodeID", bShowSelectedNodeID);
+            setBooleanValue(doc, rootElement, "SelectHidden", bSelectHidden);
+            setBooleanValue(doc, rootElement, "ShowMarkerIcons", bShowMarkerIcons);
+            setBooleanValue(doc, rootElement, "ShowParkingIcons", bShowParkingIcons);
+            setBooleanValue(doc, rootElement, "InterpolateZoom", bInterpolateZoom);
             doc.appendChild(rootElement);
 
+            // Save all the colours
+
             Element colorElement = doc.createElement("EditorColours");
-            setColorValue("Colour_Node_Regular", doc, colourNodeRegular, colorElement);
-            setColorValue("Colour_Node_Subprio", doc, colourNodeSubprio, colorElement);
-            setColorValue("Colour_Node_Selected", doc, colourNodeSelected, colorElement);
-            setColorValue("Colour_Node_Control", doc, colourNodeControl, colorElement);
-            setColorValue("Colour_Connection_Regular", doc, colourConnectRegular, colorElement);
-            setColorValue("Colour_Connection_Subprio", doc, colourConnectSubprio, colorElement);
-            setColorValue("Colour_Connection_Dual", doc, colourConnectDual, colorElement);
-            setColorValue("Colour_Connection_Dual_Subprio", doc, colourConnectDualSubprio, colorElement);
-            setColorValue("Colour_Connection_Reverse", doc, colourConnectReverse, colorElement);
-            setColorValue("Colour_Connection_Reverse_Subprio", doc, colourConnectReverseSubprio, colorElement);
+            setColorValue(doc, colorElement, "Colour_Node_Regular", colourNodeRegular);
+            setColorValue(doc, colorElement, "Colour_Node_Subprio", colourNodeSubprio);
+            setColorValue(doc, colorElement, "Colour_Node_Selected", colourNodeSelected);
+            setColorValue(doc, colorElement, "Colour_Node_Control", colourNodeControl);
+            setColorValue(doc, colorElement, "Colour_Connection_Regular", colourConnectRegular);
+            setColorValue(doc, colorElement, "Colour_Connection_Subprio", colourConnectSubprio);
+            setColorValue(doc, colorElement, "Colour_Connection_Dual", colourConnectDual);
+            setColorValue(doc, colorElement, "Colour_Connection_Dual_Subprio", colourConnectDualSubprio);
+            setColorValue(doc, colorElement, "Colour_Connection_Reverse", colourConnectReverse);
+            setColorValue(doc, colorElement, "Colour_Connection_Reverse_Subprio", colourConnectReverseSubprio);
+            setColorValue(doc, colorElement, "Colour_Grid", colourGridLines);
             rootElement.appendChild(colorElement);
 
-            // remove all the previous <RecentFiles> entries from loaded XML
+            // Save all move widget options
 
-            if (doc.getElementsByTagName("RecentFiles").getLength() != 0 ) {
-                for (int knownRecentIndex = 1; knownRecentIndex < knownMapList.size(); knownRecentIndex++) {
-                    Element element = (Element) doc.getElementsByTagName("RecentFiles" + (knownRecentIndex)).item(0);
-                    if (element != null) {
-                        Element parent = (Element) element.getParentNode();
-                        while (parent.hasChildNodes())
-                            parent.removeChild(parent.getFirstChild());
-                    }
-                }
+            Element moveWidgetElement = doc.createElement("MoveWidget");
+            setByteValue(doc, moveWidgetElement, "AxisLength", axisLength);
+            setByteValue(doc, moveWidgetElement, "AxisWidth", axisWidth);
+            setColorValue(doc, moveWidgetElement, "X_AxisColor", xAxisColor);
+            setColorValue(doc, moveWidgetElement, "Y_AxisColor", yAxisColor);
+            setByteValue(doc, moveWidgetElement, "ArrowLength", arrowLength);
+            setByteValue(doc, moveWidgetElement, "ArrowWidth", arrowWidth);
+            setEnumValue(doc, moveWidgetElement, "X_Direction", xAxisDirection);
+            setEnumValue(doc, moveWidgetElement, "Y_Direction", yAxisDirection);
+            setEnumValue(doc, moveWidgetElement, "FreeMoveLocation", freeMovePosition);
+            setIntegerValue(doc, moveWidgetElement, "FreeMoveOffsetX", freeMoveOffsetX);
+            setIntegerValue(doc, moveWidgetElement, "FreeMoveOffsetY", freeMoveOffsetY);
+            setEnumValue(doc, moveWidgetElement, "FreeMoveType", freeMoveType);
+            setEnumValue(doc, moveWidgetElement, "FreeMoveStyle", freeMoveStyle);
+            setEnumValue(doc, moveWidgetElement, "FreeMoveSize", freeMoveSize);
+            setIntegerValue(doc, moveWidgetElement, "FreeMoveDefaultSmall", freeMoveDefaultSmall);
+            setIntegerValue(doc, moveWidgetElement, "FreeMoveDefaultMedium", freeMoveDefaultMedium);
+            setIntegerValue(doc, moveWidgetElement, "FreeMoveDefaultLarge", freeMoveDefaultLarge);
+            setColorValue(doc, moveWidgetElement, "FreeMoveColor", freeMoveColor);
+
+            rootElement.appendChild(moveWidgetElement);
+
+            // Save all the shortcuts
+
+            Element shortcutsElement = doc.createElement("Shortcuts");
+            for (Shortcut shortcut : getAllShortcuts()) {
+                if (bDebugLogShortcutInfo) LOG.info("Saving shortcut: {}", shortcut);
+                Element actionElement = doc.createElement("KeyBind");
+                actionElement.setAttribute("ID", String.valueOf(shortcut.getId().getXmlDescriptor()));
+
+                String keyString = (shortcut.getKeyCode() != 0) ? shortcut.getKeyVK() : "";
+                actionElement.setAttribute("Key", keyString);
+
+                String modifiersString = InputEvent.getModifiersExText(shortcut.getModifier());
+                actionElement.setAttribute("Modifier", modifiersString);
+
+                actionElement.setAttribute("Name", shortcut.getLocalizedString());
+
+                shortcutsElement.appendChild(actionElement);
+                if (bDebugLogShortcutInfo) LOG.info("adding Shortcut: {} -> Key: {} -> Modifiers: {}", shortcut.getId(), keyString, modifiersString);
             }
+            rootElement.appendChild(shortcutsElement);
 
-            // if <RecentFiles> doesn't exist, create it
+            // Store all the recent files list
 
-            if (recentFilesList.size() > 0 && doc.getElementsByTagName("RecentFiles").getLength() == 0 ) {
-                Element newElement = doc.createElement("RecentFiles");
-                rootElement.appendChild(newElement);
-            }
-
-            // add the stored entries, makes sure the list is upto date
-
-            NodeList recentList = doc.getElementsByTagName("RecentFiles");
-            Node knownRecentNode = recentList.item(0);
-
+            Element recentFile = doc.createElement("RecentFiles");
             for (RecentFilesMenu.RecentEntry entry : recentFilesList) {
-                Element newConfigElement = doc.createElement("Config");
-
-                Element newPathElement = doc.createElement("Path");
-                newPathElement.appendChild(doc.createTextNode(entry.getConfigPath()));
-                newConfigElement.appendChild(newPathElement);
-
-                Element newTypeElement = doc.createElement("Type");
-                newTypeElement.appendChild(doc.createTextNode(String.valueOf(entry.getConfigType())));
-                newConfigElement.appendChild(newTypeElement);
-
-                knownRecentNode.appendChild(newConfigElement);
+                Element entryElement = doc.createElement("Recent");
+                entryElement.setAttribute("Path", entry.getConfigPath());
+                entryElement.setAttribute("Type", String.valueOf(entry.getConfigType()));
+                recentFile.appendChild(entryElement);
             }
+            rootElement.appendChild(recentFile);
 
-            // check if depreciated <mapzoomfactors> keys exists, if so, remove them
-
-            if (doc.getElementsByTagName("mapzoomfactor").getLength() != 0 ) {
-
-                // remove all the previous <mapzoomfactor> entries from loaded XML
-
-                for (int zoomStoreIndex = 1; zoomStoreIndex < knownMapList.size(); zoomStoreIndex++) {
-                    Element element = (Element) doc.getElementsByTagName("mapzoomfactor" + (zoomStoreIndex)).item(0);
-                    if (element != null) {
-                        Element parent = (Element) element.getParentNode();
-                        while (parent.hasChildNodes())
-                            parent.removeChild(parent.getFirstChild());
-                    }
-                }
-            } else if (doc.getElementsByTagName("KnownMapSettings").getLength() != 0 ) {
-
-                // remove all the previous <KnownMapSettings> entries from loaded XML
-
-                for (int knownMapsIndex = 1; knownMapsIndex < knownMapList.size(); knownMapsIndex++) {
-                    Element element = (Element) doc.getElementsByTagName("KnownMapSettings" + (knownMapsIndex)).item(0);
-                    if (element != null) {
-                        Element parent = (Element) element.getParentNode();
-                        while (parent.hasChildNodes())
-                            parent.removeChild(parent.getFirstChild());
-                    }
-                }
-
-            }
-
-            // if <mapzoomfactor> doesn't exist, create it
-
-            if (knownMapList.size() > 0 && doc.getElementsByTagName("KnownMapSettings").getLength() == 0 ) {
-                Element test = doc.createElement("KnownMapSettings");
-                rootElement.appendChild(test);
-            }
-
-            // add the stored entries, makes sure the list upto date
-
-            NodeList knownMapList = doc.getElementsByTagName("KnownMapSettings");
-            Node knownMapNode = knownMapList.item(0);
-
+            // store all the known map settings
+            Element knownMapList = doc.createElement("KnownMapSettings");
             for (MapInfoStore mapInfo : EditorXML.knownMapList) {
+                // createSetting the map element
+                Element mapElement = doc.createElement("Map");
+                // add the map name Attribute
+                mapElement.setAttribute("Name", mapInfo.getMapName());
+                // store the map scale
+                setIntegerValue(doc, mapElement, "MapScale", mapInfo.getMapScale());
+                // store the node size
+                setFloatValue(doc, mapElement, "NodeSize", mapInfo.getNodeSize());
+                // store the grid settings
+                setEnumValue(doc, mapElement, "GridType", mapInfo.getGridType());
+                // store the custom grid settings if needed
+                if (mapInfo.getGridType() == GRID_TYPE.GRID_CUSTOM) {
+                    setTextValue(doc, mapElement, "CustomGridX", String.valueOf(mapInfo.getGridX()));
+                    setTextValue(doc, mapElement, "CustomGridY", String.valueOf(mapInfo.getGridY()));
+                    setTextValue(doc, mapElement, "CustomSubDivisions", String.valueOf(mapInfo.getGridSubDiv()));
+                }
+                setTextValue(doc, mapElement, "MaxZoomLevel", String.valueOf(mapInfo.getMaxZoomLevel()));
 
-                Element newMapElement = doc.createElement("Map");
-                newMapElement.setAttribute("Name", mapInfo.getMapName());
-
-                Element knownMapName = doc.createElement("MapScale");
-                knownMapName.appendChild(doc.createTextNode(String.valueOf(mapInfo.getMapScale())));
-                newMapElement.appendChild(knownMapName);
-
-                Element knownMapNodeSize = doc.createElement("NodeSize");
-                knownMapNodeSize.appendChild(doc.createTextNode(String.valueOf(mapInfo.getNodeSize())));
-                newMapElement.appendChild(knownMapNodeSize);
-
-                Element knownMapGridX = doc.createElement("GridX");
-                knownMapGridX.appendChild(doc.createTextNode(String.valueOf(mapInfo.getGridX())));
-                newMapElement.appendChild(knownMapGridX);
-
-                Element knownMapGridY = doc.createElement("GridY");
-                knownMapGridY.appendChild(doc.createTextNode(String.valueOf(mapInfo.getGridY())));
-                newMapElement.appendChild(knownMapGridY);
-
-                Element knownMapGridSubDiv = doc.createElement("GridSubDivisions");
-                knownMapGridSubDiv.appendChild(doc.createTextNode(String.valueOf(mapInfo.getGridSubDiv())));
-                newMapElement.appendChild(knownMapGridSubDiv);
-
-                Element knownMapMaxZoom = doc.createElement("MaxZoomLevel");
-                knownMapMaxZoom.appendChild(doc.createTextNode(String.valueOf(mapInfo.getMaxZoomLevel())));
-                newMapElement.appendChild(knownMapMaxZoom);
-
-                knownMapNode.appendChild(newMapElement);
+                knownMapList.appendChild(mapElement);
             }
+            rootElement.appendChild(knownMapList);
+
 
             try {
                 Transformer transformer = TransformerFactory.newInstance().newTransformer();
@@ -587,9 +661,9 @@ public class EditorXML {
                 try {
                     result = new StreamResult(new FileOutputStream("EditorConfig.xml"));
                     transformer.transform(source, result);
-                    LOG.info("{}", getLocaleString("console_editor_config_save_end"));
+                    LOG.info("Completed saving Editor Config");
                 } catch (IOException ioe) {
-                    LOG.error( getLocaleString("console_editor_config_save_error"));
+                    LOG.error("Editor config could not be saved.. check file/folder access permissions");
                 }
             } catch (TransformerFactoryConfigurationError | TransformerException | IllegalArgumentException transformerFactoryConfigurationError) {
                 LOG.error("## Exception in saving Editor config ## Transformer Exception ##");
@@ -604,16 +678,18 @@ public class EditorXML {
     public static class MapInfoStore {
         private final String mapName;
         private int mapScale;
+        private GRID_TYPE gridType;
         private float nodeSize;
         private float gridX;
         private float gridY;
         private int gridSubDiv;
         private int maxZoomLevel;
 
-        public MapInfoStore(String mapName, int mapScale, float nodeSize, float gridX, float gridY, int subDiv, int maxZoomLevel) {
+        public MapInfoStore(String mapName, int mapScale, float nodeSize, GRID_TYPE gridType, float gridX, float gridY, int subDiv, int maxZoomLevel) {
             this.mapName = mapName;
             this.mapScale = mapScale;
             this.nodeSize = nodeSize;
+            this.gridType = gridType;
             this.gridX = gridX;
             this.gridY = gridY;
             this.gridSubDiv = subDiv;
@@ -625,6 +701,7 @@ public class EditorXML {
         public String getMapName() { return this.mapName; }
         public int getMapScale() { return this.mapScale; }
         public float getNodeSize() { return this.nodeSize; }
+        public GRID_TYPE getGridType() { return this.gridType; }
         public float getGridX() { return this.gridX; }
         public float getGridY() { return this.gridY; }
         public int getGridSubDiv() { return this.gridSubDiv; }
@@ -634,7 +711,8 @@ public class EditorXML {
 
         public void setMapScale(int newMapScale) { this.mapScale = newMapScale; }
         public void setNodeSize(float newNodeSize) { this.nodeSize = newNodeSize; }
-        public void setGridSettings(float newGridX, float newGridY, int newGridSubDiv) {
+        public void setGridSettings(GRID_TYPE gridType, float newGridX, float newGridY, int newGridSubDiv) {
+            this.gridType = gridType;
             this.gridX = limitFloatToDecimalPlaces(newGridX, 1, RoundingMode.HALF_UP);
             this.gridY = limitFloatToDecimalPlaces(newGridY, 1, RoundingMode.HALF_UP);
             this.gridSubDiv = newGridSubDiv;
@@ -649,12 +727,13 @@ public class EditorXML {
                 MapInfoStore store = knownMapList.get(i);
                 if (store.getMapName().equals(mapName)) {
                     LOG.info("Found previously used settings in EditorConfig.xml for map ( {} ), applying them now", mapName);
+                    setCurrentMapNameLabel(store.getMapName());
                     setNewMapScale(store.getMapScale());
                     LOG.info("  --> updated map scale to {}x", mapScale);
                     setNewNodeSize(store.getNodeSize());
                     LOG.info("  --> updated node size to {}x", nodeSize);
-                    setNewGridValues(store.getGridX(), store.getGridY(), store.getGridSubDiv());
-                    LOG.info("  --> updated grid settings to X = {} , Y = {}, SubDiv = {}", gridSpacingX, gridSpacingY, gridSubDivisions);
+                    setNewGridValues(store.gridType, store.getGridX(), store.getGridY(), store.getGridSubDiv());
+                    LOG.info("  --> updated grid settings to Type = {} , X = {} , Y = {}, SubDiv = {}", store.getGridType(), store.getGridX(), store.getGridY(), store.getGridSubDiv());
                     setNewMaxZoomLevel(store.getMaxZoomLevel());
                     LOG.info("  --> updated max zoom level to {}x", maxZoomLevel);
                     isKnown = true;
@@ -669,7 +748,7 @@ public class EditorXML {
 
         if (!isKnown && mapName != null) {
             LOG.info("No previous settings found for Map ( {} ), storing new map with initial settings of 1x map scale / node size of 2.0", mapName);
-            knownMapList.add(new MapInfoStore(mapName, 1, 2f, 2f,2f,1, 30));
+            knownMapList.add(new MapInfoStore(mapName, 1, 2f, GRID_TYPE.GRID_2x2, 2f,2f,1, 30));
             setCurrentMapScaleLabel("2km");
             nodeSize = 2f;
         }
@@ -705,17 +784,31 @@ public class EditorXML {
 
     }
 
-    public static void setNewGridValues(float newGridX, float newGridY, int newGridSubDiv) {
+    public static void setNewGridValues(GRID_TYPE type, float newGridX, float newGridY, int newGridSubDiv) {
         if (roadMap != null) {
-            gridSpacingX = limitFloatToDecimalPlaces(newGridX, 1, RoundingMode.HALF_UP);
-            gridSpacingY = limitFloatToDecimalPlaces(newGridY, 1, RoundingMode.HALF_UP);
-            gridSubDivisions = newGridSubDiv;
-            for (MapInfoStore store : knownMapList) {
-                if (store.getMapName().equals(RoadMap.mapName)) {
-                    store.setGridSettings(newGridX, newGridY, newGridSubDiv);
+            switch (type) {
+                case GRID_2x2:
+                    gridSpacingX = 2;
+                    gridSpacingY = 2;
+                    gridSubDivisions = 1;
                     break;
-                }
+                case GRID_4x4:
+                    gridSpacingX = 4;
+                    gridSpacingY = 4;
+                    gridSubDivisions = 1;
+                    break;
+                case GRID_CUSTOM:
+                    gridSpacingX = limitFloatToDecimalPlaces(newGridX, 1, RoundingMode.HALF_UP);
+                    gridSpacingY = limitFloatToDecimalPlaces(newGridY, 1, RoundingMode.HALF_UP);
+                    gridSubDivisions = newGridSubDiv;
+                    break;
+                default:
+                    gridSpacingX = 1;
+                    gridSpacingY = 1;
+                    gridSubDivisions = 1;
+                    break;
             }
+            updateGridPanelSettings(type, gridSpacingX, gridSpacingY, gridSubDivisions);
             getMapPanel().repaint();
         }
 

@@ -10,7 +10,7 @@ public class LogFileIOMenu extends JCheckBoxMenuItemBase {
     public static boolean bDebugLogFileIO;
 
     public LogFileIOMenu() {
-        makeCheckBoxMenuItem("menu_debug_log_fileio", "menu_debug_log_fileio_accstring", false, true);
+        makeCheckBoxMenuItem("menu_debug_log_fileio", false, true);
     }
 
     @Override

@@ -1,18 +1,20 @@
 package AutoDriveEditor.GUI.Config.Tabs;
 
+import com.formdev.flatlaf.extras.FlatSVGIcon;
+import net.miginfocom.swing.MigLayout;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 
+import static AutoDriveEditor.Classes.Util_Classes.GUIUtils.makeBasicButton;
+import static AutoDriveEditor.Classes.Util_Classes.GUIUtils.makeCheckBox;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogConfigGUIInfoMenu.bDebugLogConfigGUIInfo;
-import static AutoDriveEditor.GUI.TextPanel.updateAutosaveStatusLabel;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.Utils.GUIUtils.makeBasicButton;
-import static AutoDriveEditor.Utils.GUIUtils.makeCheckBox;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
+import static AutoDriveEditor.Managers.IconManager.*;
 import static AutoDriveEditor.XMLConfig.AutoSave.*;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
-import static javax.swing.BoxLayout.X_AXIS;
 
 public class AutoSaveTab extends JPanel {
 
@@ -25,85 +27,126 @@ public class AutoSaveTab extends JPanel {
 
     public AutoSaveTab() {
 
-        setLayout(new BoxLayout( this, BoxLayout.Y_AXIS));
+        // Set the layout of the main panel
+        setLayout(new MigLayout("center, insets 10 30 0 30", "[]", "[]10[]15[]15[]30[]"));
 
+        // Autosave Label
 
-        JPanel autoSaveOptions = new JPanel(new GridLayout(3,2,0,10));
+        JLabel autosaveLabel = new JLabel(getLocaleString("panel_config_tab_autosave_autosave"));
+        add(autosaveLabel, "center, wrap");
+
+        // Toggle Autosave Panel
+
+        JPanel toggleAutosavePanel = new JPanel(new MigLayout("center"));
+        toggleAutosavePanel.putClientProperty("FlatLaf.style", "border: 0,0,0,0,@disabledForeground,1,16; background: darken($Panel.background,5%)");
+        FlatSVGIcon autosaveIcon = getSVGIcon(AUTOSAVE_ICON);
+        JLabel autosaveIconLabel = new JLabel(autosaveIcon);
+
 
         // AutoSave Enabled checkbox
 
-        JLabel enabledAutoSaveLabel = new JLabel(getLocaleString("panel_config_tab_autosave_enabled") + "  ", JLabel.TRAILING);
+        JLabel enabledAutoSaveLabel = new JLabel(getLocaleString("panel_config_tab_autosave_enabled"), JLabel.TRAILING);
         JCheckBox cbEnableAutoSave = makeCheckBox(enabledAutoSaveLabel, "AutoSaveEnabled", null, true, bAutoSaveEnabled);
         cbEnableAutoSave.addItemListener(e -> {
             bTempAutoSaveEnabled = e.getStateChange() == ItemEvent.SELECTED;
             if (bDebugLogConfigGUIInfo) LOG.info("AutoSave = {}", bTempAutoSaveEnabled);
             checkIfThreadRestartButtonNeedsEnabling();
         });
-        enabledAutoSaveLabel.setLabelFor(cbEnableAutoSave);
-        autoSaveOptions.add(enabledAutoSaveLabel);
-        autoSaveOptions.add(cbEnableAutoSave);
+        //enabledAutoSaveLabel.setLabelFor(cbEnableAutoSave);
+        toggleAutosavePanel.add(autosaveIconLabel, "gap 0 20 0 0");
+        toggleAutosavePanel.add(enabledAutoSaveLabel);
+        toggleAutosavePanel.add(cbEnableAutoSave);
 
+        add(toggleAutosavePanel, "center, grow, wrap");
+
+        // Slider Panel
+
+        JLabel sliderLabel = new JLabel(getLocaleString("panel_config_tab_autosave_schedule"));
+        add(sliderLabel, "center, wrap");
+
+        JPanel mapPanel = new JPanel(new MigLayout("center, gap 0 0 0 0"));
+        mapPanel.putClientProperty("FlatLaf.style", "border: 0,0,10,0,@disabledForeground,1,16; background: darken($Panel.background,5%)");
+
+        FlatSVGIcon timeIcon = getSVGIcon(TIME_ICON);
+        timeIcon.setColorFilter(FlatSVGIcon.ColorFilter.getInstance()
+                .add(new Color(66, 139, 193), null, new Color(193, 148, 0))
+                .add(new Color(245, 245, 245,255), null, new Color(245, 245, 245,40))
+                .add(new Color(229, 229, 229,255), null, new Color(229, 229, 229, 30)));
+        JLabel timeIconLabel = new JLabel(timeIcon);
         // Autosave interval slider
 
-        JLabel autoSaveIntervalLabel = new JLabel(getLocaleString("panel_config_tab_autosave_interval") + " ("+ autoSaveInterval+")" + "  ", JLabel.TRAILING);
+        JLabel autoSaveIntervalLabel = new JLabel(getLocaleString("panel_config_tab_autosave_interval"));
         JSlider autoSaveIntervalSlider = new JSlider(SwingConstants.HORIZONTAL);
+        JTextField autoSaveIntervalTextField = new JTextField();
+        autoSaveIntervalTextField.setText(autoSaveInterval + " Mins");
+        autoSaveIntervalTextField.setEditable(false);
+
 
         autoSaveIntervalSlider.addChangeListener(e -> {
             JSlider source = (JSlider) e.getSource();
             if (source.getValueIsAdjusting()) {
                 int intervalValue = autoSaveIntervalSlider.getValue();
                 tempAutoSaveInterval = Math.max(intervalValue, 5);
-                autoSaveIntervalSlider.setValue(tempAutoSaveInterval);
-                String text = getLocaleString("panel_config_tab_autosave_interval") + " (" + tempAutoSaveInterval + ")  ";
-                autoSaveIntervalLabel.setText(text);
+                //autoSaveIntervalSlider.setValue(tempAutoSaveInterval);
+                String labelText = tempAutoSaveInterval + " Mins";
+                autoSaveIntervalTextField.setText(labelText);
                 checkIfThreadRestartButtonNeedsEnabling();
             }
         });
 
         autoSaveIntervalSlider.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
-        autoSaveIntervalSlider.setPaintTicks(true);
+        //autoSaveIntervalSlider.setPaintTicks(true);
         autoSaveIntervalSlider.setSnapToTicks(true);
         autoSaveIntervalSlider.setMajorTickSpacing(10);
         autoSaveIntervalSlider.setMinorTickSpacing(5);
-        autoSaveIntervalSlider.setPaintLabels(true);
+        //autoSaveIntervalSlider.setPaintLabels(true);
         autoSaveIntervalSlider.setMinimum(0);
         autoSaveIntervalSlider.setMaximum(60);
         autoSaveIntervalSlider.setValue(autoSaveInterval);
 
-        autoSaveOptions.add(autoSaveIntervalLabel);
-        autoSaveOptions.add(autoSaveIntervalSlider);
+
+
+        mapPanel.add(timeIconLabel, "span 1 4, gap 20 20 0 0");
+        mapPanel.add(autoSaveIntervalLabel, "center, wrap");
+        mapPanel.add(autoSaveIntervalSlider);
+        mapPanel.add(autoSaveIntervalTextField, "center, wrap");
+        //optionsPanel.add(mapPanel, "wrap");
 
 
         // Maximum autosave slots slider
 
-        JLabel maxAutoSaveSlotLabel = new JLabel(getLocaleString("panel_config_tab_autosave_maxslot") + "  ", JLabel.TRAILING);
+        JLabel maxAutoSaveSlotLabel = new JLabel(getLocaleString("panel_config_tab_autosave_maxslot"));
         JSlider slMaxAutoSaveSlot = new JSlider(SwingConstants.HORIZONTAL);
+        JTextField autoSaveSlotsTextField = new JTextField();
+        autoSaveSlotsTextField.setText(maxAutoSaveSlots + " Slots");
+        autoSaveSlotsTextField.setEditable(false);
+
         slMaxAutoSaveSlot.addChangeListener(e -> {
             JSlider source = (JSlider) e.getSource();
             if (source.getValueIsAdjusting()) {
                 tempMaxAutoSaveSlots = source.getValue();
                 if (bDebugLogConfigGUIInfo) LOG.info("Max AutoSave Slots = {}", tempMaxAutoSaveSlots);
+                autoSaveSlotsTextField.setText(tempMaxAutoSaveSlots + " Slots");
                 checkIfThreadRestartButtonNeedsEnabling();
             }
         });
         slMaxAutoSaveSlot.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
-        slMaxAutoSaveSlot.setPaintTicks(true);
+        //slMaxAutoSaveSlot.setPaintTicks(true);
         slMaxAutoSaveSlot.setSnapToTicks(true);
         slMaxAutoSaveSlot.setMajorTickSpacing(1);
-        slMaxAutoSaveSlot.setPaintLabels(true);
+        //slMaxAutoSaveSlot.setPaintLabels(true);
         slMaxAutoSaveSlot.setMinimum(1);
         slMaxAutoSaveSlot.setMaximum(10);
         slMaxAutoSaveSlot.setValue(maxAutoSaveSlots);
 
-        autoSaveOptions.add(maxAutoSaveSlotLabel);
-        autoSaveOptions.add(slMaxAutoSaveSlot);
-        add(autoSaveOptions);
+        mapPanel.add(maxAutoSaveSlotLabel, "center, wrap");
+        mapPanel.add(slMaxAutoSaveSlot);
+        mapPanel.add(autoSaveSlotsTextField, "center, wrap");
 
-        JPanel applyPanel = new JPanel();
-        applyPanel.setLayout(new BoxLayout(applyPanel, X_AXIS));
-        applyPanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,20));
+
+        JPanel applyPanel = new JPanel(new MigLayout("center"));
+        applyPanel.putClientProperty("FlatLaf.style", "border: 10,10,10,10,@disabledForeground,1,16; background: darken($Panel.background,5%)");
         applyNewAutoSaveSettingsNow = makeBasicButton(null, "panel_config_tab_autosave_apply_now_tooltip", "panel_config_tab_autosave_apply_now", applyPanel, false, true);
-        applyPanel.add(Box.createHorizontalGlue());
         applyNewAutoSaveSettingsLater = makeBasicButton(null, "panel_config_tab_autosave_apply_later_tooltip", "panel_config_tab_autosave_apply_later", applyPanel, false, true);
 
         applyNewAutoSaveSettingsNow.addActionListener(e -> {
@@ -112,7 +155,7 @@ public class AutoSaveTab extends JPanel {
             bAutoSaveEnabled = bTempAutoSaveEnabled;
             autoSaveInterval = tempAutoSaveInterval;
             maxAutoSaveSlots = tempMaxAutoSaveSlots;
-            updateAutosaveStatusLabel(bAutoSaveEnabled);
+            //updateAutosaveStatusLabel(bAutoSaveEnabled);
             if (bAutoSaveEnabled) {
                 if (scheduledFuture != null) {
                     restartAutoSaveThread();
@@ -134,7 +177,18 @@ public class AutoSaveTab extends JPanel {
             maxAutoSaveSlots = tempMaxAutoSaveSlots;
         });
 
-        add(applyPanel);
+        add(mapPanel, "center, grow, wrap");
+
+        JPanel buttonPanel = new JPanel(new MigLayout());
+        buttonPanel.putClientProperty("FlatLaf.style", "border: 10,10,10,10");
+
+        buttonPanel.add(new JLabel(""), "dock center, grow");
+        buttonPanel.add(applyNewAutoSaveSettingsNow, "dock west");
+        buttonPanel.add(applyNewAutoSaveSettingsLater, "dock east");
+
+        add(buttonPanel, "grow");
+
+
     }
 
     private void checkIfThreadRestartButtonNeedsEnabling() {

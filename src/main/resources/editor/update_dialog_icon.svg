@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Pixodesk SVG (https://pixodesk.com) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" text-rendering="geometricPrecision" shape-rendering="geometricPrecision">
+  <defs>
+    <filter id="_px_svg_20a9jrh0" data-px-label="Inner Shadow" x="-0.5" y="-0.5" width="2" height="2">
+      <feOffset/>
+      <feGaussianBlur stdDeviation="0.75"/>
+      <feComposite in="SourceGraphic" operator="out"/>
+      <feComponentTransfer result="choke">
+        <feFuncA/>
+      </feComponentTransfer>
+      <feFlood result="color" flood-color="#000000"/>
+      <feComposite result="shadow" in="color" in2="choke" operator="in"/>
+      <feComposite in="shadow" in2="SourceGraphic" operator="over"/>
+    </filter>
+  </defs>
+  <g fill="#ffffff" filter="url(#_px_svg_20a9jrh0)">
+    <path fill="#00ff00" d="M26,16L20,22L24,22C24,23.102,23.102,24,22,24L10,24C8.898,24,8,23.102,8,22L8,20L4,20L4,22C4,25.309,6.691,28,10,28L22,28C25.309,28,28,25.309,28,22L32,22L26,16z"/>
+    <path fill="#00ff00" d="M22,4L10,4C6.691,4,4,6.691,4,10L4,10.062L0,10.062L6,16L12,10.062L8,10.062L8,10C8,8.898,8.898,8,10,8L22,8C23.102,8,24,8.898,24,10L24,12L28,12L28,10C28,6.691,25.309,4,22,4z"/>
+  </g>
+</svg>

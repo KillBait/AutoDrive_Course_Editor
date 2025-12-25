@@ -10,7 +10,7 @@ public class LogMarkerInfoMenu extends JCheckBoxMenuItemBase {
     public static boolean bDebugLogMarkerInfo;
 
     public LogMarkerInfoMenu() {
-        makeCheckBoxMenuItem("menu_debug_log_marker_info", "menu_debug_log_marker_info_accstring", false, true);
+        makeCheckBoxMenuItem("menu_debug_log_markers", false, true);
     }
 
     @Override

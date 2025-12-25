@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Pixodesk SVG (https://pixodesk.com) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 20 20" text-rendering="geometricPrecision" shape-rendering="geometricPrecision" fill="none">
+  <path fill="#0aff00" stroke="#003a73" stroke-width="0" transform="translate(0.0208, 0)rotate(180)translate(-0.0208, 0)" d="M0,-8C4.38,-7.9555,8,-4.3905,8,0C8,4.3905,4.38,7.9555,0,8C-4.38,7.9554,-7.9584,4.3905,-7.9584,0C-7.9584,-4.3905,-4.38,-7.9554,0,-8zM0,7C3.8277,6.9555,7,3.8382,7,0C7,-3.8382,3.8277,-6.9555,0,-7C-3.8277,-6.9554,-6.9584,-3.8382,-6.9584,0C-6.9584,3.8382,-3.8277,6.9554,0,7z"/>
+  <g transform="translate(3.75, 0)translate(-0.75, 0)">
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(-3, -7.5)" rx="1.75" ry="1.75"/>
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(4.5, 0)" rx="1.75" ry="1.75"/>
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(-3, 7.5)" rx="1.75" ry="1.75"/>
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(-10.5, 0)" rx="1.75" ry="1.75"/>
+  </g>
+  <path fill="#c400c8" stroke="#003a73" stroke-width="0" transform="translate(-1.85, 2.4)scale(0.86, 0.86)" d="M-1.4692,-0.294C-1.5406,-0.1735,-1.5418,-0.024,-1.4725,0.0977C-1.4032,0.2194,-1.2739,0.2945,-1.1338,0.2945C-1.1338,0.2945,5.225,0.2945,5.4554,0.2945C5.6042,0.2945,5.7415,0.2147,5.8152,0.0854C5.8888,-0.0438,5.8875,-0.2027,5.8116,-0.3307C5.8118,-0.3304,2.5985,-5.7529,2.4942,-5.9289C2.4288,-6.0392,2.3102,-6.1067,2.1821,-6.1067C2.054,-6.1067,1.9354,-6.0392,1.8701,-5.9289C1.8701,-5.9291,-1.3632,-0.4729,-1.4692,-0.294z" data-px-corners="[0,0]=0.3898|[0,1]=0.4141|[0,2]=0.3627" data-px-src-d="M-1.8179,0.2945L6.1821,0.2945L2.1821,-6.4555L-1.8179,0.2945z"/>
+</svg>

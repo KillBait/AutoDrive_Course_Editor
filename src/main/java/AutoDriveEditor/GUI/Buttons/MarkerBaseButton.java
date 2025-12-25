@@ -1,6 +1,8 @@
 package AutoDriveEditor.GUI.Buttons;
 
-public abstract class MarkerBaseButton extends BaseButton {
+import AutoDriveEditor.Managers.ButtonManager;
+
+public abstract class MarkerBaseButton extends BaseButton implements ButtonManager.ToolTipBuilder {
 
     public static class markerDestinationInfo {
         private final String name;

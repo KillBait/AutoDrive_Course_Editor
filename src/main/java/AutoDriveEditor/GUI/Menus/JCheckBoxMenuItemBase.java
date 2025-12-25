@@ -7,26 +7,28 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.EventObject;
 
-import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogListenerStateMenu.bDebugMenuState;
+import static AutoDriveEditor.Classes.Util_Classes.GUIUtils.InputEvent_NONE;
+import static AutoDriveEditor.Classes.Util_Classes.GUIUtils.KeyEvent_NONE;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogMenuDebugMenu.bDebugMenuState;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.Utils.GUIUtils.InputEvent_NONE;
-import static AutoDriveEditor.Utils.GUIUtils.KeyEvent_NONE;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public abstract class JCheckBoxMenuItemBase extends JCheckBoxMenuItem implements ActionListener, ItemListener, ChangeListener {
 
     @SuppressWarnings("SameParameterValue")
-    protected JCheckBoxMenuItem makeCheckBoxMenuItem(String text, String accString, Boolean isSelected, Boolean enabled) {
-        return makeCheckBoxMenuItem(text, accString, KeyEvent_NONE, InputEvent_NONE, isSelected, enabled);
+    protected JCheckBoxMenuItem makeCheckBoxMenuItem(String text, Boolean isSelected, Boolean enabled) {
+        return makeCheckBoxMenuItem(text, KeyEvent_NONE, InputEvent_NONE, isSelected, enabled);
     }
 
-    protected JCheckBoxMenuItem makeCheckBoxMenuItem(String text, String accString, int keyEvent, Boolean isSelected, Boolean enabled) {
-        return makeCheckBoxMenuItem(text, accString, keyEvent, InputEvent_NONE, isSelected, enabled);
+    protected JCheckBoxMenuItem makeCheckBoxMenuItem(String text, int keyEvent, Boolean isSelected, Boolean enabled) {
+        return makeCheckBoxMenuItem(text, keyEvent, InputEvent_NONE, isSelected, enabled);
     }
 
-    protected JCheckBoxMenuItem makeCheckBoxMenuItem (String text, String accString, int keyEvent, int inputEvent, Boolean isSelected, Boolean enabled) {
-        setText(getLocaleString(text));
+    protected JCheckBoxMenuItem makeCheckBoxMenuItem (String text, int keyEvent, int inputEvent, Boolean isSelected, Boolean enabled) {
+        String localeText = getLocaleString(text);
+        setText(localeText);
         if (keyEvent != KeyEvent_NONE && inputEvent != InputEvent_NONE) {
             setAccelerator(KeyStroke.getKeyStroke(keyEvent, inputEvent));
             setMnemonic(keyEvent);
@@ -34,7 +36,7 @@ public abstract class JCheckBoxMenuItemBase extends JCheckBoxMenuItem implements
             setAccelerator(KeyStroke.getKeyStroke(keyEvent, 0));
         }
         setSelected(isSelected);
-        getAccessibleContext().setAccessibleDescription(getLocaleString(accString));
+        getAccessibleContext().setAccessibleDescription(localeText);
         addItemListener(this);
         setEnabled(enabled);
 
@@ -43,20 +45,23 @@ public abstract class JCheckBoxMenuItemBase extends JCheckBoxMenuItem implements
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (bDebugMenuState) logMenuEventFor("actionPerformed()");
+        if (bDebugMenuState) logMenuEventFor(e, "actionPerformed()");
     }
 
     @Override
     public void itemStateChanged(ItemEvent e) {
-        if (bDebugMenuState) logMenuEventFor("itemStateChanged()");
+        if (bDebugMenuState) logMenuEventFor(e, "itemStateChanged()");
     }
 
     @Override
-    public void stateChanged(ChangeEvent e) { if (bDebugMenuState) logMenuEventFor("stateChanged()");
+    public void stateChanged(ChangeEvent e) { if (bDebugMenuState) logMenuEventFor(e, "stateChanged()");
     }
 
-    private void logMenuEventFor(String function) {
-        LOG.info("Menu:- ({}) - {}",this.getText(), function);
-
+    private void logMenuEventFor(EventObject e, String function) {
+        String output = String.format("Menu Event: (%s) - %s", this.getText(), function);
+        if (e.getClass() == ItemEvent.class) {
+            output += String.format(" - isSelected: %s", ((AbstractButton) ((ItemEvent) e).getItem()).isSelected());
+        }
+        LOG.info(output);
     }
 }

@@ -10,7 +10,7 @@ public class LogMergeFunctionMenu  extends JCheckBoxMenuItemBase {
     public static boolean bDebugLogMerge;
 
     public LogMergeFunctionMenu() {
-        makeCheckBoxMenuItem("menu_debug_log_merge", "menu_debug_log_merge_accstring", false, true);
+        makeCheckBoxMenuItem("menu_debug_log_merge", false, true);
     }
 
     @Override

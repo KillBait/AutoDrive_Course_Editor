@@ -1,9 +1,9 @@
 package AutoDriveEditor.GUI.Menus.DebugMenu;
 
+import AutoDriveEditor.Classes.UI_Components.LabelNumberFilter;
 import AutoDriveEditor.GUI.Menus.JMenuItemBase;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
-import AutoDriveEditor.Utils.Classes.LabelNumberFilter;
 
 import javax.swing.*;
 import javax.swing.text.PlainDocument;
@@ -11,15 +11,15 @@ import java.awt.event.ActionEvent;
 import java.awt.geom.Point2D;
 
 import static AutoDriveEditor.AutoDriveEditor.editor;
-import static AutoDriveEditor.AutoDriveEditor.mapPanel;
-import static AutoDriveEditor.Classes.MapImage.pdaImage;
+import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
+import static AutoDriveEditor.GUI.MapImage.pdaImage;
 import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.XMLConfig.EditorXML.maxZoomLevel;
 
 public class MoveNodeToCentreMenu extends JMenuItemBase {
     public MoveNodeToCentreMenu() {
-        makeMenuItem("menu_debug_movetonode", "menu_debug_movetonode_accstring", true);
+        makeMenuItem("menu_debug_movetonode", true);
     }
 
     @Override
@@ -41,9 +41,10 @@ public class MoveNodeToCentreMenu extends JMenuItemBase {
                 updateNodeScaling();
                 MapNode node = RoadMap.networkNodesList.get(Integer.parseInt(centreNode.getText()) - 1);
                 Point2D target = worldPosToScreenPos(node.x, node.z);
-                double x = (mapPanel.getWidth() >> 1) - target.getX();
-                double y = (mapPanel.getHeight() >> 1) - target.getY();
-                moveMapBy((int)x,(int)y);
+
+                double x1 = (getMapPanel().getWidth() >> 1) - target.getX();
+                double y1 = (getMapPanel().getHeight() >> 1) - target.getY();
+                moveMapBy((int)x1, (int) y1);
             }
         }
     }

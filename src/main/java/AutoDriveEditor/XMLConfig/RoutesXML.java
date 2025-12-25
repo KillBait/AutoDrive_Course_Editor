@@ -1,6 +1,5 @@
 package AutoDriveEditor.XMLConfig;
 
-import AutoDriveEditor.Managers.ChangeManager;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.MarkerGroup;
 import AutoDriveEditor.RoadNetwork.RoadMap;
@@ -28,25 +27,26 @@ import java.util.LinkedList;
 import java.util.Objects;
 
 import static AutoDriveEditor.AutoDriveEditor.*;
-import static AutoDriveEditor.Classes.MapImage.loadHeightMap;
-import static AutoDriveEditor.Classes.MapImage.loadMapImage;
+import static AutoDriveEditor.Classes.Util_Classes.FileUtils.removeExtension;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
+import static AutoDriveEditor.GUI.MapImage.loadHeightMap;
+import static AutoDriveEditor.GUI.MapImage.loadMapImage;
 import static AutoDriveEditor.GUI.MapPanel.*;
-import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogRouteManagerMenu.bDebugLogRouteManager;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogRouteManagerMenu.bDebugLogRouteManagerInfo;
 import static AutoDriveEditor.GUI.Menus.EditorMenu.*;
 import static AutoDriveEditor.GUI.Menus.FileMenu.RecentFilesMenu.addToRecentFiles;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
 import static AutoDriveEditor.Managers.ImportManager.setIsEditorUsingImportedImage;
 import static AutoDriveEditor.Managers.MultiSelectManager.clearMultiSelection;
 import static AutoDriveEditor.Managers.ScanManager.scanNetworkForOverlapNodes;
+import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_REGULAR;
+import static AutoDriveEditor.RoadNetwork.MapNode.createMapNode;
 import static AutoDriveEditor.RoadNetwork.RoadMap.setRoadMapNodes;
-import static AutoDriveEditor.Utils.FileUtils.removeExtension;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 import static AutoDriveEditor.XMLConfig.AutoSave.canAutoSave;
 import static AutoDriveEditor.XMLConfig.AutoSave.resumeAutoSaving;
 import static AutoDriveEditor.XMLConfig.EditorXML.checkStoredMapInfoFor;
 import static AutoDriveEditor.XMLConfig.EditorXML.maxAutoSaveSlots;
-import static AutoDriveEditor.XMLConfig.GameXML.autoSaveLastUsedSlot;
-import static AutoDriveEditor.XMLConfig.GameXML.xmlConfigFile;
+import static AutoDriveEditor.XMLConfig.GameXML.*;
 
 public class RoutesXML {
 
@@ -58,7 +58,7 @@ public class RoutesXML {
         //suspendAutoSaving();
 
         try {
-            if (bDebugLogRouteManager) LOG.info("Parent = {}", fXmlFile.getParentFile().getParent());
+            if (bDebugLogRouteManagerInfo) LOG.info("Parent = {}", fXmlFile.getParentFile().getParent());
             // Bug fix Commit by @rheational ( https://github.com/rhaetional )
             // Replaced "//" file separator for system supported call
             // Fixes issue #70 ( https://github.com/KillBait/AutoDrive_Course_Editor/issues/70 )
@@ -70,20 +70,20 @@ public class RoutesXML {
                 configType = CONFIG_ROUTEMANAGER;
                 getMapPanel().setRoadMap(roadMap);
                 xmlConfigFile = fXmlFile;
-                if (bDebugLogRouteManager) LOG.info("name = {}", fXmlFile.getName());
+                if (bDebugLogRouteManagerInfo) LOG.info("name = {}", fXmlFile.getName());
                 if (!skipRoutesCheck) {
                     LinkedList<Route> routeList = getRoutesConfigContents(new File(routeFile));
                     if (routeList !=null) {
-                        if (bDebugLogRouteManager) LOG.info("route XML filename = {}", fXmlFile.getName());
+                        if (bDebugLogRouteManagerInfo) LOG.info("route XML filename = {}", fXmlFile.getName());
                         String fileName = fXmlFile.getName();
                         if (fileName.contains("_autosave_")) {
-                            if (bDebugLogRouteManager)LOG.info("Routes XML filename contains '_autosave_' .. Removing it, filename check against routes.xml will fail otherwise");
+                            if (bDebugLogRouteManagerInfo)LOG.info("Routes XML filename contains '_autosave_' .. Removing it, filename check against routes.xml will fail otherwise");
                             fileName = fileName.substring(0, fileName.indexOf("_autosave_")) + ".xml";
                         } else if (fileName.contains("_mergeBackup")) {
-                            if (bDebugLogRouteManager)LOG.info("Routes XML filename contains '_mergeBackup' .. Removing it, filename check against routes.xml will fail otherwise");
+                            if (bDebugLogRouteManagerInfo)LOG.info("Routes XML filename contains '_mergeBackup' .. Removing it, filename check against routes.xml will fail otherwise");
                             fileName = fileName.substring(0, fileName.indexOf("_mergeBackup")) + ".xml";
                         }
-                        if (bDebugLogRouteManager)LOG.info("using '{}' to check against routes.xml", fileName);
+                        if (bDebugLogRouteManagerInfo)LOG.info("using '{}' to check against routes.xml", fileName);
                         for (Route route : routeList) {
                             if (Objects.equals(route.fileName, fileName)) {
                                 LOG.info("setting roadMapName to {}", route.map);
@@ -94,7 +94,7 @@ public class RoutesXML {
                 } else {
                     RoadMap.mapName = mapName;
                 }
-                if (bDebugLogRouteManager) LOG.info("map = {}", RoadMap.mapName);
+                if (bDebugLogRouteManagerInfo) LOG.info("map = {}", RoadMap.mapName);
                 loadMapImage(RoadMap.mapName);
                 loadHeightMap(RoadMap.mapName);
                 checkStoredMapInfoFor(RoadMap.mapName);
@@ -102,7 +102,8 @@ public class RoutesXML {
                 updateWindowTitle();
                 // initialize a new changeManager so undo/redo system won't throw errors
                 // when we try to undo/redo something on a config that is no longer loaded
-                changeManager = new ChangeManager();
+                changeManager.clear();
+                //changeManager = new ChangeManager();
                 forceMapImageRedraw();
                 setIsEditorUsingImportedImage(false);
                 saveImageEnabled(false);
@@ -113,6 +114,7 @@ public class RoutesXML {
                 routesXMLSaveEnabled(true);
                 resumeAutoSaving();
                 buttonManager.enableAllButtons();
+                buttonManager.onConfigChange();
                 addToRecentFiles(xmlConfigFile.getAbsolutePath(), configType);
                 return true;
             } else {
@@ -130,11 +132,11 @@ public class RoutesXML {
 
     public static void saveRouteManagerXML(String newName, boolean isAutoSave, boolean isBackup) {
         if (isAutoSave) {
-            LOG.info(getLocaleString("console_config_autosave_start"));
+            LOG.info("Starting AutoSave...");
         } else if (isBackup) {
-            LOG.info(getLocaleString("console_config_backup_start"));
+            LOG.info("Starting Backup...");
         } else {
-            LOG.info(getLocaleString("console_config_save_start"));
+            LOG.info("Starting config save...");
         }
 
         try
@@ -250,14 +252,22 @@ public class RoutesXML {
                     LOG.info("----------------------------");
 
                     LOG.info("starting creation of {} map nodes", wayPointIDs);
-
                     for (int i=0; i<wayPointIDs; i++) {
                         int id = i+1;
                         float x = Float.parseFloat(xValues[i]);
                         float y = Float.parseFloat(yValues[i]);
                         float z = Float.parseFloat(zValues[i]);
                         int flag = Integer.parseInt(flagsValue[i]);
-                        MapNode mapNode = new MapNode(id, x, y, z, flag, false, false);
+
+                        if (configVersion == GameVersion.FS22_CONFIG || configVersion == GameVersion.FS25_CONFIG) {
+                            // check if a nodes flag values is equal 2 or 4, this means it was autogenerated by AutoDrive from the map splines
+                            if (flag == 2 || flag == 4) {
+                                // reset the flag to 0, the editor will just see it as a CONNECTION_REGULAR in checks
+                                flag = NODE_FLAG_REGULAR;
+                            }
+                        }
+                        MapNode mapNode = createMapNode(id, x, y, z, flag);
+                        //MapNode mapNode = new MapNode(id, x, y, z, flag, false, false);
                         nodes.add(mapNode);
                     }
 
@@ -288,7 +298,7 @@ public class RoutesXML {
 
         NodeList groupList = doc.getElementsByTagName("g");
         markerGroup.clear();
-        if (bDebugLogRouteManager) {
+        if (bDebugLogRouteManagerInfo) {
             LOG.info("----------------------------");
             LOG.info("Group Index length = {}", groupList.getLength());
             LOG.info("----------------------------");
@@ -299,15 +309,15 @@ public class RoutesXML {
                 Element eElement = (Element) markerNode;
                 String groupId = eElement.getAttribute("i");
                 String groupName = eElement.getAttribute("n");
-                if (bDebugLogRouteManager) LOG.info("Group {} : index {} , name {}", temp+1, groupId, groupName);
+                if (bDebugLogRouteManagerInfo) LOG.info("Group {} : index {} , name {}", temp+1, groupId, groupName);
                 MarkerGroup group = new MarkerGroup(Integer.parseInt(groupId), groupName);
                 markerGroup.add(group);
             }
         }
-        if (bDebugLogRouteManager) LOG.info("markerGroup size {}", markerGroup.size());
+        if (bDebugLogRouteManagerInfo) LOG.info("markerGroup size {}", markerGroup.size());
 
         NodeList markerList = doc.getElementsByTagName("m");
-        if (bDebugLogRouteManager) {
+        if (bDebugLogRouteManagerInfo) {
             LOG.info("----------------------------");
             LOG.info("Marker length = {}", markerList.getLength());
             LOG.info("----------------------------");
@@ -319,7 +329,7 @@ public class RoutesXML {
                 String markerNodeId = eElement.getAttribute("i");
                 String markerName = eElement.getAttribute("n");
                 String markerGroup = eElement.getAttribute("g");
-                if (bDebugLogRouteManager) LOG.info("Marker {} : ID {} , name '{}' , group '{}'", temp+1, markerNodeId, markerName, markerGroup);
+                if (bDebugLogRouteManagerInfo) LOG.info("Marker {} : ID {} , name '{}' , group '{}'", temp+1, markerNodeId, markerName, markerGroup);
                 MapNode node = nodes.get(Integer.parseInt(markerNodeId) -1);
                 node.createMapMarker(markerName, markerGroup);
             }
@@ -335,18 +345,18 @@ public class RoutesXML {
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
         Document doc = docBuilder.newDocument();
 
-        // create the root node
+        // createSetting the root node
 
         Element root = doc.createElement("routeExport");
         doc.appendChild(root);
 
-        // create a parent node for the waypoints
+        // createSetting a parent node for the waypoints
 
         Element waypoints = doc.createElement("waypoints");
         root.appendChild(waypoints);
         waypoints.setAttribute("c", String.valueOf(RoadMap.networkNodesList.size()));
 
-        // create a child node for all x co-ordinates
+        // createSetting a child node for all x co-ordinates
 
         Element xElement = doc.createElement("x");
         waypoints.appendChild(xElement);
@@ -359,7 +369,7 @@ public class RoutesXML {
         }
         xElement.setTextContent(xPositions.toString());
 
-        // create a child node for all y co-ordinates
+        // createSetting a child node for all y co-ordinates
 
         Element yElement = doc.createElement("y");
         waypoints.appendChild(yElement);
@@ -372,7 +382,7 @@ public class RoutesXML {
         }
         yElement.setTextContent(yPositions.toString());
 
-        // create a child node for all z co-ordinates
+        // createSetting a child node for all z co-ordinates
 
         Element zElement = doc.createElement("z");
         waypoints.appendChild(zElement);
@@ -385,7 +395,7 @@ public class RoutesXML {
         }
         zElement.setTextContent(zPositions.toString());
 
-        // create a child node for all outgoing connections
+        // createSetting a child node for all outgoing connections
 
         Element outElement = doc.createElement("out");
         waypoints.appendChild(outElement);
@@ -407,7 +417,7 @@ public class RoutesXML {
         }
         outElement.setTextContent(outElementString.toString());
 
-        // create a child node for all incoming connections
+        // createSetting a child node for all incoming connections
 
         Element inElement = doc.createElement("in");
         waypoints.appendChild(inElement);
@@ -429,7 +439,7 @@ public class RoutesXML {
         }
         inElement.setTextContent(inElementString.toString());
 
-        // create a child node for all flags
+        // createSetting a child node for all flags
 
         Element flagsElement = doc.createElement("flags");
         waypoints.appendChild(flagsElement);
@@ -442,7 +452,7 @@ public class RoutesXML {
         }
         flagsElement.setTextContent(flagElementString.toString());
 
-        // create a parent node for map markers
+        // createSetting a parent node for map markers
 
         Element markers = doc.createElement("markers");
         root.appendChild(markers);
@@ -459,7 +469,7 @@ public class RoutesXML {
 
         }
 
-        // create a parent node for marker groups
+        // createSetting a parent node for marker groups
 
         Element groups = doc.createElement("groups");
         root.appendChild(groups);
@@ -496,17 +506,17 @@ public class RoutesXML {
         transformer.transform(source, result);
 
         if (isAutoSave) {
-            LOG.info(getLocaleString("console_config_autosave_end"));
+            LOG.info("AutoSave completed...");
         } else if (isBackup) {
-            LOG.info(getLocaleString("console_config_backup_end"));
+            LOG.info("Backup completed...");
         } else {
-            LOG.info(getLocaleString("console_config_save_end"));
+            LOG.info("Save config completed...");
         }
     }
 
     public static LinkedList<Route> getRoutesConfigContents(File routesFile) {
         try {
-            if (bDebugLogRouteManager) {
+            if (bDebugLogRouteManagerInfo) {
                 LOG.info("----------------------------");
                 LOG.info("Parsing {}", routesFile.getAbsolutePath());
                 LOG.info("----------------------------");
@@ -531,7 +541,7 @@ public class RoutesXML {
                 Node nNode = nList.item(temp);
                 if (nNode.getNodeType() == Node.ELEMENT_NODE) {
                     Element eElement = (Element) nNode;
-                    if (bDebugLogRouteManager) {
+                    if (bDebugLogRouteManagerInfo) {
                         LOG.info("----------------------------");
                         LOG.info("name : {}", eElement.getAttribute("name"));
                         LOG.info("filename : {}", eElement.getAttribute("fileName"));

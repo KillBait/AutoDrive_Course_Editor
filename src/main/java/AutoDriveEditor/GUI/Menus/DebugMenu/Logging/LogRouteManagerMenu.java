@@ -7,16 +7,16 @@ import java.awt.event.ItemEvent;
 
 public class LogRouteManagerMenu extends JCheckBoxMenuItemBase {
 
-    public static boolean bDebugLogRouteManager;
+    public static boolean bDebugLogRouteManagerInfo;
 
     public LogRouteManagerMenu() {
-        makeCheckBoxMenuItem("menu_debug_log_routemanager", "menu_debug_log_routemanager_accstring", false, true);
+        makeCheckBoxMenuItem("menu_debug_log_routemanager", false, true);
     }
 
     @Override
     public void itemStateChanged(ItemEvent e) {
         super.itemStateChanged(e);
         AbstractButton menuItem = (AbstractButton) e.getItem();
-        bDebugLogRouteManager = menuItem.isSelected();
+        bDebugLogRouteManagerInfo = menuItem.isSelected();
     }
 }

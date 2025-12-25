@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Pixodesk SVG (https://pixodesk.com) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 20 20" text-rendering="geometricPrecision" shape-rendering="geometricPrecision" fill="none">
+  <path fill="#009614" stroke="#003a73" stroke-width="0" transform="translate(-0.5, 6.5)translate(-1, -1)" d="M8.75,-2.25C8.8881,-2.25,10.5,2.75,10.5,2.75C10.5,2.8881,10.3881,3,10.25,3L-7.25,3C-7.3881,3,-7.5,2.8881,-7.5,2.75C-7.5,2.75,-5.6381,-2.25,-5.5,-2.25L8.75,-2.25z"/>
+  <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(0.2309, 0.6576)scale(2.85, 2.85)translate(0, 4)" cx="0.0111" cy="-3.9632" rx="1.75" ry="1.75"/>
+  <text fill="#000000" font-family="Consolas" font-size="20px" xml:space="preserve" transform="translate(-9.522, 1.0923)scale(0.4134, 0.3624)" data-gn-el-type="text" style="white-space:pre"><tspan>X </tspan></text>
+  <text fill="#000000" font-size="20px" xml:space="preserve" transform="translate(-1.5979, -4.5188)scale(0.33, 0.3546)" data-gn-el-type="text" style="white-space:pre"><tspan>Y </tspan></text>
+  <text fill="#000000" font-size="20px" xml:space="preserve" transform="translate(5.2586, 1.1055)scale(0.3688, 0.33)" data-gn-el-type="text" style="white-space:pre"><tspan>Z </tspan></text>
+</svg>

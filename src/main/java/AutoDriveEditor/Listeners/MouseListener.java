@@ -1,42 +1,43 @@
 package AutoDriveEditor.Listeners;
 
 import AutoDriveEditor.GUI.MapPanel;
+import AutoDriveEditor.Managers.MultiSelectManager;
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.geom.Point2D;
 
-import static AutoDriveEditor.AutoDriveEditor.buttonManager;
-import static AutoDriveEditor.AutoDriveEditor.multiSelectManager;
+import static AutoDriveEditor.AutoDriveEditor.*;
+import static AutoDriveEditor.GUI.MapImage.pdaImage;
 import static AutoDriveEditor.GUI.MapPanel.bIsShiftPressed;
+import static AutoDriveEditor.GUI.MapPanel.screenPosToWorldPos;
 
 public class MouseListener implements MouseMotionListener, MouseWheelListener, java.awt.event.MouseListener {
 
-    private final MapPanel previewPanel;
+    private final MultiSelectManager multiSelectManager;
     public static int currentMouseX;
     public static int currentMouseY;
     public static int prevMousePosX;
     public static int prevMousePosY;
 
     public MouseListener(MapPanel mapPanel) {
-        this.previewPanel = mapPanel;
+        this.multiSelectManager = new MultiSelectManager();
+    }
+
+    public MouseListener() {
+        this.multiSelectManager = new MultiSelectManager();
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
         storeCurrentMousePos(e.getX(), e.getY());
         multiSelectManager.mouseClicked(e);
+        widgetManager.mouseClicked(e);
         buttonManager.mouseClicked(e);
-        if (e.getButton() == MouseEvent.BUTTON1) {
-            previewPanel.mouseButton1Clicked(e.getX(), e.getY());
-        }
-        if (e.getButton() == MouseEvent.BUTTON2) {
-            previewPanel.mouseButton2Clicked(e.getX(), e.getY());
-        }
-        if (e.getButton() == MouseEvent.BUTTON3) {
-            previewPanel.mouseButton3Clicked(e.getX(), e.getY());
-        }
+        curveManager.mouseClicked(e);
+        getMapPanel().mouseButtonClicked(e);
         storePreviousMousePos(e.getX(), e.getY());
 
     }
@@ -45,16 +46,10 @@ public class MouseListener implements MouseMotionListener, MouseWheelListener, j
     public void mousePressed(MouseEvent e) {
         storeCurrentMousePos(e.getX(), e.getY());
         multiSelectManager.mousePressed(e);
+        widgetManager.mousePressed(e);
         buttonManager.mousePressed(e);
-        if (e.getButton() == MouseEvent.BUTTON1) {
-            previewPanel.mouseButton1Pressed(e.getX(), e.getY());
-        }
-        if (e.getButton() == MouseEvent.BUTTON2) {
-            previewPanel.mouseButton2Pressed(e.getX(), e.getY());
-        }
-        if (e.getButton() == MouseEvent.BUTTON3) {
-            previewPanel.mouseButton3Pressed(e.getX(), e.getY());
-        }
+        curveManager.mousePressed(e);
+        getMapPanel().mouseButtonPressed(e);
         storePreviousMousePos(e.getX(), e.getY());
     }
 
@@ -62,31 +57,31 @@ public class MouseListener implements MouseMotionListener, MouseWheelListener, j
     public void mouseReleased(MouseEvent e) {
         storeCurrentMousePos(e.getX(), e.getY());
         multiSelectManager.mouseReleased(e);
+        widgetManager.mouseReleased(e);
         buttonManager.mouseReleased(e);
-        if (e.getButton() == MouseEvent.BUTTON1) {
-            previewPanel.mouseButton1Released(e.getX(), e.getY());
-        }
-        if (e.getButton() == MouseEvent.BUTTON2) {
-            previewPanel.mouseButton2Released();
-        }
-        if (e.getButton() == MouseEvent.BUTTON3) {
-            previewPanel.mouseButton3Released(e.getX(), e.getY());
-        }
+        curveManager.mouseReleased(e);
+        getMapPanel().mouseButtonReleased(e);
         storePreviousMousePos(e.getX(), e.getY());
     }
 
     @Override
-    public void mouseEntered(MouseEvent e) {}
+    public void mouseEntered(MouseEvent e) {
+        buttonManager.mouseEntered(e);
+    }
 
     @Override
-    public void mouseExited(MouseEvent e) {}
+    public void mouseExited(MouseEvent e) {
+        buttonManager.mouseExited(e);
+    }
 
     @Override
     public void mouseDragged(MouseEvent e) {
         storeCurrentMousePos(e.getX(), e.getY());
         multiSelectManager.mouseDragged(e);
+        widgetManager.mouseDragged(e);
         buttonManager.mouseDragged(e);
-        previewPanel.mouseDragged(e.getX(), e.getY());
+        curveManager.mouseDragged(e);
+        getMapPanel().mouseDragged(e.getX(), e.getY());
         storePreviousMousePos(e.getX(), e.getY());
     }
 
@@ -94,18 +89,20 @@ public class MouseListener implements MouseMotionListener, MouseWheelListener, j
     public void mouseMoved(MouseEvent e) {
         storeCurrentMousePos(e.getX(), e.getY());
         multiSelectManager.mouseMoved(e);
+        widgetManager.mouseMoved(e);
         buttonManager.mouseMoved(e);
-        previewPanel.mouseMoved(e.getX(), e.getY());
+        curveManager.mouseMoved(e);
+        getMapPanel().mouseMoved(e.getX(), e.getY());
         storePreviousMousePos(e.getX(), e.getY());
     }
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
         int num = Math.min(Math.max(e.getWheelRotation(), -1), 1);
-        //if (!bIsShiftPressed)  previewPanel.adjustZoomLevelBy(num);
-        if (!bIsShiftPressed)  previewPanel.setNewZoomLevel(num);
-
+        if (!bIsShiftPressed && pdaImage != null)  getMapPanel().setNewZoomLevel(num);
+        widgetManager.mouseWheelMoved(e);
         buttonManager.mouseWheelMoved(e);
+        curveManager.mouseWheelMoved(e);
     }
 
 
@@ -116,5 +113,33 @@ public class MouseListener implements MouseMotionListener, MouseWheelListener, j
     private void storePreviousMousePos(int x, int y) {
         prevMousePosX = x;
         prevMousePosY = y;
+    }
+
+
+    public static Point2D getCurrentMouseWorldPos() {
+        return screenPosToWorldPos(currentMouseX, currentMouseY);
+    }
+
+
+    public static double getCurrentMouseWorldY() {
+        Point2D p = screenPosToWorldPos(currentMouseX, currentMouseY);
+        return p.getY();
+    }
+
+    public static double getCurrentMouseWorldX() {
+        Point2D p = screenPosToWorldPos(currentMouseX, currentMouseY);
+        return p.getX();
+    }
+
+    public static int getCurrentMouseY() {
+        return currentMouseY;
+    }
+
+    public static int getPrevMouseX() {
+        return prevMousePosX;
+    }
+
+    public static int getPrevMouseY() {
+        return prevMousePosY;
     }
 }

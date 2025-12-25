@@ -1,11 +1,14 @@
 package AutoDriveEditor.Managers;
 
+
+import AutoDriveEditor.Classes.Util_Classes.XMLUtils;
 import com.vdurmont.semver4j.Semver;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.HyperlinkEvent;
 import javax.xml.parsers.DocumentBuilder;
@@ -21,9 +24,8 @@ import java.net.URL;
 
 import static AutoDriveEditor.AutoDriveEditor.COURSE_EDITOR_VERSION;
 import static AutoDriveEditor.AutoDriveEditor.editor;
-import static AutoDriveEditor.GUI.EditorImages.getUpdateIcon;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
-import static AutoDriveEditor.Utils.XMLUtils.getTextValue;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
+import static AutoDriveEditor.Managers.IconManager.getUpdateIcon;
 import static AutoDriveEditor.XMLConfig.EditorXML.bShowUpdateMessage;
 
 public class VersionManager {
@@ -33,7 +35,7 @@ public class VersionManager {
         InputStream in = null;
         URL url;
 
-        LOG.info("Connecting to GitHub for update check");
+        LOG.info("Connecting to GitHub for updateWidget check");
         try {
             url = new URL("https://github.com/KillBait/AutoDrive_Course_Editor/raw/master/version.xml");
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
@@ -58,8 +60,8 @@ public class VersionManager {
             if (in != null) in.close();
 
 
-            String remoteVersion = getTextValue(null, e, "latest_version");
-            String updateHTML = getTextValue(null, e, "version_notes");
+            String remoteVersion = XMLUtils.getStringValue(e, "latest_version");
+            String updateHTML = XMLUtils.getStringValue(e, "version_notes");
             Semver localSem = new Semver(COURSE_EDITOR_VERSION);
             if (localSem.isLowerThan(remoteVersion)) {
                 if (bShowUpdateMessage) {
@@ -86,9 +88,10 @@ public class VersionManager {
                     scrollPane.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
                     scrollPane.setPreferredSize(new Dimension(600,200));
 
+
                     // ScrollPane will default to the bottom of the text.
                     //
-                    // This behaviour is triggered if you create the scrollbar at the top and set the text
+                    // This behaviour is triggered if you createSetting the scrollbar at the top and set the text
                     // to display, as it displays the text, it moves the scrollbar position back to the bottom
                     // again:/
 
@@ -106,7 +109,7 @@ public class VersionManager {
                 }
                 bShowUpdateMessage = false;
             } else if (localSem.isEqualTo(remoteVersion)){
-                LOG.info("No update available... Remote version {} matches local version", remoteVersion);
+                LOG.info("No updateVisibility available... Remote version {} matches local version", remoteVersion);
                 bShowUpdateMessage = true;
             } else {
                 // yes.... this is a "Back To The Future" reference.. :-P
@@ -128,7 +131,7 @@ public class VersionManager {
             docFactory = DocumentBuilderFactory.newInstance();
             docBuilder = docFactory.newDocumentBuilder();
         } catch (ParserConfigurationException e) {
-            LOG.error("## Parser Exception ## cannot create DocumentBuilder for showUpdateHistory()");
+            LOG.error("## Parser Exception ## cannot createSetting DocumentBuilder for showUpdateHistory()");
             return;
         }
 
@@ -163,12 +166,13 @@ public class VersionManager {
 
         if (doc != null) {
             Element rootElement = doc.getDocumentElement();
-            //String remoteVersion = getTextValue(null, rootElement, "latest_version");
-            String updateHTML = getTextValue(null, rootElement, "version_history");
+            //String remoteVersion = getStringValue(null, rootElement, "latest_version");
+            String updateHTML = XMLUtils.getStringValue(rootElement, "version_history");
             JTextPane textPane = new JTextPane();
             textPane.setContentType("text/html");
             textPane.setText(updateHTML);
             textPane.setEditable(false);
+            textPane.setBorder(new EmptyBorder(10,10,10,10));
             textPane.addHyperlinkListener(e1 -> {
                 if(e1.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
                     if(Desktop.isDesktopSupported()) {
@@ -184,17 +188,16 @@ public class VersionManager {
             JScrollPane scrollPane = new JScrollPane(textPane);
             scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
             scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-            scrollPane.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
             scrollPane.setPreferredSize(new Dimension(700,600));
 
             // ScrollPane will default to the bottom of the text.
             //
-            // This behaviour is triggered if you create the scrollbar at the top and set the text
+            // This behaviour is triggered if you createSetting the scrollbar at the top and set the text
             // to display, as it displays the text, it moves the scrollbar position back to the bottom
             // again:/
 
             // A not so friendly fix is to use invokeLater() to delay setting the scrollbar position,
-            // that way it gives the JTextPane time to display the text and update the JScrollPane
+            // that way it gives the JTextPane time to display the text and updateVisibility the JScrollPane
 
             javax.swing.SwingUtilities.invokeLater(() -> scrollPane.getVerticalScrollBar().setValue(0));
             JOptionPane.showMessageDialog(editor, scrollPane, "Version History", JOptionPane.INFORMATION_MESSAGE);

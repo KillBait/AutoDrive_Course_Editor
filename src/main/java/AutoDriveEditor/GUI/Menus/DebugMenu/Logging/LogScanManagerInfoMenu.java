@@ -10,7 +10,7 @@ public class LogScanManagerInfoMenu extends JCheckBoxMenuItemBase {
     public static boolean bDebugLogScanManagerInfo;
 
     public LogScanManagerInfoMenu() {
-        makeCheckBoxMenuItem("menu_debug_log_scanmanager_info", "menu_debug_log_scanmanager_info_accstring", false, true);
+        makeCheckBoxMenuItem("menu_debug_log_scanmanager", false, true);
     }
 
     @Override

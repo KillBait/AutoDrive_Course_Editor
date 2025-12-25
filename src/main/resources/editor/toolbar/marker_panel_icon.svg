@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Pixodesk SVG (https://pixodesk.com) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 20.00002552124872 20" text-rendering="geometricPrecision" shape-rendering="geometricPrecision" fill="url(#256)" stroke="#003a73">
+  <defs>
+    <radialGradient id="256" spreadMethod="pad" cx="61.3985" cy="57.99999" fx="61.3985" fy="57.99999" r="44.7969" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="rgb(255,187,152)"/>
+      <stop offset="100%" stop-color="rgb(215,100,0)"/>
+    </radialGradient>
+    <radialGradient id="956" spreadMethod="pad" cx="0.0018621511780303468" cy="1.1035707573927653" fx="0.0018621511780303468" fy="1.1035707573927653" r="3.9458" gradientTransform="scale(18.52, 18.52)" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="rgb(0,0,0)"/>
+      <stop offset="100%" stop-color="rgb(0,58,115)"/>
+    </radialGradient>
+    <radialGradient id="256" spreadMethod="pad" cx="61.3985" cy="57.99999" fx="61.3985" fy="57.99999" r="44.7969" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="rgb(255,187,152)"/>
+      <stop offset="100%" stop-color="rgb(215,100,0)"/>
+    </radialGradient>
+  </defs>
+  <path fill="#b3a8fc" stroke="url(#956)" stroke-width="0.5" transform="translate(0.0027, 0.0002)scale(1.45, 1.45)translate(-0.0019, -1.1036)" d="M0.0023,-4.6896C2.0197,-4.6896,4.4349,-3.0063,3.862,-0.2758C3.6286,0.8367,0.71,5.7186,0.1081,6.7175C0.0853,6.7555,0.0442,6.7787,0,6.7787C-0.0443,6.7787,-0.0853,6.7555,-0.1082,6.7176C-0.711,5.7182,-3.6356,0.8315,-3.862,-0.2758C-4.4202,-3.0063,-2.0151,-4.6896,0.0023,-4.6896zM0,-2.6538C-1.1229,-2.6538,-2.0331,-1.7435,-2.0331,-0.6207C-2.0331,0.5022,-1.1229,1.4124,0,1.4124C1.1229,1.4124,2.0331,0.5022,2.0331,-0.6207C2.0331,-1.7435,1.1229,-2.6538,0,-2.6538z" data-px-corners="[0,2]=0.1289" data-px-src-d="M0.0023,-4.6896C2.0197,-4.6896,4.4349,-3.0063,3.862,-0.2758C3.6016,0.9652,0,6.8965,0,6.8965C0,6.8965,-3.6095,0.9593,-3.862,-0.2758C-4.4202,-3.0063,-2.0151,-4.6896,0.0023,-4.6896zM0,-2.6538C-1.1229,-2.6538,-2.0331,-1.7435,-2.0331,-0.6207C-2.0331,0.5022,-1.1229,1.4124,0,1.4124C1.1229,1.4124,2.0331,0.5022,2.0331,-0.6207C2.0331,-1.7435,1.1229,-2.6538,0,-2.6538z"/>
+</svg>

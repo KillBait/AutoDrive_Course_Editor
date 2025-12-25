@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Pixodesk SVG (https://pixodesk.com) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 20 20" text-rendering="geometricPrecision" shape-rendering="geometricPrecision" fill="none">
+  <g transform="translate(-0.375, -0.125)translate(0.375, 0.125)">
+    <path fill="#0aff00" stroke="#003a73" stroke-width="0" transform="translate(-3.75, -7.5)" d="M0,-0.25L10.75,-0.25L10.75,1.25L0,1.25L0,-0.25z"/>
+    <path fill="#0aff00" stroke="#003a73" stroke-width="0" transform="translate(-7.5, 7.5)" d="M-0.25,0L-0.25,-12L1.25,-12L1.25,0L-0.25,0z"/>
+  </g>
+  <g transform="translate(0, 0.25)translate(0, -0.25)">
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(-7, -4.5)" rx="1.75" ry="1.75"/>
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(7, -7)" rx="1.75" ry="1.75"/>
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(-7, 7.5)" rx="1.75" ry="1.75"/>
+    <ellipse fill="#ff0000" stroke="#003a73" stroke-width="0" transform="translate(-3.75, -7)" rx="1.75" ry="1.75"/>
+  </g>
+  <g transform="translate(1.25, 0.5)translate(-1.25, -0.5)">
+    <path fill="#000000" stroke="#003a73" stroke-width="0" transform="translate(1.25, -6.25)" d="M0,1.5L2,3.5L0.75,3.5L0.75,10L2,10L0,12L-2,10L-0.75,10L-0.75,3.5L-2,3.5L0,1.5z"/>
+    <path fill="#000000" stroke="#003a73" stroke-width="0" transform="translate(8, 0.5)rotate(90)" d="M0,1.5L2,3.5L0.75,3.5L0.75,10L2,10L0,12L-2,10L-0.75,10L-0.75,3.5L-2,3.5L0,1.5z"/>
+  </g>
+</svg>

@@ -5,8 +5,8 @@ import java.awt.*;
 import java.awt.event.ItemEvent;
 
 import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
+import static AutoDriveEditor.Classes.Util_Classes.GUIUtils.makeCheckBox;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.Utils.GUIUtils.makeCheckBox;
 import static AutoDriveEditor.XMLConfig.EditorXML.bShowSelectionBounds;
 
 public class ExperimentalTab extends JPanel {
@@ -16,7 +16,7 @@ public class ExperimentalTab extends JPanel {
 
         // Show Selection Bounds checkbox
 
-        JLabel showSelectionBoundsLabel = new JLabel(getLocaleString("panel_config_tab_mappanel_show_selection_bounds") + "  ", JLabel.TRAILING);
+        JLabel showSelectionBoundsLabel = new JLabel(getLocaleString("panel_config_tab_editor_show_selection_bounds") + "  ", JLabel.TRAILING);
         JCheckBox cbShowSelectionBounds = makeCheckBox(showSelectionBoundsLabel, "ShowSelectionBounds", null, true, bShowSelectionBounds);
         cbShowSelectionBounds.addItemListener(e -> {
             bShowSelectionBounds = e.getStateChange() == ItemEvent.SELECTED;

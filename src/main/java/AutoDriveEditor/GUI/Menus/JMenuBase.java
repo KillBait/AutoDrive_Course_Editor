@@ -8,29 +8,16 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
-import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogListenerStateMenu.bDebugMenuState;
+import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
+import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogMenuDebugMenu.bDebugMenuState;
 import static AutoDriveEditor.Locale.LocaleManager.getLocaleString;
-import static AutoDriveEditor.Utils.LoggerUtils.LOG;
 
 public abstract class JMenuBase extends JMenu implements ActionListener, ItemListener, ChangeListener {
 
-    protected JMenu makeMenu(String menuName, int keyEvent, String accString, JMenuBar parentMenu, boolean isVisible) {
-        setText(getLocaleString(menuName));
-        setMnemonic(keyEvent);
-        getAccessibleContext().setAccessibleDescription(getLocaleString(accString));
-        setVisible(isVisible);
-        parentMenu.add(this);
-        return this;
-    }
-
-    protected JMenu makeSubMenu(String menuName, String accString) {
-        return makeSubMenu(menuName, accString, true);
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    protected JMenu makeSubMenu(String menuName, String accString, boolean enabled) {
-        setText(getLocaleString(menuName));
-        getAccessibleContext().setAccessibleDescription(getLocaleString(accString));
+    protected JMenu makeSubMenu(String menuName, boolean enabled) {
+        String text = getLocaleString(menuName);
+        setText(text);
+        getAccessibleContext().setAccessibleDescription(text);
         setEnabled(enabled);
         addActionListener(this);
         return this;
