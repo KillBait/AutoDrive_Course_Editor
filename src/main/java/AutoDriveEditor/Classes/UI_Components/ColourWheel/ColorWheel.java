@@ -323,7 +323,7 @@ public class ColorWheel extends JPanel {
      * Handles text field errors by displaying an error outline and logging the error.
      *
      * @param evt the property change event
-     * @param textField the text field to updateVisibility
+     * @param textField the text field to update
      */
     private void handleTextFieldError(PropertyChangeEvent evt, JTextField textField) {
 //        if ("errorText".equals(evt.getPropertyName())) {
@@ -735,7 +735,7 @@ class ColourRingPicker extends Component implements MouseListener, MouseMotionLi
                 this.imageStartX = this.imageCentreX - (minSize / 2);
                 this.imageStartY = this.imageCentreY - (minSize / 2);
             } else {
-                LOG.info("Failed to createSetting color wheel image - panel size is 0");
+                LOG.info("Failed to create color wheel image - panel size is 0");
                 return false;
             }
             return true;
@@ -878,7 +878,7 @@ class ColourRingPicker extends Component implements MouseListener, MouseMotionLi
            double rotationAngle = 2 * Math.PI * hue;
            // Calculate the inner radius
            int innerRadius = outerRadius - (ringThickness/2) - 2;
-           // createSetting the rotated triangle points
+           // create the rotated triangle points
            for (int i = 0; i < 3; i++) {
                double angle = 2 * Math.PI / 3 * i - rotationAngle; // Add the rotation angle to the vertex angle
                int x = (int) (imageCentreX + (innerRadius - ((double) ringThickness / 2)) * Math.cos(angle));

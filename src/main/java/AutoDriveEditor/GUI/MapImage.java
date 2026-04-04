@@ -2,6 +2,7 @@ package AutoDriveEditor.GUI;
 
 import AutoDriveEditor.AutoDriveEditor;
 import AutoDriveEditor.Classes.SimpleImageInfo;
+import AutoDriveEditor.Classes.Util_Classes.FSUtils;
 import AutoDriveEditor.RoadNetwork.MapNode;
 import AutoDriveEditor.RoadNetwork.RoadMap;
 
@@ -305,7 +306,7 @@ public class MapImage {
                         LOG.info("Created correct directory for legacy file - {}", parent.getAbsolutePath());
 
                     } else {
-                        LOG.info("Failed to createSetting directory {}", parent.getAbsolutePath());
+                        LOG.info("Failed to create directory {}", parent.getAbsolutePath());
                     }
                 }
             }
@@ -425,9 +426,9 @@ public class MapImage {
                     g.dispose();
                 } else {
                     String message;
-                    if (configVersion == GameVersion.FS19_CONFIG) {
+                    if (configVersion == FSUtils.GameVersion.FS19) {
                         message = getLocaleString("dialog_mapimage_incorrect_size") + "\n\n" + getLocaleString("dialog_mapimage_incorrect_size_fs19");
-                    } else if (configVersion == GameVersion.FS22_CONFIG) {
+                    } else if (configVersion == FSUtils.GameVersion.FS22) {
                         message = getLocaleString("dialog_mapimage_incorrect_size") + "\n\n" + getLocaleString("dialog_mapimage_incorrect_size_fs22");
                     } else {
                         message = getLocaleString("dialog_mapimage_incorrect_size");
@@ -479,9 +480,9 @@ public class MapImage {
                         g.drawImage(image.getScaledInstance(2048, 2048, Image.SCALE_DEFAULT), 0, 0, null);
                     } else {
                         String message;
-                        if (configVersion == GameVersion.FS19_CONFIG) {
+                        if (configVersion == FSUtils.GameVersion.FS19) {
                             message = getLocaleString("dialog_mapimage_incorrect_size") + "\n\n" + getLocaleString("dialog_mapimage_incorrect_size_fs19");
-                        } else if (configVersion == GameVersion.FS22_CONFIG) {
+                        } else if (configVersion == FSUtils.GameVersion.FS22) {
                             message = getLocaleString("dialog_mapimage_incorrect_size") + "\n\n" + getLocaleString("dialog_mapimage_incorrect_size_fs22");
                         } else {
                             message = getLocaleString("dialog_mapimage_incorrect_size");

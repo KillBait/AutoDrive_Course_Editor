@@ -4,7 +4,6 @@ import AutoDriveEditor.Classes.Util_Classes.ProfileUtil;
 import AutoDriveEditor.RoadNetwork.MapNode;
 
 import java.awt.*;
-import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -18,7 +17,6 @@ import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.ShowAllNodeIDMenu.bDebugShowAllNodeID;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.ShowNodeHeightMenu.bDebugShowHeight;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.ShowRenderProfileInfo.bDebugShowRenderProfileInfo;
-import static AutoDriveEditor.Managers.MultiSelectManager.*;
 import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_REGULAR;
 import static AutoDriveEditor.RoadNetwork.MapNode.NodeWarning.NODE_WARNING_OVERLAP;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
@@ -32,8 +30,6 @@ public class NodeDrawThread implements Runnable {
     public static final ProfileUtil nodeDrawTimer = new ProfileUtil();
     public static final ProfileUtil imageDrawTimer = new ProfileUtil();
     public static final ProfileUtil textDrawTimer = new ProfileUtil();
-    //public static final ProfileUtil buttonDrawTimer = new ProfileUtil();
-    public static final ProfileUtil rectangleDrawTimer = new ProfileUtil();
 
     public static int nodeComputeTotal;
 
@@ -58,8 +54,6 @@ public class NodeDrawThread implements Runnable {
         ArrayList<NodeDisplayList> nodeDrawArray = new ArrayList<>();
         ArrayList<ImageDisplayList> imageDrawArray = new ArrayList<>();
         ArrayList<TextDisplayStore> textDrawArray = new ArrayList<>();
-        ArrayList<MapNode> specialNodeArray = new ArrayList<>();
-        ArrayList<RectangleDisplayList> rectangleDrawArray = new ArrayList<>();
 
         while ( !isStopped ) {
 
@@ -67,9 +61,6 @@ public class NodeDrawThread implements Runnable {
                 nodeDrawArray.clear();
                 imageDrawArray.clear();
                 textDrawArray.clear();
-                specialNodeArray.clear();
-                rectangleDrawArray.clear();
-
                 this.wait();
             } catch (InterruptedException e) {
 
@@ -83,14 +74,8 @@ public class NodeDrawThread implements Runnable {
                     nodeDrawTimer.resetTimer();
                     imageDrawTimer.resetTimer();
                     textDrawTimer.resetTimer();
-                    //buttonDrawTimer.resetTimer();
-                    rectangleDrawTimer.resetTimer();
                     nodeComputeTimer.startTimer();
                 }
-//
-//                int width = getMapPanel().getWidth() + (int)nodeSizeScaled;
-//                int height = getMapPanel().getHeight() + (int)nodeSizeScaled;
-//                MapNode anchorNode = null;
 
                 if (renderGraphics != null && pdaImage != null) {
 
@@ -105,10 +90,7 @@ public class NodeDrawThread implements Runnable {
                     for (MapNode mapNode : visibleNodes) {
                         Point nodePos = worldPosToScreenPos(mapNode.x, mapNode.z);
                         if (nodeSizeScaled >= 2.0) {
-                                /*if (mapNode.isWidgetAnchor()) {
-                                    specialNodeArray.add(mapNode);
-                                    anchorNode = mapNode;
-                                } else*/ if (mapNode != getMapPanel().hoveredNode || !mapNode.isSpecialNode()) {
+                            if (mapNode != getMapPanel().hoveredNode || !mapNode.isSpecialNode()) {
                                 vis = mapNode.isNodeHidden() == mapNode.getPreviewNodeHiddenChange();
                                 select = mapNode.isSelected() != mapNode.getPreviewNodeSelectionChange();
                                 flag = (mapNode.getPreviewNodeFlagChange())? 1 - mapNode.flag : mapNode.flag;
@@ -161,41 +143,12 @@ public class NodeDrawThread implements Runnable {
 
                     MapNode hoverNode = getMapPanel().getHoveredNode();
                     if (hoverNode != null) {
-                        if (/*!hoverNode.isControlNode() && hoverNode.isRotationNode() && */hoverNode.isMapNode()) {
-                            //boolean selectable = ButtonManager.getCurrentButton() != null && ButtonManager.getCurrentButton().showHoverNodeSelect() && hoveredNode.isSelectable();
+                        if (hoverNode.isMapNode()) {
                             boolean selected = buttonManager.getCurrentButton() == null || buttonManager.getCurrentButton().showHoverNodeSelect() || hoverNode.isSelected();
-                            //boolean selectable = hoveredNode.isSelected() || (ButtonManager.getCurrentButton() != null && !ButtonManager.getCurrentButton().showHoverNodeSelect());
                             Point2D hoverNodePos = worldPosToScreenPos(hoverNode.x, hoverNode.z);
                             nodeDrawArray.add(new NodeDisplayList((int) hoverNodePos.getX(), (int) hoverNodePos.getY(), hoverNode.flag, selected, !hoverNode.isNodeHidden()));
                         }
                     }
-                }
-
-                if (isMultiSelectDragging) {
-                    if (useRectangularSelection) {
-                        Point2D rectScreenEnd = worldPosToScreenPos(multiSelectRect.getX() + multiSelectRect.getWidth(), multiSelectRect.getY() + multiSelectRect.getHeight());
-                        Point2D rectScreenStart = worldPosToScreenPos(multiSelectRect.getX(), multiSelectRect.getY());
-                        rectangleDrawArray.add(new RectangleDisplayList((int) rectScreenStart.getX(), (int) rectScreenStart.getY(), (int) (rectScreenEnd.getX() - rectScreenStart.getX()), (int) (rectScreenEnd.getY() - rectScreenStart.getY()), Color.WHITE, true));
-                    } else {
-                        Path2D freeformPath = getFreeformSelectionPath();
-                        Graphics2D newG = (Graphics2D) renderGraphics;
-                        newG.setColor(Color.WHITE);
-                        newG.draw(freeformPath);
-                        newG.setComposite(AlphaComposite.SrcOver.derive(0.25f));
-                        newG.drawLine((int) freeformPath.getCurrentPoint().getX(), (int) freeformPath.getCurrentPoint().getY(), (int) freeformSelectionStart.getX(), (int) freeformSelectionStart.getY());
-                        newG.setComposite(AlphaComposite.SrcOver.derive(1f));
-                    }
-                }
-
-                if (isMultipleSelected && bShowSelectionBounds) {
-                    SelectionAreaInfo selectionInfo = getSelectionBounds(multiSelectList);
-                    Graphics2D gTemp = (Graphics2D) renderGraphics.create();
-                    gTemp.setColor(Color.WHITE);
-                    Point2D topLeft = selectionInfo.getSelectionStart(SCREEN_COORDINATES);
-                    Point2D bottomRight = selectionInfo.getSelectionEnd(SCREEN_COORDINATES);
-                    double rectSizeX = bottomRight.getX() - topLeft.getX();
-                    double rectSizeY = bottomRight.getY() - topLeft.getY();
-                    rectangleDrawArray.add(new RectangleDisplayList((int) (topLeft.getX() - nodeSizeScaledQuarter), (int) (topLeft.getY() - nodeSizeScaledQuarter), (int) (rectSizeX + (nodeSizeScaledQuarter * 2)), (int) (rectSizeY + (nodeSizeScaledQuarter * 2)), Color.WHITE, false));
                 }
 
                 if (bDebugShowRenderProfileInfo) nodeComputeTimer.stopTimer();
@@ -211,10 +164,6 @@ public class NodeDrawThread implements Runnable {
                     if (bDebugShowRenderProfileInfo) textDrawTimer.startTimer();
                     if (!textDrawArray.isEmpty()) drawText(renderGraphics, textDrawArray);
                     if (bDebugShowRenderProfileInfo) textDrawTimer.stopTimer();
-                    if (bDebugShowRenderProfileInfo) rectangleDrawTimer.startTimer();
-                    //drawSpecialNode(renderGraphics, specialNodeArray);
-                    if (!rectangleDrawArray.isEmpty()) drawRectangles(renderGraphics, rectangleDrawArray);
-                    if (bDebugShowRenderProfileInfo) rectangleDrawTimer.stopTimer();
                 } catch (InterruptedException ex) {
                     ex.printStackTrace();
                     throw new RuntimeException(ex);
@@ -278,45 +227,6 @@ public class NodeDrawThread implements Runnable {
         }
     }
 
-    private void drawSpecialNode(Graphics g, ArrayList<MapNode> nodeArray) {
-//        Graphics2D g1 = (Graphics2D) g.create();
-//        FontMetrics fm = g.getFontMetrics();
-//        for (MapNode node : nodeArray) {
-//            if (node.isWidgetAnchor()) {
-//                Point nodePos = worldPosToScreenPos(node.x, node.z);
-//                g1.drawImage((node.flag == NODE_FLAG_REGULAR) ? regularNodeImage : subprioNodeImage, (int) (nodePos.x - (double) (regularNodeImage.getWidth()-1) / 2), (int) (nodePos.y - (double) (regularNodeImage.getHeight()-1) / 2), (int) nodeSizeScaled, (int) nodeSizeScaled, null);
-//                if (node.isSelected()) {
-//                    g1.drawImage(selectedNodeOverlayImage, (int) (nodePos.x - (double) (selectedNodeOverlayImage.getWidth()-1) / 2), (int) (nodePos.y - (double) (selectedNodeOverlayImage.getHeight()-1) / 2), (int) nodeSizeScaled, (int) nodeSizeScaled, null);
-//                    String text = String.valueOf(node.getID());
-//                    Rectangle2D rect = fm.getStringBounds(text, renderGraphics);
-//                    g1.setColor(Color.WHITE);
-//                    g1.drawString(String.valueOf(node.id), (int) (nodePos.getX() - (rect.getWidth() / 2)), (int) (nodePos.getY() + (( rect.getHeight() / 2) - 3)));
-//
-//                }
-////                g1.drawImage(selectedNodeOverlayImage, (int) (nodePos.x - (double) (regularNodeImage.getWidth()-1) / 2), (int) (nodePos.y - (double) (regularNodeImage.getHeight()-1) / 2), (int) nodeSizeScaled, (int) nodeSizeScaled, null);
-//            }
-//        }
-//        g1.dispose();
-    }
-
-    private void drawRectangles(Graphics g, ArrayList<RectangleDisplayList> rectangleList) {
-        Graphics2D gRect = (Graphics2D) g.create();
-        BasicStroke stDash = new BasicStroke(1, BasicStroke.CAP_BUTT,
-                BasicStroke.JOIN_ROUND, 1.0f, new float[]{10f, 0f, 2f}, 2f);
-        gRect.setStroke(stDash);
-
-        for (RectangleDisplayList rec : rectangleList) {
-            if (rec.hasStroke) {
-                gRect.setColor(rec.colour);
-                gRect.drawRect(rec.rectangle.x, rec.rectangle.y, rec.rectangle.width, rec.rectangle.height);
-            } else {
-                g.setColor(rec.colour);
-                g.drawRect(rec.rectangle.x, rec.rectangle.y, rec.rectangle.width, rec.rectangle.height);
-            }
-        }
-        gRect.dispose();
-    }
-
     private static class NodeDisplayList {
         final double x;
         final double y;
@@ -364,18 +274,4 @@ public class NodeDrawThread implements Runnable {
             this.transparencyLevel = transparencyLevel;
         }
     }
-
-    private static class RectangleDisplayList {
-
-        final Rectangle rectangle;
-        final Color colour;
-        final Boolean hasStroke;
-
-        public RectangleDisplayList(int x, int y, int width, int height, Color colour, boolean hasStroke) {
-            this.rectangle = new Rectangle(x, y, width, height);
-            this.colour = colour;
-            this.hasStroke = hasStroke;
-        }
-    }
-
 }

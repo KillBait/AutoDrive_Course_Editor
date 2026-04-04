@@ -105,7 +105,7 @@ public class HeaderListEntry {
         this(null, color, displayString, value, false, false, null, false, false, null, false, 0);
     }
 
-    // full constructor, not directly usable, but can be used by other functions to createSetting a new entry
+    // full constructor, not directly usable, but can be used by other functions to create a new entry
     private HeaderListEntry(Icon icon, Color colour, String displayString, String value, boolean isHeader, boolean isSeparator, Color labelColor, boolean bold, boolean italic, Color separatorColor, boolean isSpacer, int spacerHeight) {
         this.icon = icon;
         this.colorIcon = colour;

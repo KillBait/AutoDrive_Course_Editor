@@ -34,13 +34,13 @@ public class ButtonCellEditor extends AbstractCellEditor implements TableCellEdi
         panel = new JPanel(new GridLayout(1, 2));
         panel.setOpaque(true);
 
-        // createSetting a removeOriginalNodes button
+        // create a removeOriginalNodes button
         JButton removeButton = makeSVGImageButton(getIconPath(CANCEL_ICON), 18, 18, null, "panel_config_tab_keybinds_button_remove",  panel, true, null);
 
-        // createSetting a reset button
+        // create a reset button
         JButton resetButton = makeSVGImageButton(getIconPath(RESET_ICON), 18, 16, null, "panel_config_tab_keybinds_button_reset",  panel, true, null);
 
-        // add an action listener to clear the shortcut in the selected row and updateVisibility the list of shortcuts
+        // add an action listener to clear the shortcut in the selected row and update the list of shortcuts
         removeButton.addActionListener(e -> {
             int row = table.getSelectedRow();
             if (row != -1) {
@@ -52,7 +52,7 @@ public class ButtonCellEditor extends AbstractCellEditor implements TableCellEdi
             }
         });
 
-        // add an action listener to reset the shortcut in the selected row and updateVisibility the list of shortcuts
+        // add an action listener to reset the shortcut in the selected row and update the list of shortcuts
         resetButton.addActionListener(e -> {
             if (bDebugLogShortcutInfo) LOG.info("ActionListener: Resetting keybinding in row {}", currentRow);
             int row = table.getSelectedRow();

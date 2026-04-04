@@ -626,7 +626,7 @@ public class EditorXML {
             // store all the known map settings
             Element knownMapList = doc.createElement("KnownMapSettings");
             for (MapInfoStore mapInfo : EditorXML.knownMapList) {
-                // createSetting the map element
+                // create the map element
                 Element mapElement = doc.createElement("Map");
                 // add the map name Attribute
                 mapElement.setAttribute("Name", mapInfo.getMapName());

@@ -91,7 +91,7 @@ public class VersionManager {
 
                     // ScrollPane will default to the bottom of the text.
                     //
-                    // This behaviour is triggered if you createSetting the scrollbar at the top and set the text
+                    // This behaviour is triggered if you create the scrollbar at the top and set the text
                     // to display, as it displays the text, it moves the scrollbar position back to the bottom
                     // again:/
 
@@ -109,7 +109,7 @@ public class VersionManager {
                 }
                 bShowUpdateMessage = false;
             } else if (localSem.isEqualTo(remoteVersion)){
-                LOG.info("No updateVisibility available... Remote version {} matches local version", remoteVersion);
+                LOG.info("No update available... Remote version {} matches local version", remoteVersion);
                 bShowUpdateMessage = true;
             } else {
                 // yes.... this is a "Back To The Future" reference.. :-P
@@ -131,7 +131,7 @@ public class VersionManager {
             docFactory = DocumentBuilderFactory.newInstance();
             docBuilder = docFactory.newDocumentBuilder();
         } catch (ParserConfigurationException e) {
-            LOG.error("## Parser Exception ## cannot createSetting DocumentBuilder for showUpdateHistory()");
+            LOG.error("## Parser Exception ## cannot create DocumentBuilder for showUpdateHistory()");
             return;
         }
 
@@ -192,12 +192,12 @@ public class VersionManager {
 
             // ScrollPane will default to the bottom of the text.
             //
-            // This behaviour is triggered if you createSetting the scrollbar at the top and set the text
+            // This behaviour is triggered if you create the scrollbar at the top and set the text
             // to display, as it displays the text, it moves the scrollbar position back to the bottom
             // again:/
 
             // A not so friendly fix is to use invokeLater() to delay setting the scrollbar position,
-            // that way it gives the JTextPane time to display the text and updateVisibility the JScrollPane
+            // that way it gives the JTextPane time to display the text and update the JScrollPane
 
             javax.swing.SwingUtilities.invokeLater(() -> scrollPane.getVerticalScrollBar().setValue(0));
             JOptionPane.showMessageDialog(editor, scrollPane, "Version History", JOptionPane.INFORMATION_MESSAGE);

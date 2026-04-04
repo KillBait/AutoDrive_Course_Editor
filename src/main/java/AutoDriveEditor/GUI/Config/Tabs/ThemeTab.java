@@ -49,7 +49,7 @@ public class ThemeTab extends JPanel {
         myHeaderListPanel.addSeparator("FlatLaf", null, true, true, Color.LIGHT_GRAY);
         addFlatLafThemes(myHeaderListPanel);
 
-        // createSetting a comparator to sort the themes by name
+        // create a comparator to sort the themes by name
         Comparator<? super ThemeInfo> comparator = (t1, t2) -> t1.getName().compareToIgnoreCase(t2.getName());
 
         // Add External Themes if any detected by the ThemeManager
@@ -76,7 +76,7 @@ public class ThemeTab extends JPanel {
             if (themeInfo.isMaterialTheme()) myHeaderListPanel.addEntry(themeInfo.getName(), themeInfo.getPath());
         }
 
-        // Add a listener to updateVisibility the theme info panel when a theme is selected
+        // Add a listener to update the theme info panel when a theme is selected
         myHeaderListPanel.getEntryList().addListSelectionListener(e -> {
             if (e.getValueIsAdjusting()) {
                 HeaderListEntry selectedEntry = myHeaderListPanel.getEntryList().getSelectedValue();

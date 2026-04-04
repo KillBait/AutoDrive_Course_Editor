@@ -97,7 +97,7 @@ public class LinearLine extends RenderManager.Drawable implements MouseMotionLis
                 this.endNode = null;
                 point.setLocation(screenPosToWorldPos(e.getX(), e.getY()));
             }
-            // updateVisibility the line preview
+            // update the line preview
             updateLineEndLocation(point.getX(), point.getY());
             getMapPanel().repaint();
         }
@@ -223,7 +223,7 @@ public class LinearLine extends RenderManager.Drawable implements MouseMotionLis
         addToNetworkNodeList.clear();
         existingNetworkNodesList.clear();
 
-        // calculate the interpolation to be added to each MapNode position to createSetting
+        // calculate the interpolation to be added to each MapNode position to create
         // a linear transition from the start height to the end nodes height
         double endY = (endNode != null) ? endNode.getY() : getYValueFromHeightMap(getCurrentMouseWorldY(), getCurrentMouseWorldY());
         float yInterpolation = (float) ((endY - startNode.y) / (this.linePreviewNodeList.size() - 1));
@@ -301,7 +301,7 @@ public class LinearLine extends RenderManager.Drawable implements MouseMotionLis
      */
     private ArrayList<Connection> connectNodes(LinkedList<MapNode> nodesList) {
         ArrayList<Connection> conList = new ArrayList<>();
-        // loop through the remaining nodes and createSetting connections between them
+        // loop through the remaining nodes and create connections between them
         if (nodesList.isEmpty()) {
             if (bDebugLogLinearlineInfo) LOG.info("## LinearLine.connectNodes() Debug ## No interpolation nodes generated");
             if (endNode != null) {

@@ -103,7 +103,7 @@ public class KeyBindsTab extends JPanel {
             }
         });
 
-        // Add a property change listener to updateVisibility the table colours when the UI changes
+        // Add a property change listener to update the table colours when the UI changes
         table.addPropertyChangeListener(e -> {
             if (e.getPropertyName().equals("UI") || e.getPropertyName().equals("foreground") || e.getPropertyName().equals("gridcolor")) {
                 UIManager.put("Table.alternateRowColor", FlatLaf.isLafDark() ? ColorFunctions.lighten(this.getBackground(), 0.15F) : ColorFunctions.darken(this.getBackground(), 0.15F));
@@ -169,7 +169,7 @@ public class KeyBindsTab extends JPanel {
         return (row % 2 == 0) ? defCellColour : altCellColour;
     }
 
-    // updateVisibility the table colours
+    // update the table colours
     private void updateTableColours() {
         Color background = this.getBackground();
         Color alternateRowColor = FlatLaf.isLafDark() ? ColorFunctions.lighten(background, 0.10F) : ColorFunctions.darken(background, 0.10F);

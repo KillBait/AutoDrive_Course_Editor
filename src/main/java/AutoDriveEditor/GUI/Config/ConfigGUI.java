@@ -97,7 +97,7 @@ public class ConfigGUI extends JFrame {
         guiPanel.add(scrollPane, "dock west, gap 10 0 10 10, w 125!");
 
         // Add a listener to the JList to swap the content panel to the selected item
-        // and updateVisibility the content tab label
+        // and update the content tab label
         itemList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 CardLayout cl = (CardLayout) (contentPanel.getLayout());

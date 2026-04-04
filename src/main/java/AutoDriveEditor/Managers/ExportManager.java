@@ -1,5 +1,6 @@
 package AutoDriveEditor.Managers;
 
+import AutoDriveEditor.Classes.Util_Classes.FSUtils;
 import AutoDriveEditor.XMLConfig.GameXML;
 
 import javax.imageio.ImageIO;
@@ -23,19 +24,19 @@ public class ExportManager {
                 LOG.info("Created folder: {}", newFolder.getAbsolutePath());
                 return newFolder.getAbsolutePath();
             } else {
-                LOG.error("Failed to createSetting folder: {}", newFolder.getAbsolutePath());
+                LOG.error("Failed to create folder: {}", newFolder.getAbsolutePath());
                 JOptionPane.showMessageDialog(editor, getLocaleString("dialog_import_zip_folder_creation_failed"), getLocaleString("dialog_import_zip_folder_creation_failed_title"), JOptionPane.ERROR_MESSAGE);
                 return null;
             }
         } else {
             LOG.warn("Export Folder '{}' already exists", newFolder.getAbsolutePath());
-            // Folder already exists, no need to createSetting it again
+            // Folder already exists, no need to create it again
             return newFolder.getAbsolutePath();
         }
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public static boolean exportMapImageToDisk(BufferedImage image, String filePath, GameXML.GameVersion fsVersion) {
+    public static boolean exportMapImageToDisk(BufferedImage image, String filePath, FSUtils.GameVersion fsVersion) {
         try {
             File outputFile = new File(filePath);
             if (outputFile.exists()) {

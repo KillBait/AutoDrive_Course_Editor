@@ -71,7 +71,7 @@ public class CurvePanel extends JPanel implements ActionListener, ItemListener {
         curveOptionsPanel.setAnchorPositionY(-25);
         getMapPanel().add(curveOptionsPanel, POPUP_LAYER);
 
-        // createSetting a panel for path radio buttons
+        // create a panel for path radio buttons
 
         JPanel optionsPanel = new JPanel(new MigLayout("gap 3, inset 0"));
         optionsPanel.setBorder(new EmptyBorder(0,0,0,0));
@@ -109,19 +109,19 @@ public class CurvePanel extends JPanel implements ActionListener, ItemListener {
 
 
 
-        // createSetting panel for slider using vertical layout
+        // create a panel for slider using vertical layout
 
         JPanel interpolationSliderPanel = new JPanel(new MigLayout("gap 0"));
         interpolationSliderPanel.putClientProperty("FlatLaf.style", "border: 0,0,0,0,@disabledForeground,1,16; background: darken($Panel.background,5%)");
 
         interpolationSliderPanel.add(new JLabel(getLocaleString("panel_curve_label_interpolation")), "span 2,center, wrap");
 
-        // createSetting the iterations slider text field and updateVisibility it with the default value
+        // create the iterations slider text field and update it with the default value
         numIterationsTextField = new JTextField();
         numIterationsTextField.setEditable(false);
         updateNumIterationTextField(curveIterationsDefault);
 
-        // createSetting the iterations slider and set its properties
+        // create the iterations slider and set its properties
         numIterationsSlider = new JSlider(JSlider.HORIZONTAL);
         numIterationsSlider.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
         numIterationsSlider.setMinimum(1);

@@ -28,7 +28,7 @@ public class RotationUtils {
 
     public RotationUtils() {
         // the control node coordinates specified here is just a placeholder
-        // we have to specify something to createSetting the control node.
+        // we have to specify something to create the control node.
         controlNode = createControlNode(0, 0);
     }
 
@@ -41,8 +41,6 @@ public class RotationUtils {
         if (curveManager.isCurvePreviewCreated()) {
             curveManager.updateAllCurves();
         }
-//        if (isQuadCurveCreated) quadCurve.updateCurve();
-//        if (isCubicCurveCreated) cubicCurve.updateCurve();
         getMapPanel().repaint();
         resumeAutoSaving();
     }
@@ -103,10 +101,6 @@ public class RotationUtils {
             controlNode.z = screenPosToWorldPos((int) screenY.getX(), (int) screenY.getY() - getSelectionRadius(list)).getY();
         }
     }
-
-//    public void setRotationSnapDegree(int numDegrees) {
-//        snapDegrees = numDegrees;
-//    }
 
     //
     // Getters

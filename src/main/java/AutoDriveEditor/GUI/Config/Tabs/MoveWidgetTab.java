@@ -81,7 +81,6 @@ public class MoveWidgetTab extends JPanel {
                 int newValue = axisLengthSlider.getValue();
                 axisLengthTextField.setText(newValue + "px");
                 axisLength = (byte) newValue;
-//                getMoveWidget().updateVisibility();
                 widgetManager.updateAllWidgets();
                 getMapPanel().repaint();
             }
@@ -131,7 +130,6 @@ public class MoveWidgetTab extends JPanel {
                     xAxisDirection = X_DIRECTION.RIGHT;
                     break;
             }
-//            getMoveWidget().updateVisibility();
             widgetManager.updateAllWidgets();
             getMapPanel().repaint();
         });
@@ -153,7 +151,6 @@ public class MoveWidgetTab extends JPanel {
                     yAxisDirection = Y_DIRECTION.DOWN;
                     break;
             }
-//            getMoveWidget().updateVisibility();
             widgetManager.updateAllWidgets();
             getMapPanel().repaint();
         });
@@ -201,7 +198,6 @@ public class MoveWidgetTab extends JPanel {
                 int newValue = arrowWidthSlider.getValue();
                 arrowWidthTextField.setText(newValue + " px");
                 arrowWidth = (byte) newValue;
-//                getMoveWidget().updateVisibility();
                 widgetManager.updateAllWidgets();
                 getMapPanel().repaint();
             }
@@ -253,7 +249,6 @@ public class MoveWidgetTab extends JPanel {
                     freeMoveSizeComboBox.enableIndex(2);
                     break;
             }
-//            getMoveWidget().updateVisibility();
             widgetManager.updateAllWidgets();
             getMapPanel().repaint();
         });
@@ -275,7 +270,6 @@ public class MoveWidgetTab extends JPanel {
                     freeMoveType = FREEMOVE_TYPE.ROUND;
                     break;
             }
-//            getMoveWidget().updateVisibility();
             widgetManager.updateAllWidgets();
             getMapPanel().repaint();
         });
@@ -301,7 +295,6 @@ public class MoveWidgetTab extends JPanel {
                     freeMoveStyle  = FREEMOVE_STYLE.PATTERN;
                     break;
             }
-//            getMoveWidget().updateVisibility();
             widgetManager.updateAllWidgets();
             getMapPanel().repaint();
         });
@@ -328,7 +321,6 @@ public class MoveWidgetTab extends JPanel {
                     freeMoveSize = FREEMOVE_SIZE.LARGE;
                     break;
             }
-//            getMoveWidget().updateVisibility();
             widgetManager.updateAllWidgets();
             getMapPanel().repaint();
         });
@@ -479,7 +471,6 @@ public class MoveWidgetTab extends JPanel {
                     break;
                 }
             }
-//            getMoveWidget().updateVisibility();
             widgetManager.updateAllWidgets();
             getMapPanel().repaint();
         });

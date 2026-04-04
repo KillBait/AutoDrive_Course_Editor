@@ -28,7 +28,7 @@ public class ActionBar extends JPanel {
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createEmptyBorder());
 
-        // createSetting the action panel to hold the menu popup, undo/redo, copy/paste buttons
+        // create the action panel to hold the menu popup, undo/redo, copy/paste buttons
         JPanel actionPanel = new JPanel(new MigLayout("gap 0, hidemode 3"));
         actionPanel.setBorder(BorderFactory.createEmptyBorder());
         add(actionPanel, BorderLayout.WEST);
@@ -37,7 +37,7 @@ public class ActionBar extends JPanel {
         // Popup menu/button
         //
 
-        // createSetting the popup menu
+        // create the popup menu
         JPopupMenu popupMenu = new JPopupMenu();
 
         // add the toggleable text JPanel menu item
@@ -80,7 +80,7 @@ public class ActionBar extends JPanel {
         popupMenu.add(showCopyPasteMenu);
         popupMenu.add(showTextPanel);
 
-        // createSetting the popup menu button
+        // create the popup menu button
         JButton popupMenuButton = getPopupMenuButton(popupMenu);
         actionPanel.add(popupMenuButton);
 
@@ -91,7 +91,7 @@ public class ActionBar extends JPanel {
         // Undo/Redo Panel
         //
 
-        // createSetting the undo/redo JPanel
+        // create the undo/redo JPanel
         historyPanel = new JPanel(new MigLayout("insets 0 10 0 0"));
         historyPanel.setBorder(BorderFactory.createEmptyBorder());
         // add the undo/redo buttons
@@ -106,7 +106,7 @@ public class ActionBar extends JPanel {
         // Cut/Copy/Paste Panel
         //
 
-        // createSetting the cut/copy/paste JPanel
+        // create the cut/copy/paste JPanel
         clipPanel = new JPanel(new MigLayout("insets 0 10 0 "));
         clipPanel.setBorder(BorderFactory.createEmptyBorder());
         // add the cut/copy/paste buttons
@@ -123,7 +123,7 @@ public class ActionBar extends JPanel {
         // Config Panel
         //
 
-        // createSetting the config JPanel
+        // create the config JPanel
         JPanel configPanel = new JPanel(new MigLayout());
         configPanel.setBorder(BorderFactory.createEmptyBorder());
 

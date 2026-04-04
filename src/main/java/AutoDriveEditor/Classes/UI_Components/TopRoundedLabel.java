@@ -61,7 +61,7 @@ public class TopRoundedLabel extends JLabel {
     @Override
     protected void paintComponent(Graphics g) {
 
-        // createSetting a 2D graphics context
+        // create a 2D graphics context
         Graphics2D g2d = (Graphics2D) g;
         // set the rendering hint to antialiasing
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);

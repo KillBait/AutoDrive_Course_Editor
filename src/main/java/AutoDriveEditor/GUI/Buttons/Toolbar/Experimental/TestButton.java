@@ -46,8 +46,8 @@ public class TestButton extends BaseButton {
 
         if (networkNodesList.size() > 2) {
 
-            MapNode n1 = new MapNode(0, 1024, 0 , 1024, MapNode.NODE_FLAG_REGULAR, false);
-            MapNode n2 = new MapNode(0, -1024, 0 , -1024, MapNode.NODE_FLAG_REGULAR, false);
+            MapNode n1 = new MapNode(0, 0, 0 , 0, MapNode.NODE_FLAG_REGULAR, false);
+            MapNode n2 = new MapNode(0, 10, 0 , 0, MapNode.NODE_FLAG_REGULAR, false);
 
             int[] size = {2,4,8,16,32,64,128,256};
             for (int i = 0; i < size.length; i++) {
@@ -80,11 +80,11 @@ public class TestButton extends BaseButton {
         int scaledX = (int) ((worldX/ mapScale) * zoomLevel);
         int scaledY = (int) ((worldZ/ mapScale) * zoomLevel);
 
-        double centerXScaled = (relativeCentreX * (pdaImage.getWidth()*zoomLevel));
-        double centerYScaled = (relativeCentreY * (pdaImage.getHeight()*zoomLevel));
+        double centerXScaled = (relativeCentreX * (2048*zoomLevel));
+        double centerYScaled = (relativeCentreY * (2048*zoomLevel));
 
-        int topLeftX = (int)centerXScaled - (getMapPanel().getWidth() / 2);
-        int topLeftY = (int)centerYScaled - (getMapPanel().getHeight() / 2);
+        int topLeftX = (int)centerXScaled - (1024 / 2);
+        int topLeftY = (int)centerYScaled - (1024 / 2);
 
         return new Point(scaledX - topLeftX, scaledY - topLeftY);
     }

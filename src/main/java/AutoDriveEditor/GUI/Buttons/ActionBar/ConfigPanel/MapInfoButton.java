@@ -83,7 +83,7 @@ public class MapInfoButton extends OptionsBaseButton{
     }
 
     private void setupPopupPanel() {
-        // createSetting the autosave popup Panel
+        // create the autosave popup Panel
         popoutJPanel = PopupManager.makePopupPanel(button, "actionbar_options_mapinfo_popup_tooltip", false);
         getMapPanel().add(popoutJPanel, POPUP_LAYER);
 

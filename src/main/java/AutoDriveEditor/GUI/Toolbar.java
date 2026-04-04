@@ -6,12 +6,9 @@ import AutoDriveEditor.GUI.Buttons.Toolbar.Alignment.DepthAlignButton;
 import AutoDriveEditor.GUI.Buttons.Toolbar.Alignment.EditLocationButton;
 import AutoDriveEditor.GUI.Buttons.Toolbar.Alignment.HorizontalAlignButton;
 import AutoDriveEditor.GUI.Buttons.Toolbar.Alignment.VerticalAlignButton;
-import AutoDriveEditor.GUI.Buttons.Toolbar.Experimental.ArcSplineButton;
+import AutoDriveEditor.GUI.Buttons.Toolbar.Experimental.*;
 import AutoDriveEditor.GUI.Buttons.Toolbar.Curves.BezierCurveButton;
 import AutoDriveEditor.GUI.Buttons.Toolbar.Display.*;
-import AutoDriveEditor.GUI.Buttons.Toolbar.Experimental.RoadConnection;
-import AutoDriveEditor.GUI.Buttons.Toolbar.Experimental.ScaleButton;
-import AutoDriveEditor.GUI.Buttons.Toolbar.Experimental.TestButton;
 import AutoDriveEditor.GUI.Buttons.Toolbar.Markers.AddMarkerButton;
 import AutoDriveEditor.GUI.Buttons.Toolbar.Markers.DeleteMarkerButton;
 import AutoDriveEditor.GUI.Buttons.Toolbar.Markers.EditMarkerButton;
@@ -98,6 +95,7 @@ public class Toolbar extends JPanel {
             buttonManager.addButton(new TestButton(experimentalPanel));
             buttonManager.addButton(new RoadConnection(experimentalPanel));
             buttonManager.addButton(new ScaleButton(experimentalPanel));
+            //buttonManager.addButton(new BoundaryButton(experimentalPanel));
         }
 
         // Calculate toolbar location

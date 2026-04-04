@@ -22,7 +22,7 @@ public class TemplateButton extends BaseButton {
 
     public TemplateButton(JPanel panel) {
 
-        // createSetting your button, the pointer to it must be assigned to the button variable
+        // create your button, the pointer to it must be assigned to the button variable
         //
         // e.g.
         // button = new JButton()
@@ -107,7 +107,7 @@ public class TemplateButton extends BaseButton {
 
 
     /*
-     * This function is used to createSetting a tooltip for the button.
+     * This function is used to create a tooltip for the button.
      * e.g. return "This button does this and that"
      *      return "<html><center><b>This button does this and that</b><br>and this too</center></html>"
      *      return getLocaleString("this_button_does_this_that_localized_text")

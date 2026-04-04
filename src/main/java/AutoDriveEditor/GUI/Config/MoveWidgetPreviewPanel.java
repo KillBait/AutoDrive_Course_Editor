@@ -54,7 +54,6 @@ public class MoveWidgetPreviewPanel extends JPanel {
             public void mouseReleased(MouseEvent e) {
                 freeMoveSelected = false;
                 getMapPanel().repaint();
-//                getMoveWidget().updateVisibility();
                 widgetManager.updateAllWidgets();
             }
         });

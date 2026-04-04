@@ -36,10 +36,10 @@ import static AutoDriveEditor.XMLConfig.GameXML.xmlConfigFile;
 
 public class AutoDriveEditor extends JFrame {
 
-    public static final String COURSE_EDITOR_VERSION = "1.1.0";
+    public static final String COURSE_EDITOR_VERSION = "1.1.1";
     public static final String COURSE_EDITOR_NAME = "AutoDrive Editor";
     public static final String COURSE_EDITOR_TITLE = COURSE_EDITOR_NAME + " " + COURSE_EDITOR_VERSION;
-    public static final String COURSE_EDITOR_BUILD_INFO = "Java 11 SDK + IntelliJ IDEA 2025.2.3 Community Edition";
+    public static final String COURSE_EDITOR_BUILD_INFO = "Java 11 SDK + IntelliJ IDEA 2025.3.4";
 
     public static AutoDriveEditor editor;
     public static JSplitPane editorSplitPane;

@@ -125,7 +125,7 @@ public abstract class LinerLineBaseButton extends BaseButton implements Shortcut
                         }
                     }
                 } else {
-                    // No end node was selected, check if the config option to createSetting end nodes is enabled
+                    // No end node was selected, check if the config option to create end nodes is enabled
                     if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## No end node selected");
                     if (bCreateLinearLineEndNode) {
                         if (bDebugLogLinearlineInfo) LOG.info("## LinearLine Debug ## Create end node enabled in preferences");

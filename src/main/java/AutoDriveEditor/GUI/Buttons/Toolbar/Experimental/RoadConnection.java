@@ -82,7 +82,7 @@ public class RoadConnection extends BaseButton {
                 if (selected != null && !selected.isControlNode()) {
                     startNode = selected;
 
-                    // createSetting primary Linear Line
+                    // create primary Linear Line
 
 //                    primaryLinearLine = new LinearLine(startNode, e.getX(), e.getY()/*, nodeFlag, connectionType*/);
 //                    isLinePreviewCreated = true;
@@ -90,7 +90,7 @@ public class RoadConnection extends BaseButton {
 //                    showInTextArea(getLocaleString("toolbar_nodes_connection_started_infotext"), true, false);
 //                    LOG.info("## RoadConnection Debug ## primary linear line = {}", primaryLinearLine);
 
-                    // createSetting secondary Linear Line
+                    // create secondary Linear Line
 
 //                    Point2D pointerWorldPos = screenPosToWorldPos(e.getX(), e.getY());
 //                    secondaryStartNode = MapNode.createMapNode(-99, pointerWorldPos.getX(), pointerWorldPos.getY(), NODE_FLAG_REGULAR, false);

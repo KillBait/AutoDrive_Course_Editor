@@ -118,11 +118,11 @@ public class MapNode implements Comparable<MapNode> {
     public int id;
     public ArrayList<MapNode> incoming;
     public ArrayList<MapNode> outgoing;
+    public ArrayList<Connection> connections;
     public int flag;
     private MapMarker mapMarker;
 
     // used by editor only!
-    private final ArrayList<Connection> connectionList;
     private SelectorInterface nodeSelector;
     private boolean isSelected;
     private boolean hasWarning;
@@ -146,10 +146,10 @@ public class MapNode implements Comparable<MapNode> {
         this.z = roundUpDoubleToDecimalPlaces(z, 3);
         this.incoming = new ArrayList<>();
         this.outgoing = new ArrayList<>();
+        this.connections = new ArrayList<>();
         this.flag = flag;
 
         // set the editor only variables
-        this.connectionList = new ArrayList<>();
         this.nodeSelector = null; // Default to no selector, is assigned in creation functions
         this.mapMarker = null;
         this.isSelected = isSelected;
@@ -422,7 +422,7 @@ public class MapNode implements Comparable<MapNode> {
      */
     public Point2D.Double getWorldPosition2D() { return new Point2D.Double(this.x, this.z); }
     public Point getScreenPosition2D() { return worldPosToScreenPos(this.x, this.z); }
-    public ArrayList<Connection> getConnectionList() { return this.connectionList; }
+    public List<Connection> getConnectionList() { return this.connections; }
     public ArrayList<MapNode> getWarningNodes() { return this.warningNodes; }
     public List<String> getParkedVehiclesList() { return this.mapMarker.parkedVehiclesList; }
     public ArrayList<MapNode> getIgnoreDrawingConnectionsList() { return this.ignoreDrawingConnectionsList; }

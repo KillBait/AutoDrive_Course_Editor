@@ -75,12 +75,12 @@ public class RotationSnapButton extends OptionsBaseButton {
     }
 
     private void createPopupPanel() {
-        // createSetting the autosave popup Panel
+        // create the autosave popup Panel
         snapPopoutJPanel = PopupManager.makePopupPanel(button, "actionbar_options_rotation_popup_title");
 
         snapPopoutJPanel.add(new JLabel(getLocaleString("actionbar_options_rotation_panel_text_tooltip")), "center, span, gap 5, wrap");
 
-        // createSetting a JSpinner for th modifying the autosave time interval
+        // create a JSpinner for th modifying the autosave time interval
         JSpinner degreeSpinner = new FlatSpinner();
         SpinnerModel degreeValue = new SpinnerNumberModel(rotationStep, 5, 90, 1);
         degreeSpinner.setModel(degreeValue);
@@ -91,7 +91,7 @@ public class RotationSnapButton extends OptionsBaseButton {
         });
         snapPopoutJPanel.add(degreeSpinner, "center");
 
-        // createSetting accept + apply button
+        // create an accept + apply button
         FlatSVGIcon acceptStep = getSVGIcon(ROTATE_CONFIRM_ICON, 15, 15);
         ScaleAnimIcon animAcceptStepIcon = createScaleAnimIcon(acceptStep, false, 15 ,15);
 

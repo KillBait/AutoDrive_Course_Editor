@@ -179,7 +179,7 @@ public abstract class BaseButton extends Drawable implements ButtonInterface, To
 
     //
     // Tooltip helper functions, implement the ToolTipBuilder interface
-    // and override the buildToolTip() function to createSetting a custom tooltip
+    // and override the buildToolTip() function to create a custom tooltip
     // for your button.
     //
 

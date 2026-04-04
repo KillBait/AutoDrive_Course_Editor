@@ -13,7 +13,7 @@ public class HTMLUtils {
         label.setHorizontalAlignment(SwingConstants.CENTER);
         Font font = label.getFont();
 
-        // createSetting some css from the label's font
+        // create some css from the label's font
         String style = "font-family:" + font.getFamily() + ";" + "font-weight:" + (font.isBold() ? "bold" : "normal") + ";" +
                 "font-size:" + font.getSize() + "pt;" +
                 "text-align: centre";

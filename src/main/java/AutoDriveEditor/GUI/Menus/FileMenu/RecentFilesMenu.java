@@ -30,7 +30,7 @@ public class RecentFilesMenu extends JMenuBase {
     public RecentFilesMenu() {
         recentSubMenu = makeSubMenu("menu_file_recent", true);
 
-        // createSetting the shared actionListener used by all the previous file menus
+        // create the shared actionListener used by all the previous file menus
         recentMenuItemListener = e -> {
             RecentJMenuItem menuItem = (RecentJMenuItem) e.getSource();
             String filePath = menuItem.getConfigPath();
@@ -44,7 +44,7 @@ public class RecentFilesMenu extends JMenuBase {
 
         };
 
-        // createSetting an actionListener for the clear list menu item.
+        // create an actionListener for the clear list menu item.
         clearListListener = e -> {
             int result = JOptionPane.showConfirmDialog(editor, getLocaleString("dialog_recent_clear"), "AutoDrive Editor", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (result == JOptionPane.OK_OPTION) {

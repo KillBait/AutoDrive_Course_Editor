@@ -20,9 +20,10 @@ import static AutoDriveEditor.GUI.MapImage.pdaImage;
 import static AutoDriveEditor.GUI.MapPanel.*;
 import static AutoDriveEditor.GUI.Menus.DebugMenu.Logging.LogMultiSelectManagerInfoMenu.bDebugLogMultiSelectManagerInfo;
 import static AutoDriveEditor.GUI.Menus.EditorMenu.updateEditMenu;
+import static AutoDriveEditor.XMLConfig.EditorXML.bShowSelectionBounds;
 
 @SuppressWarnings("unused")
-public class MultiSelectManager implements MouseListener, MouseMotionListener {
+public class MultiSelectManager extends RenderManager.Drawable implements MouseListener, MouseMotionListener {
 
     public static final int WORLD_COORDINATES = 1;
     public static final int SCREEN_COORDINATES = 2;
@@ -34,7 +35,6 @@ public class MultiSelectManager implements MouseListener, MouseMotionListener {
     public static final ArrayList<MapNode> selectedNodes = new ArrayList<>();
     public static boolean isMultipleSelected = false;
     public static boolean isMultiSelectDragging;
-
 
     //
     // Rectangular selection
@@ -161,7 +161,7 @@ public class MultiSelectManager implements MouseListener, MouseMotionListener {
             if (buttonManager.getCurrentButton().useMultiSelection()) {
                 // check if a selection started
                 if (selectStart != null && isMultiSelectDragging) {
-                    // clear the inSelectionArea flag on the previously selected nodes, if not, the visual preview won't updateVisibility properly
+                    // clear the inSelectionArea flag on the previously selected nodes, if not, the visual preview won't update properly
                     for (MapNode node : selectedNodes) {
                         node.setPreviewNodeSelectionChange(false);
                         node.setPreviewNodeHiddenChange(false);
@@ -240,7 +240,7 @@ public class MultiSelectManager implements MouseListener, MouseMotionListener {
 
 
                     }
-                    // updateVisibility the screen to show the changes
+                    // update the screen to show the changes
                     getMapPanel().repaint();
                 }
             }
@@ -455,6 +455,41 @@ public class MultiSelectManager implements MouseListener, MouseMotionListener {
         useRectangularSelection = !bool;
     }
     private static void setIsMultiSelectDragging(boolean result) { isMultiSelectDragging = result; }
+
+    @Override
+    public void drawToScreen(Graphics g) {
+
+        Graphics2D gRect = (Graphics2D) g.create();
+        BasicStroke stDash = new BasicStroke(1, BasicStroke.CAP_BUTT,
+                BasicStroke.JOIN_ROUND, 1.0f, new float[]{10f, 0f, 2f}, 2f);
+        gRect.setColor(Color.WHITE);
+        Stroke oldStroke = gRect.getStroke();
+        gRect.setStroke(stDash);
+
+        if (isMultipleSelected && bShowSelectionBounds) {
+            SelectionAreaInfo selectionInfo = getSelectionBounds(multiSelectList);
+            Point2D topLeft = selectionInfo.getSelectionStart(SCREEN_COORDINATES);
+            Point2D bottomRight = selectionInfo.getSelectionEnd(SCREEN_COORDINATES);
+            double rectSizeX = bottomRight.getX() - topLeft.getX();
+            double rectSizeY = bottomRight.getY() - topLeft.getY();
+            gRect.setStroke(oldStroke);
+            gRect.drawRect((int) (topLeft.getX() - nodeSizeScaledQuarter), (int) (topLeft.getY() - nodeSizeScaledQuarter), (int) (rectSizeX + (nodeSizeScaledQuarter * 2)), (int) (rectSizeY + (nodeSizeScaledQuarter * 2)));
+        }
+
+        if (isMultiSelectDragging) {
+            if (useRectangularSelection) {
+                Point2D rectScreenEnd = worldPosToScreenPos(multiSelectRect.getX() + multiSelectRect.getWidth(), multiSelectRect.getY() + multiSelectRect.getHeight());
+                Point2D rectScreenStart = worldPosToScreenPos(multiSelectRect.getX(), multiSelectRect.getY());
+                gRect.drawRect((int) rectScreenStart.getX(), (int) rectScreenStart.getY(), (int) (rectScreenEnd.getX() - rectScreenStart.getX()), (int) (rectScreenEnd.getY() - rectScreenStart.getY()));
+            } else {
+                Path2D freeformPath = freeformSelectionPath;
+                gRect.draw(freeformPath);
+                gRect.setComposite(AlphaComposite.SrcOver.derive(0.25f));
+                gRect.drawLine((int) freeformPath.getCurrentPoint().getX(), (int) freeformPath.getCurrentPoint().getY(), (int) freeformSelectionStart.getX(), (int) freeformSelectionStart.getY());
+            }
+            gRect.dispose();
+        }
+    }
 
     public static class SelectionAreaInfo {
         private final Point2D startCoordinates;

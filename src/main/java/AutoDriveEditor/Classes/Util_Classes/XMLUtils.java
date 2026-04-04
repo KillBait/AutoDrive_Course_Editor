@@ -10,6 +10,9 @@ import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
 
 import static AutoDriveEditor.Classes.Util_Classes.ColourUtils.ColorToHexWithAlpha;
 import static AutoDriveEditor.Classes.Util_Classes.ColourUtils.HexToColorWithAlpha;
@@ -245,14 +248,40 @@ public class XMLUtils {
                 this.xmlDocument = dBuilder.parse(is);
                 this.xmlRootElement = xmlDocument.getDocumentElement();
             } catch (Exception ex) {
-                LOG.error("## XMLUtils.XMLReader() ## Exception");
+                LOG.error("## XMLUtils.XMLReader() ## Exception reading from byte array");
+                ex.printStackTrace();
+            }
+        }
+
+        public XMLReader(String filePath) {
+            if (filePath == null || filePath.isEmpty()) {
+                throw new IllegalArgumentException("File path cannot be null or empty");
+            }
+            try {
+                DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+                Document doc = dBuilder.parse(filePath);
+                doc.getDocumentElement().normalize();
+                this.xmlDocument = doc;
+                this.xmlRootElement = xmlDocument.getDocumentElement();
+            } catch (Exception ex) {
+                LOG.error("## XMLUtils.XMLReader() ## Exception reading from file path: {}", filePath);
                 ex.printStackTrace();
             }
         }
 
         public XMLReader(Document xmlDocument) {
-            this.xmlDocument = xmlDocument;
-            this.xmlRootElement = xmlDocument.getDocumentElement();
+            if (xmlDocument == null) {
+                throw new IllegalArgumentException("Document cannot be null");
+            }
+            try {
+                xmlDocument.getDocumentElement().normalize();
+                this.xmlDocument = xmlDocument;
+                this.xmlRootElement = xmlDocument.getDocumentElement();
+            } catch (Exception ex) {
+                LOG.error("## XMLUtils.XMLReader() ## Exception reading from Document");
+                ex.printStackTrace();
+            }
         }
 
         public String getRootElementName() {
@@ -305,6 +334,7 @@ public class XMLUtils {
         public String getAttributeValue(String tagName, String attributeName) {
             NodeList nodeList = xmlDocument.getElementsByTagName(tagName);
             if (nodeList.getLength() > 0) {
+                LOG.info("## XMLReader.getAttributeValue() ## Tag '{}' has {} occurrences with the attribute name '{}'", tagName, nodeList.getLength(), attributeName);
                 if (bDebugXMLReader) {
                     LOG.info("## XMLReader.getAttributeValue() ## Searching for attribute '{}' in tag '{}'", attributeName, tagName);
                     for (int i = 0; i < nodeList.getLength(); i++) {
@@ -314,7 +344,7 @@ public class XMLUtils {
                                 NamedNodeMap attributes = node.getAttributes();
                                 for (int j = 0; j < attributes.getLength(); j++) {
                                     Node attribute = attributes.item(j);
-                                    if (attribute.getNodeName().equals(attributeName)) LOG.info("## XMLReader.getAttributeValue() ## Fount Attribute '{}' ( {} ) ", attribute.getNodeName(), attribute.getNodeValue());
+                                    if (attribute.getNodeName().equals(attributeName)) LOG.info("## XMLReader.getAttributeValue() ## Found Attribute '{}' with value '{}'", attribute.getNodeName(), attribute.getNodeValue());
                                 }
                             }
                         }
@@ -333,6 +363,85 @@ public class XMLUtils {
                 }
             }
             LOG.error("## XMLReader.getAttributeValue() ## Tag '{}' not found", tagName);
+            return null;
+        }
+
+        public String getAttributeValue(String tagName, String attributeName, String value) {
+            NodeList nodeList = xmlDocument.getElementsByTagName(tagName);
+            if (nodeList.getLength() > 0) {
+                LOG.info("## XMLReader.getAttributeValue() ## Tag '{}' has {} occurrences with the attribute name '{}'", tagName, nodeList.getLength(), attributeName);
+                LOG.info("## XMLReader.getAttributeValue() ## Searching for attribute value '{}'", value);
+                for (int i = 0; i < nodeList.getLength(); i++) {
+                    Node node = nodeList.item(i);
+                    if (node.getNodeType() == Node.ELEMENT_NODE) {
+                        if (node.hasAttributes()) {
+                            NamedNodeMap attributes = node.getAttributes();
+                            for (int j = 0; j < attributes.getLength(); j++) {
+                                Node attribute = attributes.item(j);
+                                if (attribute.getNodeName().equals(attributeName)) {
+                                    //LOG.info("## XMLReader.getAttributeValue() ## Found Attribute '{}' with value '{}'", attribute.getNodeName(), attribute.getNodeValue());
+                                    if (attribute.getNodeValue().equals(value)) {
+                                        LOG.info("## XMLReader.getAttributeValue() ## Found attribute '{}' that matches search value '{}'", attribute.getNodeName(), value);
+                                        LOG.info("value: {}", attribute.getChildNodes().getLength());
+                                        return attribute.getNodeValue();
+                                    }
+//                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+//                Element element = (Element) nodeList.item(0);
+//                if (element.hasAttributes()) {
+//                    String attributeValue = element.getAttribute(attributeName);
+//                    if (attributeValue.isBlank()) {
+//                        LOG.info("## XMLReader.getAttributeValue() ## Attribute '{}' not found or empty", attributeName);
+//                    }
+//                    return attributeValue;
+//                } else {
+//                    LOG.error("## XMLReader.getAttributeValue() ## Tag '{}' has no attributes", tagName);
+//                    return null;
+//                }
+            }
+            LOG.error("## XMLReader.getAttributeValue() ## Tag '{}' not found", tagName);
+            return null;
+        }
+
+        public void findFieldNames() {
+            final Pattern FIELD_PATTERN = Pattern.compile("^field\\d+$");
+            List<String> fieldNames = new ArrayList<>();
+            //XMLUtils.XMLReader reader = new XMLUtils.XMLReader(xmlFilePath);
+            NodeList transformGroups = xmlDocument.getElementsByTagName("TransformGroup");
+            for (int i = 0; i < transformGroups.getLength(); i++) {
+                Element element = (Element) transformGroups.item(i);
+                String name = element.getAttribute("name");
+                if (name != null && FIELD_PATTERN.matcher(name).matches()) {
+                    fieldNames.add(name);
+                }
+            }
+            LOG.info("Fields {}",fieldNames);
+        }
+
+        public NodeList getChildren(String tag, String attribute, String value) {
+            //XMLUtils.XMLReader reader = new XMLUtils.XMLReader(xmlFilePath);
+            Element fieldsElement = this.getElementByAttribute(tag, attribute, value);
+            if (fieldsElement != null) {
+                return fieldsElement.getChildNodes();  // Returns all child nodes (elements, text, etc.)
+            }
+            return null;
+        }
+
+        public Element getElementByAttribute(String tagName, String attributeName, String attributeValue) {
+            NodeList nodeList = xmlDocument.getElementsByTagName(tagName);
+            for (int i = 0; i < nodeList.getLength(); i++) {
+                Node node = nodeList.item(i);
+                if (node.getNodeType() == Node.ELEMENT_NODE) {
+                    Element element = (Element) node;
+                    if (attributeValue.equals(element.getAttribute(attributeName))) {
+                        return element;
+                    }
+                }
+            }
             return null;
         }
 

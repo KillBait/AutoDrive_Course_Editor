@@ -442,7 +442,7 @@ public class ArcSpline extends CurveBase implements ArcSplineInterface {
 
     /**
      * This method is used to commit the curve to the current map.
-     * It uses the positions of the preview nodes to createSetting
+     * It uses the positions of the preview nodes to create
      * the actual nodes added to the map.
      */
     @Override

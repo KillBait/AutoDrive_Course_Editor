@@ -7,6 +7,28 @@
         <body style="font-size:14;">
 
             <!------------------------->
+            <!-- Start version 1.1.1 -->
+            <!------------------------->
+
+            <br>
+            <h3 style="font-family:verdana;">Update to v1.1.1</h2>
+            <p><u>Changes</u></p>
+            <ul>
+                <li>"Import images from zip" menu option
+                    <ul>
+                        <li>Changed zip file processing to autodetect the FS version from the maps xml files</li>
+                        <li>Added override option if auto-detected version is incorrect.</li>
+                        <li>Modified map preview image to remove the unused borders</li>
+                    </ul>
+                </li>
+            </ul>
+            <p><u>Fixes</u></p>
+            <ul>
+                <li>Fixed crash on detecting FS25 parking spots from vehicle.xml</li>
+            </ul>
+
+
+            <!------------------------->
             <!-- Start version 1.1.0 -->
             <!------------------------->
 

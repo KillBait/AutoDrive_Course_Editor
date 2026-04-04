@@ -84,7 +84,7 @@ public final class FlipDirectionButton extends ConnectionSelectBaseButton {
     public void mouseReleased(MouseEvent e) {
 
         // Normally it would be a simple task to remove all the connections in one go and
-        // immediately createSetting all the flipped connections, but, this isn't possible due
+        // immediately create all the flipped connections, but, this isn't possible due
         // to one special case, it is possible to have two nodes with a reverse connection
         // and a normal connection in the opposite direction.
         //

@@ -25,7 +25,7 @@ public class ButtonManager implements MultiSelectManager.MultiSelectEventListene
      * ToolTipBuilder - Interface for creating tooltips
      * <br><br>
      * Any class implementing this interface and @Overriding the
-     * buildToolTip() function can use it to easily set and updateVisibility
+     * buildToolTip() function can use it to easily set and update
      * the tooltip text for any button.
      */
     public interface ToolTipBuilder {
@@ -48,7 +48,7 @@ public class ButtonManager implements MultiSelectManager.MultiSelectEventListene
 
         /**
          * sets a name for this buttons action, you can assign multiple
-         * buttons the same name to effectively createSetting a group and use
+         * buttons the same name to effectively create a group and use
          * getActionGroup("your_group_name") to get an ArrayList of all
          * buttons assigned that name.
          * @return string containing your unique name
@@ -57,7 +57,7 @@ public class ButtonManager implements MultiSelectManager.MultiSelectEventListene
 
         /**
          * sets a name for this buttons panel, you can assign multiple
-         * buttons the same name to effectively createSetting a group and use
+         * buttons the same name to effectively create a group and use
          * getPanelGroup("your_panel_name") to get an ArrayList of all
          * buttons assigned that name.
          * @return string containing your unique name

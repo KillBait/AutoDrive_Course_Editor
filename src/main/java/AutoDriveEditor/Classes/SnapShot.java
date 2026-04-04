@@ -22,7 +22,7 @@ import static AutoDriveEditor.RoadNetwork.RoadMap.networkNodesList;
 /**
  * This class is responsible for creating and managing a snapshots of selected nodes
  * in the road network. It stores the state of nodes and connections at a specific
- * time and can be used to createSetting new copies of the nodes and connections or restore
+ * time and can be used to create new copies of the nodes and connections or restore
  * their original state
  */
 
@@ -496,7 +496,7 @@ public class SnapShot {
 
         int insertIndex = toAdd.id - 1;
 
-        // createSetting an iterator starting at the insertion point
+        // create an iterator starting at the insertion point
         ListIterator<MapNode> roadMapIterator = networkNodesList.listIterator(insertIndex);
 
         if (roadMapIterator.hasPrevious()) {

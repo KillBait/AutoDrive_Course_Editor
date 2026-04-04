@@ -35,7 +35,7 @@ public class ColoursTab extends JPanel {
 
         JPanel colourPanel = new JPanel(new MigLayout("insets 0 0 0 0, wrap 1"));
 
-        // createSetting a new HeaderListPanel
+        // create a new HeaderListPanel
         listPanel = new HeaderListPanel();
 
         // Initialize the list with default colors

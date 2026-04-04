@@ -55,13 +55,13 @@ public class GUIUtils {
         imageButton.setContentAreaFilled(false);
         imageButton.setFocusable(false);
 
-        // createSetting the unselected state icon,
+        // create the unselected state icon,
         // the colour filter will ensure it adapts to any theme changes
         FlatSVGIcon svgUnselectedIcon = new FlatSVGIcon(svgImageName, width, height);
         //svgUnselectedIcon.setColorFilter(lightDarkColorFilter);
         imageButton.setIcon(svgUnselectedIcon);
 
-        // createSetting the selected state icon,
+        // create the selected state icon,
         // Scale the image down slightly to give the icon a slight different appearance
         // the colour filter will ensure it adapts to any theme changes
         FlatSVGIcon svgSelectedIcon = new FlatSVGIcon(svgImageName, width-2, height-2);

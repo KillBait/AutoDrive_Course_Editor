@@ -77,12 +77,12 @@ public class AutosaveButton extends OptionsBaseButton {
     }
 
     private void createPopupPanel() {
-        // createSetting the autosave popup Panel
+        // create the autosave popup Panel
         popoutJPanel = PopupManager.makePopupPanel(button, "actionbar_options_autosave_popup_tooltip");
 
         popoutJPanel.add(new JLabel(getLocaleString("actionbar_options_autosave_panel_interval_tooltip")), "center, span, gap 5, wrap");
 
-        // createSetting a JSpinner for th modifying the autosave time interval
+        // create a JSpinner for th modifying the autosave time interval
         JSpinner intervalSpinner = new FlatSpinner();
         SpinnerModel spinnerValue = new SpinnerNumberModel(autoSaveInterval, 5, 60, 1);
         intervalSpinner.setModel(spinnerValue);
@@ -93,7 +93,7 @@ public class AutosaveButton extends OptionsBaseButton {
         });
         popoutJPanel.add(intervalSpinner, "center");
 
-        // createSetting accept + apply button
+        // create accept + apply button
         FlatSVGIcon acceptIcon = getSVGIcon(CONFIRM_ICON, 15, 15);
         ScaleAnimIcon animAcceptTimeIcon = createScaleAnimIcon(acceptIcon, false, 15 ,15);
 

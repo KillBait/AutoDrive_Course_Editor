@@ -120,7 +120,7 @@ public class BezierCurve extends CurveBase {
         for (int i = 1; i < getNumInterpolations() + 1; i++) {
             double step = iterationLength * i;
             Point2D.Double point = calcPointsForCurve(this.startNode, this.endNode, step);
-            // createSetting the preview node, we don't specify a Y value as it's just for display purposes only.
+            // create the preview node, we don't specify a Y value as it's just for display purposes only.
             MapNode newNode = createMapNode(id, point.getX(), -1, point.getY(), this.getCurvePriority(), false);
             getCurvePreviewNodesList().add(newNode);
             id++;
@@ -295,7 +295,7 @@ public class BezierCurve extends CurveBase {
 
     /**
      * This method is used to commit the curve to the current map.
-     * It uses the positions of the preview nodes to createSetting
+     * It uses the positions of the preview nodes to create
      * the actual nodes added to the map.
      */
     @Override

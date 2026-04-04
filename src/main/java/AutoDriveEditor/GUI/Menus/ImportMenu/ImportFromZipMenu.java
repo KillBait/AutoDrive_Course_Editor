@@ -1,10 +1,9 @@
 package AutoDriveEditor.GUI.Menus.ImportMenu;
 
+import AutoDriveEditor.Classes.Util_Classes.FSUtils;
 import AutoDriveEditor.Classes.Util_Classes.XMLUtils;
 import AutoDriveEditor.GUI.Menus.JMenuItemBase;
 import AutoDriveEditor.Import.DDSReader;
-import AutoDriveEditor.Managers.ImportManager;
-import AutoDriveEditor.XMLConfig.GameXML;
 import net.miginfocom.swing.MigLayout;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -23,6 +22,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import java.util.zip.ZipFile;
 
 import static AutoDriveEditor.AutoDriveEditor.editor;
@@ -107,7 +107,7 @@ public class ImportFromZipMenu extends JMenuItemBase {
         // Create a file filter for zip files
         FileFilter zipFilter = createFileFilter("zip", "Zip Archive (.zip)");
         JFileChooser lfc = createFileChooser("dialog_load_config_xml_title", JFileChooser.FILES_ONLY, true, lastUsedLocation, zipFilter);
-        // Open the file chooser dialog
+        // Open the file chooser dialogue
         if (lfc.showOpenDialog(editor) == JFileChooser.APPROVE_OPTION) {
             lastUsedLocation = lfc.getCurrentDirectory().getAbsolutePath();
             // Open the selected zip file
@@ -115,11 +115,16 @@ public class ImportFromZipMenu extends JMenuItemBase {
             if (zipFile != null) {
                 // Create a new ZipFile instance
                 LOG.info("## ImportFromZipMenu.actionPerformed() ## Zip file opened: {}", zipFile.getName());
-                // createSetting a byte array to hold the contents of the modDesc.xml file
+                // create a byte array to hold the contents of the modDesc.xml file
                 byte[] modDescFile = getFileFromZip(zipFile, "modDesc.xml");
                 if (modDescFile != null ) {
-                    // Check if the modDesc.xml file is present, createSetting an XMLReader if ture
+                    // Check if the modDesc.xml file is present, create an XMLReader if true
                     XMLUtils.XMLReader modDescReader = new XMLUtils.XMLReader(modDescFile);
+
+                    // Try to auto-detect the FS version from the modDesc.xml file
+                    int descVersion = Integer.parseInt(modDescReader.getAttributeValue("modDesc", "descVersion"));
+                    FSUtils.GameVersion fsVersion = FSUtils.getFSVersion(descVersion);
+                    LOG.info("## ImportFromZipMenu.actionPerformed() ## Auto detected FS Version from modDesc.xml : {}", fsVersion.getDescription());
                     // Get the maps config xml file from the modDesc.xml file
                     String configFilename = modDescReader.getAttributeValue("map", "configFilename");
                     // Try and match the setupPreview title locale to the system language
@@ -137,7 +142,7 @@ public class ImportFromZipMenu extends JMenuItemBase {
                                 String heightmapPath = findFileInZip(zipFile, "dem.png");
                                 if (!heightmapPath.isEmpty()) {
                                     LOG.info("## ImportFromZipMenu.actionPerformed() ## heightmapFilename = {}", heightmapPath);
-                                    setupPreview(titleLocalString, imagePath, heightmapPath);
+                                    setupPreview(titleLocalString, imagePath, heightmapPath, fsVersion);
                                 }
                             }
                         }
@@ -180,7 +185,7 @@ public class ImportFromZipMenu extends JMenuItemBase {
     }
 
 
-    private void setupPreview(String localeTitle, String imagePath, String heightmapPath) {
+    private void setupPreview(String localeTitle, String imagePath, String heightmapPath, FSUtils.GameVersion fsVersion) {
         // Create a window for the decoding progress bar
         JFrame progressFrame = new JFrame("Decoding");
         progressFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -222,10 +227,9 @@ public class ImportFromZipMenu extends JMenuItemBase {
                     } finally {
                         progressFrame.dispose();
                         if (success.get()) {
-                            if (getMapImagePreview(decodedDDSImage)) {
+                            if (getMapImagePreview(decodedDDSImage, fsVersion)) {
                                 if (getHeightMapPreview(heightmapPath)) {
-                                    //ImportGUI.createInternalImportGUI();
-                                    openPreviewWindow(localeTitle, previewMapImage, previewHeightmapImage);
+                                    openPreviewWindow(localeTitle, previewMapImage, previewHeightmapImage, fsVersion);
                                 }
                             }
                         }
@@ -239,15 +243,21 @@ public class ImportFromZipMenu extends JMenuItemBase {
         }
     }
 
-    private boolean getMapImagePreview(BufferedImage image) {
+    private boolean getMapImagePreview(BufferedImage image, FSUtils.GameVersion fsVersion) {
         if (image != null) {
             Graphics2D g = (Graphics2D) previewMapImage.getGraphics();
-            g.drawImage(image, 0, 0, 256, 256, null);
+            if (fsVersion == FSUtils.GameVersion.FS19) {
+                g.drawImage(image, 0, 0, 256, 256, null);
+            } else {
+                // For FS22 and FS25, crop the image to remove the border
+                BufferedImage crop = image.getSubimage(image.getWidth() / 4, image.getHeight() / 4, image.getWidth() / 2, image.getHeight() / 2);
+                g.drawImage(crop, 0, 0, 256, 256, null);
+            }
+            LOG.info("Created {} preview image successfully", fsVersion);
             g.dispose();
-            LOG.info("Created preview image successfully");
             return true;
         } else {
-            LOG.error("Image is null: Failed to createSetting preview");
+            LOG.error("Image is null: Failed to create preview");
         }
         return false;
     }
@@ -258,7 +268,6 @@ public class ImportFromZipMenu extends JMenuItemBase {
             File tempfile = getFileInputStreamFromZip(zipFile, heightmapPath);
             if (tempfile != null) {
                 try {
-                    //
                     decodedHeightmapImage = ImageIO.read(tempfile);
                     Graphics2D g = (Graphics2D) previewHeightmapImage.getGraphics();
                     g.drawImage(decodedHeightmapImage, 0, 0, 256, 256, null);
@@ -278,11 +287,9 @@ public class ImportFromZipMenu extends JMenuItemBase {
         return false;
     }
 
-    private void openPreviewWindow(String localeTitle, BufferedImage previewMapImage, BufferedImage previewHeightmapImage) {
+    private void openPreviewWindow(String localeTitle, BufferedImage previewMapImage, BufferedImage previewHeightmapImage, FSUtils.GameVersion fsVersion) {
         // Create a new instance of the ImportFromZipWindow
-        // Set the window to be visible
         JFrame windowFrame = new JFrame();
-
         SwingUtilities.invokeLater(() -> {
             windowFrame.dispatchEvent(new WindowEvent(windowFrame, WindowEvent.WINDOW_CLOSING));
             windowFrame.addWindowListener(new WindowAdapter() {
@@ -295,7 +302,7 @@ public class ImportFromZipMenu extends JMenuItemBase {
             windowFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             windowFrame.setTitle(getLocaleString("menu_import_zip_window_title"));
             windowFrame.setIconImage(getTractorImage());
-            windowFrame.setPreferredSize(new Dimension(610, 520));
+            windowFrame.setPreferredSize(new Dimension(610, 480));
             windowFrame.setResizable(true);
             windowFrame.pack();
             windowFrame.setLocationRelativeTo(getMapPanel());
@@ -304,36 +311,70 @@ public class ImportFromZipMenu extends JMenuItemBase {
             windowFrame.setLayout(new MigLayout("insets 0 15 15 15"));
             isPreviewWindowOpen = true;
 
-            // createSetting the image preview panel and add it to the main window frame
-            JPanel mainPanel = new JPanel(new MigLayout());
-            //mainPanel.putClientProperty("FlatLaf.style", "border: 0,0,0,0,@disabledForeground,1,16; background: darken($Panel.background,5%)");
-
-            // Add the map label/preview to the main panel
+            // Add the map label and preview to the main panel
             JPanel mapPreviewPanel = new JPanel(new MigLayout());
             mapPreviewPanel.add(new JLabel("<html><b>" + getLocaleString("menu_import_zip_map_image")), "center, wrap");
             RoundedImageLabel mapPreview = new RoundedImageLabel(20);
             mapPreview.setIcon(new ImageIcon(previewMapImage));
-            mapPreviewPanel.add(mapPreview, "center, wrap");
+            mapPreviewPanel.add(mapPreview, "center");
 
-            //mapPreview.putClientProperty("arc", 25);
-            mapPreviewPanel.add(mapPreview);
-            mainPanel.add(mapPreviewPanel);
+            windowFrame.add(mapPreviewPanel);
 
             // Add the heightmap label and image preview to the main panel
             JPanel heightmapPreviewPanel = new JPanel(new MigLayout());
-            heightmapPreviewPanel.setOpaque(false);
             heightmapPreviewPanel.add(new JLabel("<html><b>" + getLocaleString("menu_import_zip_heightmap")), "center, wrap");
             RoundedImageLabel heightmapPreviewLabel = new RoundedImageLabel(20);
             heightmapPreviewLabel.setIcon(new ImageIcon(previewHeightmapImage));
-            heightmapPreviewPanel.add(heightmapPreviewLabel);
-            mainPanel.add(heightmapPreviewPanel);
+            heightmapPreviewPanel.add(heightmapPreviewLabel, "center");
 
-            windowFrame.add(mainPanel,"wrap");
+            windowFrame.add(heightmapPreviewPanel, "wrap");
 
+            // Add the map name Panel to the main window frame
+            JPanel versionPanel = new JPanel(new MigLayout());
+            versionPanel.putClientProperty("FlatLaf.style", "border: 0,0,0,0,@disabledForeground,1,16; background: darken($Panel.background,5%)");
+
+            // Add the auto-detected FS version to a label and display it
+            JLabel gameVersionLabel = new JLabel("<html>" + getLocaleString("menu_import_zip_autodetect_version") + " : <b>'" + fsVersion.getDescription() + "'</b></html>");
+            versionPanel.add(gameVersionLabel, "span, center, wrap");
+
+            // Create a string array of all the game version descriptions
+            FSUtils.GameVersion[] vals = FSUtils.GameVersion.values();
+            String[] res = new String[vals.length-1];
+            // skip the first value (NOT_SUPPORTED)
+            for (int i = 1; i < vals.length; i++) {
+                res[i-1] = vals[i].getDescription();
+            }
+
+
+            // Create the override game version checkbox early, so it can be enabled/disabled by the override checkbox
+            JComboBox<String> overrideVersionComboBox = new JComboBox<>(res);
+            overrideVersionComboBox.setEnabled(false);
+            // Set the selected index to the auto-detected version
+            for (int i = 0; i < res.length; i++) {
+                if (res[i].equals(fsVersion.getDescription())) {
+                    // Set the selected index to the index of the locale title
+                    overrideVersionComboBox.setSelectedIndex(i);
+                    break;
+                }
+            }
+
+            JCheckBox overrideVersionCheckbox = new JCheckBox(getLocaleString("menu_import_zip_override"));
+            overrideVersionCheckbox.setHorizontalTextPosition(SwingConstants.LEFT);
+            overrideVersionCheckbox.setIconTextGap(10);
+            overrideVersionCheckbox.addItemListener( e -> overrideVersionComboBox.setEnabled(overrideVersionCheckbox.isSelected()));
+            versionPanel.add(overrideVersionCheckbox);
+            versionPanel.add(overrideVersionComboBox, "span, center");
+
+            windowFrame.add(versionPanel, "center");
 
             // Add the map name Panel to the main window frame
             JPanel mapNamePanel = new JPanel(new MigLayout());
             mapNamePanel.putClientProperty("FlatLaf.style", "border: 0,0,0,0,@disabledForeground,1,16; background: darken($Panel.background,5%)");
+
+            // Add the auto-detected name to a label and display it
+            JLabel mapNameLabel = new JLabel("<html>" + getLocaleString("menu_import_zip_autodetect_name") + " : <b>'" + localeTitle + "'</b></html>");
+            mapNamePanel.add(mapNameLabel, "span, center, wrap");
+
             // Create the override name checkbox early, so it can be enabled/disabled by the override checkbox
             String[] localeNames = mapLocaleNames.values().toArray(new String[0]);
             JComboBox<String> overrideNameComboBox = new JComboBox<>(localeNames);
@@ -345,20 +386,22 @@ public class ImportFromZipMenu extends JMenuItemBase {
                     break;
                 }
             }
+
+            // Add item listener for debug purposes only
             overrideNameComboBox.addItemListener(e -> {
-                // If the override name is selected, set the map name to the selected value
-                if (overrideNameComboBox.isEnabled() && e.getStateChange() == ItemEvent.SELECTED) {
-                    String selectedName = (String) overrideNameComboBox.getSelectedItem();
-                    if (selectedName != null && !selectedName.isEmpty()) {
-                        LOG.info("Override Map Name Selected: {}", selectedName);
-                        // Here you can set the map name in your application context
+                if (bDebugLogZipUtils) {
+                    if (overrideNameComboBox.isEnabled() && e.getStateChange() == ItemEvent.SELECTED) {
+                        // If a name override is selected, set the selectedName to the selected value
+                        String selectedLocaleName = (String) overrideNameComboBox.getSelectedItem();
+                        if (selectedLocaleName != null) {
+                            LOG.info("Override Map Name Selected: {}", selectedLocaleName);
+                        }
                     }
                 }
             });
-            // Add the auto-detected name to a label and display it
-            JLabel folderNameLabel = new JLabel("<html>" + getLocaleString("menu_import_zip_autodetect_name") + " : <b>'" + localeTitle + "'</b></html>");
-            mapNamePanel.add(folderNameLabel, "span, center, wrap");
 
+
+            // Add the override name checkbox
             JCheckBox overrideMapNameCheckbox = new JCheckBox(getLocaleString("menu_import_zip_override"));
             overrideMapNameCheckbox.setHorizontalTextPosition(SwingConstants.LEFT);
             overrideMapNameCheckbox.setIconTextGap(10);
@@ -366,44 +409,38 @@ public class ImportFromZipMenu extends JMenuItemBase {
             mapNamePanel.add(overrideMapNameCheckbox);
 
             mapNamePanel.add(overrideNameComboBox);
-            windowFrame.add(mapNamePanel, "center, wrap, gaptop 5");
+            windowFrame.add(mapNamePanel, "center, wrap");
 
-            JPanel versionPanel = new JPanel(new MigLayout("", "[]30[]30[]"));
-            // Add the FS19 import button to the main window frame
-            JButton importFS19Button = new JButton(getLocaleString("menu_import_zip_import_fs19"));
-            importFS19Button.addActionListener(e1 -> {
-                // Create a new folder with the map name
-                String folderName = overrideNameComboBox.isEnabled() ? (String) overrideNameComboBox.getSelectedItem() : localeTitle;
-                exportImages(GameXML.GameVersion.FS19_CONFIG, folderName);
+            JPanel confirmPanel = new JPanel(new MigLayout("", "[]160[]"));
+
+            // Add the import button to the confirmPanel
+            JButton importButton = new JButton(getLocaleString("menu_import_zip_import"));
+            importButton.addActionListener(e1 -> {
+                FSUtils.GameVersion selectedVersion = (overrideVersionCheckbox.isSelected()) ? FSUtils.GameVersion.getGameVersion(overrideVersionComboBox.getSelectedItem().toString()) : fsVersion;
+                String selectedName = (overrideMapNameCheckbox.isSelected()) ? overrideNameComboBox.getSelectedItem().toString() : localeTitle;
+
+                LOG.info("Exporting map name '{}' for {}", selectedName, selectedVersion);
+                exportImages(selectedVersion, selectedName);
+                windowFrame.dispose();
             });
-            importFS19Button.setPreferredSize(new Dimension(importFS19Button.getPreferredSize().width+20, importFS19Button.getPreferredSize().height+10));
+            importButton.setPreferredSize(new Dimension(importButton.getPreferredSize().width+20, importButton.getPreferredSize().height+10));
+            confirmPanel.add(importButton, "left, gapleft 40");
 
-            versionPanel.add(importFS19Button);
-            // Add the FS22 import button to the main window frame
-            JButton importFS22Button = new JButton(getLocaleString("menu_import_zip_import_fs22"));
-            importFS22Button.addActionListener(e1 -> {
-                // Create a new folder with the map name
-                String folderName = overrideNameComboBox.isEnabled() ? (String) overrideNameComboBox.getSelectedItem() : localeTitle;
-                exportImages(GameXML.GameVersion.FS22_CONFIG, folderName);
+
+            // Add the cancel button to the confirmPanel
+            JButton cancelButton = new JButton(getLocaleString("menu_import_zip_cancel"));
+            cancelButton.addActionListener(e1 -> {
+                if (bDebugLogZipUtils) LOG.info("Import cancelled by user");
+                windowFrame.dispose();
             });
-            importFS22Button.setPreferredSize(new Dimension(importFS22Button.getPreferredSize().width+20, importFS22Button.getPreferredSize().height+10));
+            cancelButton.setPreferredSize(new Dimension(cancelButton.getPreferredSize().width+20, cancelButton.getPreferredSize().height+10));
 
-            versionPanel.add(importFS22Button);
-            // Add the FS25 import button to the main window frame
-            JButton importFS25Button = new JButton(getLocaleString("menu_import_zip_import_fs25"));
-            importFS25Button.addActionListener(e1 -> {
-                // Create a new folder with the map name
-                String folderName = overrideNameComboBox.isEnabled() ? (String) overrideNameComboBox.getSelectedItem() : localeTitle;
-                exportImages(GameXML.GameVersion.FS25_CONFIG, folderName);
-            });
-            importFS25Button.setPreferredSize(new Dimension(importFS25Button.getPreferredSize().width+20, importFS25Button.getPreferredSize().height+10));
-
-            versionPanel.add(importFS25Button);
-            windowFrame.add(versionPanel, "gaptop 10, span, center");
+            confirmPanel.add(cancelButton, "right, gapright 40");
+            windowFrame.add(confirmPanel, "gaptop 20, span, center");
         });
     }
 
-    private void exportImages(GameXML.GameVersion gameVersion, String name) {
+    private void exportImages(FSUtils.GameVersion gameVersion, String name) {
         // replace any blank spaces in the folder name with underscores
         LOG.info("Exporting {} map with name: {}", gameVersion, name);
         String nameAdjust = name.replace(" ", "_").replace(".", "_");

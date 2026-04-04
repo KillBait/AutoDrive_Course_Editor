@@ -1,8 +1,11 @@
 package AutoDriveEditor.RoadNetwork;
 
 import AutoDriveEditor.Classes.Util_Classes.ExceptionUtils;
+import AutoDriveEditor.Classes.Util_Classes.FSUtils;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 
 import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
@@ -15,12 +18,15 @@ import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_SUBPRIO;
 public class RoadMap {
 
     public static String mapName;
+//    public static ArrayList<MapNode> newNetworkList;
     public static LinkedList<MapNode> networkNodesList;
+    public static FSUtils.GameVersion fsVersion;
     public static UUID uuid;
 
 
     public RoadMap() {
         networkNodesList = new LinkedList<>();
+//        newNetworkList = new ArrayList<>();
         mapName = null;
         uuid = UUID.randomUUID();
 

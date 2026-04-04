@@ -1,7 +1,7 @@
 package AutoDriveEditor.Managers;
 
+import AutoDriveEditor.Classes.Util_Classes.FSUtils;
 import AutoDriveEditor.Import.DDSReader;
-import AutoDriveEditor.XMLConfig.GameXML;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
@@ -29,13 +29,13 @@ public class ImportManager {
     private static boolean isUsingImportedImage = false;
 
     public static void importDDSForFS19(String filename) {
-        createBufferImageFromDDS(filename, GameXML.GameVersion.FS19_CONFIG);
+        createBufferImageFromDDS(filename, FSUtils.GameVersion.FS19);
     }
 
-    public static void importDDSForFS22(String filename) { createBufferImageFromDDS(filename, GameXML.GameVersion.FS22_CONFIG);
+    public static void importDDSForFS22(String filename) { createBufferImageFromDDS(filename, FSUtils.GameVersion.FS22);
     }
 
-    public static void createBufferImageFromDDS(String filename, GameXML.GameVersion gameVersion) {
+    public static void createBufferImageFromDDS(String filename, FSUtils.GameVersion gameVersion) {
 
         JFrame progressFrame = new JFrame("DDS Import");
         progressFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -91,7 +91,7 @@ public class ImportManager {
         decodingThread.start();
     }
 
-    public static BufferedImage createBufferImage(BufferedImage decodeImage, GameXML.GameVersion fsVersion) {
+    public static BufferedImage createBufferImage(BufferedImage decodeImage, FSUtils.GameVersion fsVersion) {
 
         // Scale the BufferImage to a size the editor can use ( 2048 x 2048 )
 
@@ -113,9 +113,9 @@ public class ImportManager {
         g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_DEFAULT);
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_DEFAULT);
         g.setRenderingHint(RenderingHints.KEY_RESOLUTION_VARIANT, RenderingHints.VALUE_RESOLUTION_VARIANT_SIZE_FIT);
-        if (fsVersion == GameXML.GameVersion.FS19_CONFIG) {
+        if (fsVersion == FSUtils.GameVersion.FS19) {
             g.drawImage(decodeImage, 0, 0, 2048, 2048, null);
-        } else if (fsVersion == GameXML.GameVersion.FS22_CONFIG || fsVersion == GameXML.GameVersion.FS25_CONFIG) {
+        } else if (fsVersion == FSUtils.GameVersion.FS22 || fsVersion == FSUtils.GameVersion.FS25) {
             LOG.info("## createBufferImage() ## Scaling converted DDS Image ( {}x{} ) to correct size..", decodeImage.getWidth(), decodeImage.getHeight());
             BufferedImage crop = decodeImage.getSubimage(decodeImage.getWidth() / 4, decodeImage.getHeight() / 4, decodeImage.getWidth() / 2, decodeImage.getHeight() / 2);
             g.drawImage(crop, 0, 0, 2048, 2048, null);

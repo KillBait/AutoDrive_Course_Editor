@@ -1,8 +1,10 @@
 package AutoDriveEditor.RoadNetwork;
 
 import java.awt.*;
+import java.awt.geom.Point2D;
 import java.util.Objects;
 
+import static AutoDriveEditor.GUI.MapPanel.worldPosToScreenPos;
 import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_REGULAR;
 import static AutoDriveEditor.RoadNetwork.MapNode.NODE_FLAG_SUBPRIO;
 import static AutoDriveEditor.XMLConfig.EditorXML.*;
@@ -135,8 +137,10 @@ public class Connection {
     //
 
     public MapNode getStartNode() { return startNode; }
+    public Point2D getStartNodeScreenPos() { return worldPosToScreenPos(startNode.getX(), startNode.getZ()); }
     public int getStartNodeID() { return startNodeID; }
     public MapNode getEndNode() { return endNode; }
+    public Point2D getEndNodeScreenPos() { return worldPosToScreenPos(endNode.getX(), endNode.getZ()); }
     public int getEndNodeID() { return endNodeID; }
     public String getConnectionTypeString() { return connectionType.getDescription(); }
 

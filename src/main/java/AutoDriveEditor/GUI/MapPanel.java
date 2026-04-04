@@ -22,8 +22,6 @@ import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.Month;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -277,7 +275,7 @@ public class MapPanel extends JLayeredPane {
             ArrayList<MapNode> visibleNodes = new ArrayList<>();
             Point2D topLeft = screenPosToWorldPos(0, 0);
             Point2D bottomRight = screenPosToWorldPos(getWidth(), getHeight());
-            double offScreenDistance = 24;
+            double offScreenDistance = 24 * mapScale;
 
             // Calculate visible nodes
             for (MapNode mapNode : RoadMap.networkNodesList) {
@@ -352,7 +350,7 @@ public class MapPanel extends JLayeredPane {
 
                 BufferedImage buff = getSVGBufferImage(logo, newWidth, newHeight, null);
 
-                // Calculate the top-left coordinates to center the image
+                // Calculate the top-left coordinates to centre the image
                 int x = (panelWidth - newWidth) / 2;
                 int y = (panelHeight - newHeight) / 2;
 
@@ -363,15 +361,15 @@ public class MapPanel extends JLayeredPane {
         if (bDebugShowRenderProfileInfo) {
             renderProfileGroup.reset();
             renderProfileGroup.addText("Connection Compute", connectionComputeTimer.getTime(3) + " ms");
+            renderProfileGroup.addText("Connection Drawn", String.valueOf(connectionDrawTotal - skippedConnections));
+            renderProfileGroup.addText("Connection Skipped", String.valueOf(skippedConnections));
             renderProfileGroup.addText("Connection Render", connectionDrawTimer.getTime(3) + " ms");
-            renderProfileGroup.addText("Total Connections Rendered", String.valueOf(connectionDrawTotal));
             renderProfileGroup.addText("Node Compute", nodeComputeTimer.getTime(3) + " ms");
+            renderProfileGroup.addText("Node Drawn", String.valueOf(nodeComputeTotal));
             renderProfileGroup.addText("Node Render", nodeDrawTimer.getTime(3) + " ms");
-            renderProfileGroup.addText("Total Nodes Rendered", String.valueOf(nodeComputeTotal));
             renderProfileGroup.addText("Image Render", imageDrawTimer.getTime(3) + " ms");
             renderProfileGroup.addText("Text Render", textDrawTimer.getTime(3) + " ms");
             renderProfileGroup.addText("Button Render", buttonDrawTimer.getTime(3) + " ms");
-            renderProfileGroup.addText("Selection Render", rectangleDrawTimer.getTime(3) + " ms");
             renderProfileGroup.addEmptyLine();
             renderProfileGroup.addCenteredText("Render Times", true);
             renderProfileGroup.addText("Render Thread", renderTimer.getTime(3) + " ms");
@@ -498,7 +496,7 @@ public class MapPanel extends JLayeredPane {
             int lineHeight = fm.getHeight();
 
             if (!infoList.isEmpty()) {
-                // loop through all the strings to display, compare and updateVisibility maxStringLength to use later
+                // loop through all the strings to display, compare and update maxStringLength to use later
                 int maxStringLength = 0;
                 for (NodeHoverTextList infoEntry : infoList) {
                     if (fm.stringWidth(infoEntry.text) >= maxStringLength) maxStringLength = fm.stringWidth(infoEntry.text);
@@ -962,7 +960,7 @@ public class MapPanel extends JLayeredPane {
                 selectedNodeOverlayImage = getSVGBufferImage(nodeSelectRing, (int) nodeSizeScaled, (int) nodeSizeScaled, null);
 
                 //
-                // create the control node color filters
+                // create the control node colour filters
                 //
                 FlatSVGIcon controlNode = getSVGIcon(CONTROL_NODE_ICON);
                 Map<Color, Color> filters = new HashMap<>();

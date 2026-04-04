@@ -8,7 +8,6 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
-import static AutoDriveEditor.AutoDriveEditor.getMapPanel;
 import static AutoDriveEditor.Classes.Util_Classes.LoggerUtils.LOG;
 import static AutoDriveEditor.Classes.Util_Classes.MathUtils.normalizeAngle;
 import static AutoDriveEditor.GUI.MapImage.pdaImage;
@@ -27,14 +26,13 @@ public class ConnectionDrawThread implements Runnable{
     private static ArrayList<MapNode> visibleNodes;
 
     private static volatile boolean isStopped = false;
-//    private final LinkedList<ConnectionDrawList> drawList = new LinkedList<>();
     private final ArrayList<ConnectionDrawList> drawList = new ArrayList<>();
-
 
     public static final ProfileUtil connectionComputeTimer = new ProfileUtil();
     public static final ProfileUtil connectionDrawTimer = new ProfileUtil();
 
     public static int connectionDrawTotal;
+    public static int skippedConnections;
 
     private static class ConnectionDrawList {
         final Point2D startPos;
@@ -85,58 +83,62 @@ public class ConnectionDrawThread implements Runnable{
                 }
 
                 if (renderGraphics != null && pdaImage != null) {
-                    Point2D topLeft = screenPosToWorldPos(0,0);
-                    Point2D bottomRight = screenPosToWorldPos(getMapPanel().getWidth(),getMapPanel().getHeight());
-                    double offScreenDistance = 24;
                     Color colour;
-
                     for (MapNode mapNode : visibleNodes) {
-                        if (topLeft.getX() - offScreenDistance < mapNode.x && bottomRight.getX() + offScreenDistance > mapNode.x && topLeft.getY() - offScreenDistance < mapNode.z && bottomRight.getY() + offScreenDistance > mapNode.z) {
-                            if (!mapNode.outgoing.isEmpty()) {
-                                Point2D nodePos = worldPosToScreenPos(mapNode.x, mapNode.z);
-                                for (MapNode outgoing : mapNode.outgoing) {
-                                    Point2D outPos = worldPosToScreenPos(outgoing.x, outgoing.z);
-                                    int mapNodeFlag = (mapNode.getPreviewNodeFlagChange())? 1 - mapNode.flag : mapNode.flag;
-                                    int outFlag = (outgoing.getPreviewNodeFlagChange())? 1 - outgoing.flag : outgoing.flag;
-                                    boolean hidden = mapNode.getPreviewConnectionHiddenList().contains(outgoing) != mapNode.isConnectionHidden(outgoing);
-                                    if (RoadMap.isDual(mapNode, outgoing)) {
-                                        if (!mapNode.getIgnoreDrawingConnectionsList().contains(outgoing)) {
-                                            // for node type preview, if either node is subprio draw both arrows the correct colour
-                                            if (mapNodeFlag == NODE_FLAG_REGULAR && outFlag == NODE_FLAG_REGULAR) {
-                                                colour = colourConnectDual;
-                                            } else {
-                                                colour = colourConnectDualSubprio;
-                                            }
-                                            drawList.add(new ConnectionDrawList(nodePos, outPos, colour, true, hidden));
+                        if (!mapNode.outgoing.isEmpty()) {
+                            Point2D nodePos = worldPosToScreenPos(mapNode.x, mapNode.z);
+                            for (MapNode outgoing : mapNode.outgoing) {
+                                Point2D outPos = worldPosToScreenPos(outgoing.x, outgoing.z);
+                                int mapNodeFlag = (mapNode.getPreviewNodeFlagChange())? 1 - mapNode.flag : mapNode.flag;
+                                int outFlag = (outgoing.getPreviewNodeFlagChange())? 1 - outgoing.flag : outgoing.flag;
+                                boolean hidden = mapNode.getPreviewConnectionHiddenList().contains(outgoing) != mapNode.isConnectionHidden(outgoing);
+                                if (RoadMap.isRegular(mapNode, outgoing)) {
+                                    if (!mapNode.getIgnoreDrawingConnectionsList().contains(outgoing)) {
+                                        if (mapNodeFlag == NODE_FLAG_SUBPRIO) {
+                                            drawList.add(new ConnectionDrawList(nodePos, outPos, colourConnectSubprio, false, hidden));
+                                        } else {
+                                            drawList.add(new ConnectionDrawList(nodePos, outPos, colourConnectRegular, false, hidden));
                                         }
-                                    } else if (RoadMap.isReverse(mapNode, outgoing) || RoadMap.isCrossedReverse(mapNode, outgoing)) {
-                                        if (!mapNode.getIgnoreDrawingConnectionsList().contains(outgoing)) {
-                                            if (mapNodeFlag == NODE_FLAG_REGULAR) {
-                                                colour = colourConnectReverse;
-                                            } else {
-                                                colour = colourConnectReverseSubprio;
-                                            }
-                                            drawList.add(new ConnectionDrawList(nodePos, outPos, colour, false, hidden));
+                                    }
+                                } else if (RoadMap.isDual(mapNode, outgoing)) {
+                                    if (!mapNode.getIgnoreDrawingConnectionsList().contains(outgoing)) {
+                                        // for node type preview, if either node is subprio draw both arrows the correct colour
+                                        if (mapNodeFlag == NODE_FLAG_REGULAR && outFlag == NODE_FLAG_REGULAR) {
+                                            colour = colourConnectDual;
+                                        } else {
+                                            colour = colourConnectDualSubprio;
                                         }
-                                    } else {
-                                        if (!mapNode.getIgnoreDrawingConnectionsList().contains(outgoing)) {
-                                            if (mapNodeFlag == NODE_FLAG_SUBPRIO) {
-                                                drawList.add(new ConnectionDrawList(nodePos, outPos, colourConnectSubprio, false, hidden));
-                                            } else {
-                                                drawList.add(new ConnectionDrawList(nodePos, outPos, colourConnectRegular, false, hidden));
-                                            }
+                                        drawList.add(new ConnectionDrawList(nodePos, outPos, colour, true, hidden));
+                                    }
+                                } else if (RoadMap.isReverse(mapNode, outgoing) || RoadMap.isCrossedReverse(mapNode, outgoing)) {
+                                    if (!mapNode.getIgnoreDrawingConnectionsList().contains(outgoing)) {
+                                        if (mapNodeFlag == NODE_FLAG_REGULAR) {
+                                            colour = colourConnectReverse;
+                                        } else {
+                                            colour = colourConnectReverseSubprio;
                                         }
+                                        drawList.add(new ConnectionDrawList(nodePos, outPos, colour, false, hidden));
                                     }
                                 }
                             }
                         }
+//                        if (!mapNode.connections.isEmpty()) {
+//                            Point2D nodePos = mapNode.getScreenPosition2D();
+//                            for (Connection connection : mapNode.connections) {
+//                                Point2D outPos = connection.getEndNodeScreenPos();
+//                                drawList.add(new ConnectionDrawList(nodePos, outPos, connection.getColor(), false, false));
+//                            }
+//                        }
+
                     }
+
+
 
                     if (bDebugShowRenderProfileInfo) connectionComputeTimer.stopTimer();
                     drawLock.lock();
                     try {
                         if (bDebugShowRenderProfileInfo) connectionDrawTimer.startTimer();
-                        drawArrowList(renderGraphics, drawList);
+                        skippedConnections = drawArrowList(renderGraphics, drawList);
                         if (bDebugShowRenderProfileInfo) connectionDrawTimer.stopTimer();
                     } finally {
                         drawLock.unlock();
@@ -149,25 +151,42 @@ public class ConnectionDrawThread implements Runnable{
         }
     }
 
-    private void drawArrowList(Graphics g, ArrayList<ConnectionDrawThread.ConnectionDrawList> nodeList) {
-        if (nodeList.isEmpty()) return;
+    private int drawArrowList(Graphics g, ArrayList<ConnectionDrawThread.ConnectionDrawList> nodeList) {
+        if (nodeList.isEmpty()) return 0;
 
         Graphics2D gTrans = (Graphics2D) g.create();
         Polygon p = new Polygon();
 
+        double arrowLeftAngle = Math.toRadians(-20);
+        double arrowRightAngle = Math.toRadians(20);
+
+        int sx, sy, ex, ey;
+
+        double angleRad, offsetX, offsetY, maxDistance;
+
+        int skipped = 0;
+
+
         for (ConnectionDrawThread.ConnectionDrawList mapNode : nodeList) {
 
-            double angleRad = Math.atan2( mapNode.startPos.getY() - mapNode.endPos.getY(),
-                    mapNode.startPos.getX() - mapNode.endPos.getX()
-            );
+            sx = (int) mapNode.startPos.getX();
+            sy = (int) mapNode.startPos.getY();
+            ex = (int) mapNode.endPos.getX();
+            ey = (int) mapNode.endPos.getY();
 
-            double offsetX = nodeSizeScaledHalf * Math.cos(angleRad);
-            double offsetY = nodeSizeScaledHalf * Math.sin(angleRad);
+            maxDistance = Math.hypot(ex - sx, ey - sy);
 
-            double maxDistance = Math.sqrt(Math.pow(mapNode.endPos.getX() - mapNode.startPos.getX(), 2) + Math.pow(mapNode.endPos.getY() - mapNode.startPos.getY(), 2));
+            if (maxDistance < 1) {
+                skipped++;
+                continue;
+            }
 
-            float tr = mapNode.isHidden ? hiddenNodesTransparencyLevel : 1f;
-            gTrans.setComposite(AlphaComposite.SrcOver.derive(tr));
+            angleRad = Math.atan2(sy - ey, sx - ex);
+
+            offsetX = nodeSizeScaledHalf * Math.cos(angleRad);
+            offsetY = nodeSizeScaledHalf * Math.sin(angleRad);
+
+            gTrans.setComposite(AlphaComposite.SrcOver.derive(mapNode.isHidden ? hiddenNodesTransparencyLevel : 1f));
             gTrans.setColor(mapNode.colour);
 
             if (nodeSizeScaled >= 2.0) {
@@ -184,47 +203,33 @@ public class ConnectionDrawThread implements Runnable{
                     }
                 }
 
-                double adjustedArrowLength = (nodeSize * zoomLevel * 0.7) - (diff / 1.15);
-
-
-                double normalizedAngleRad = normalizeAngle(angleRad + Math.toRadians(-20));
-                int arrowLeftX = (int) (mapNode.endPos.getX() + Math.cos(normalizedAngleRad) * adjustedArrowLength);
-                int arrowLeftY = (int) (mapNode.endPos.getY() + Math.sin(normalizedAngleRad) * adjustedArrowLength);
-
-                double normalizedAngleRad2 = normalizeAngle(angleRad + Math.toRadians(20));
-                int arrowRightX = (int) (mapNode.endPos.getX() + Math.cos(normalizedAngleRad2) * adjustedArrowLength);
-                int arrowRightY = (int) (mapNode.endPos.getY() + Math.sin(normalizedAngleRad2) * adjustedArrowLength);
-
                 if (maxDistance >= nodeSizeScaled) {
+
+                    double adjustedArrowLength = (nodeSize * zoomLevel * 0.7) - (diff / 1.15);
+
+                    double normalizedAngleRad = normalizeAngle(angleRad + arrowLeftAngle);
+                    int arrowLeftX = (int) (ex + Math.cos(normalizedAngleRad) * adjustedArrowLength);
+                    int arrowLeftY = (int) (ey + Math.sin(normalizedAngleRad) * adjustedArrowLength);
+
+                    double normalizedAngleRad2 = normalizeAngle(angleRad + arrowRightAngle);
+                    int arrowRightX = (int) (ex + Math.cos(normalizedAngleRad2) * adjustedArrowLength);
+                    int arrowRightY = (int) (ey + Math.sin(normalizedAngleRad2) * adjustedArrowLength);
+
                     if (bFilledArrows) {
-                        p.addPoint((int) (mapNode.endPos.getX() + offsetX), (int) (mapNode.endPos.getY() + offsetY));
+                        p.addPoint((int) (ex + offsetX), (int) (ey + offsetY));
                         p.addPoint(arrowLeftX, arrowLeftY);
                         p.addPoint(arrowRightX, arrowRightY);
                         gTrans.fillPolygon(p);
                         p.reset();
                     } else {
-                        gTrans.drawLine((int) (mapNode.startPos.getX() - offsetX), (int) (mapNode.startPos.getY() - offsetY),
-                                (int) (mapNode.endPos.getX() + offsetX), (int) (mapNode.endPos.getY() + offsetY));
-                        gTrans.drawLine((int) (mapNode.endPos.getX() + offsetX), (int) (mapNode.endPos.getY() + offsetY), arrowLeftX, arrowLeftY);
-                        gTrans.drawLine((int) (mapNode.endPos.getX() + offsetX), (int) (mapNode.endPos.getY() + offsetY), arrowRightX, arrowRightY);
+
+                        gTrans.drawLine((int) (ex + offsetX), (int) (ey + offsetY), arrowLeftX, arrowLeftY);
+                        gTrans.drawLine((int) (ex + offsetX), (int) (ey + offsetY), arrowRightX, arrowRightY);
                     }
                 }
-
-                int targetPolygonCenterX = (int) (mapNode.endPos.getX() + Math.cos(angleRad) * adjustedArrowLength);
-                int targetPolygonCenterY = (int) (mapNode.endPos.getY() + Math.sin(angleRad) * adjustedArrowLength);
-
-                if (mapNode.isDual) {
-                    angleRad = normalizeAngle(angleRad + Math.PI);
-
-                    int startPolygonCenterX = (int) (mapNode.startPos.getX() + Math.cos(angleRad) * adjustedArrowLength);
-                    int startPolygonCenterY = (int) (mapNode.startPos.getY() + Math.sin(angleRad) * adjustedArrowLength);
-                    gTrans.drawLine(startPolygonCenterX, startPolygonCenterY, targetPolygonCenterX, targetPolygonCenterY);
-                } else {
-                    gTrans.drawLine((int) (mapNode.startPos.getX() - offsetX), (int) (mapNode.startPos.getY() - offsetY), targetPolygonCenterX, targetPolygonCenterY);
-                }
-            } else {
-                gTrans.drawLine((int) (mapNode.startPos.getX() - offsetX), (int) (mapNode.startPos.getY() - offsetY), (int) (mapNode.endPos.getX() + offsetX), (int) (mapNode.endPos.getY() + offsetY));
             }
+            gTrans.drawLine((int) (sx - offsetX), (int) (sy - offsetY), (int) (ex + offsetX), (int) (ey + offsetY));
         }
+        return skipped;
     }
 }
